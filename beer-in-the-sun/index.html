@@ -636,7 +636,7 @@ function updRain(dt){
     if(!(pint.has&&pint.ml>0))rainCnt=0;
     if(rainCnt>0&&!rain.active){
       rainCnt+=dt;
-      if(rainCnt>=rainWarnAt&&!rain.warned){rain.warned=true;sfx('thunder');flashWhite=0.2;calloutMsg("RAIN COMIN'!",'#6bc5ff');}
+      if(rainCnt>=rainWarnAt&&!rain.warned){rain.warned=true;sfx('thunder');flashWhite=0.2;} /* thunder says it a' — nae UI notif */
       if(rainCnt>=rainWarnAt+0.6){rain.active=true;}
     }
   }
