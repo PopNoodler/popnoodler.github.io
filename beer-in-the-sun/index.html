@@ -809,9 +809,9 @@ function updStreet(dt){
   updMove(dt);
   homeHintT+=dt;
   streetT+=dt;
-  /* chuggin' as ye go — but only doon tae the hauf-wey line */
+  /* chuggin' as ye go — but only doon tae the hauf-wey line, at a wanderin' pace */
   if(pint.has&&pint.ml>284){
-    var sip=Math.min(pint.ml-284,90*dt);
+    var sip=Math.min(pint.ml-284,45*dt);
     pint.ml-=sip;drankMl+=sip;score+=sip;
     glugT-=dt;
     if(glugT<=0){glugT=0.3;sfx('glug');}
