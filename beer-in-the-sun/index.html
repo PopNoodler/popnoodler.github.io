@@ -258,15 +258,16 @@ function updSong(dt){
     bgGain.gain.setTargetAtTime(BG_VOL,t,0.5);
     return;
   }
-  /* the chorus lives in the circle an' naewhere else */
-  var wantSun=state==='PLAY'&&scene==='GARDEN'&&!fetching&&inSunPatch()&&pint.has&&pint.ml>0;
+  /* the chorus lives in the circle an' naewhere else — an' it plays on ower
+     an empty gless until ye actually leave for the pub */
+  var wantSun=state==='PLAY'&&scene==='GARDEN'&&inSunPatch();
   if(pend){
     if(t>pend.at+CF+0.05)finishSwitch();
     else if(wantSun!==pend.to&&t<pend.at-0.08)cancelSwitch();
     else return;
   }
   /* sticky: quick tae bring the chorus in, gey reluctant tae let it go */
-  if(sunOn&&!wantSun&&scene==='GARDEN'&&pint.has&&pint.ml>0&&patch.alpha>0.4&&dist(dude.x,dude.y,patch.x,patch.y)<patch.r+14)wantSun=true;
+  if(sunOn&&!wantSun&&scene==='GARDEN'&&patch.alpha>0.4&&dist(dude.x,dude.y,patch.x,patch.y)<patch.r+14)wantSun=true;
   if(wantSun!==sunOn){
     if(wantSun){ /* intae the sun: nae delay — the bar-lock is a' the timing needed */
       sunHold=0;scheduleSwitch(true);
@@ -429,7 +430,7 @@ function popup(x,y,txt,col){pops.push({x:x,y:y,txt:txt,t:1,col:col||'#fff'});}
 function speak(txt){bubble={txt:txt,t:1.7};}
 function ruinPint(msg,say){
   if(invuln>0||state!=='PLAY')return;
-  stock--;shake=8;flashRed=0.5;invuln=2;
+  shake=8;flashRed=0.5;invuln=2; /* health's charged at the damage site noo */
   calloutMsg(msg,'#ff6b6b');if(say)speak(say);sfx('lose');
   if(navigator.vibrate)try{navigator.vibrate(80);}catch(e){}
   pint.has=false;pint.ml=0;pint.watered=0;
@@ -576,16 +577,12 @@ function updDrink(dt){
   if(sunny&&!drinking)exposure+=dt*0.5;
   sunburn=clamp(exposure/170,0,1);
   if(sunburn>0.55&&!burnCalled){burnCalled=true;calloutMsg('FACTOR 50? NAE CHANCE','#ff9d6b');speak("AH'M ROASTIN'");}
-  /* oot in the rain, the beer gangs bad (only if there's beer in it) */
-  if(inRain()&&pint.has&&pint.ml>0){
-    pint.watered+=dt/4;
-    if(!tutDone)pint.watered=Math.min(pint.watered,0.9); /* safe first run */
-    if(pint.watered>0.6&&!wateredSpoke){wateredSpoke=true;speak("MA PINT'S GAUN WATERY!");}
-    if(pint.watered>=1)ruinPint("DROONED! PURE RAINWATTER!","AW NAW");
-  }else{
-    pint.watered=Math.max(0,pint.watered-dt/3);
-    if(pint.watered<0.3)wateredSpoke=false;
-  }
+  /* oot in the rain, yer beer-life drains — the three icons ARE yer health */
+  if(inRain()&&pint.has&&pint.ml>0&&tutDone){
+    stock-=dt/4.5;spillFlash=0.35;
+    flashRed=Math.max(flashRed,0.08);
+    if(!wateredSpoke&&stock<2.2){wateredSpoke=true;speak("AH'M LOSIN' MA BEER!");}
+  }else wateredSpoke=false;
 }
 
 /* ---------- garden: the sun fighting through the clouds ---------- */
@@ -618,7 +615,7 @@ function updRain(dt){
     if(!(pint.has&&pint.ml>0))rainCnt=0;
     if(rainCnt>0&&!rain.active){
       rainCnt+=dt;
-      if(!rain.warned){rain.warned=true;sfx('thunder');flashWhite=0.2;calloutMsg("RAIN COMIN'!",'#6bc5ff');}
+      if(rainCnt>=0.4&&!rain.warned){rain.warned=true;sfx('thunder');flashWhite=0.2;calloutMsg("RAIN COMIN'!",'#6bc5ff');}
       if(rainCnt>=1){rain.active=true;}
     }
   }
@@ -907,7 +904,7 @@ function updBal(dt){
   if(pint.has&&pint.ml>0&&edgeUp>headroom+1.2){
     var sd4=surfSA>0?-1:1;
     var ov=Math.min(pint.ml,(edgeUp-headroom)*10*dt);
-    pint.ml-=ov;flightSpill+=ov;spillAcc+=ov*0.8;spillFlash=0.35;
+    pint.ml-=ov;flightSpill+=ov;spillAcc+=ov*0.8;spillFlash=0.35;stock-=ov/568;
     var dyB2=246+Math.sin(T*2.2)*6;
     while(spillAcc>2.2){spillAcc-=2.2;
       balDrops.push({x:hx+sd4*(11+rnd(0,7)),y:dyB2-66-34+rnd(-3,5),
@@ -954,7 +951,7 @@ function updBal(dt){
   if(aa2>0.45&&pint.has&&pint.ml>0){
     var sRate=lerp(8,90,Math.pow((aa2-0.45)/0.7,1.4));
     var out=Math.min(pint.ml,sRate*dt);
-    pint.ml-=out;flightSpill+=out;spillAcc+=out;spillFlash=0.35;
+    pint.ml-=out;flightSpill+=out;spillAcc+=out;spillFlash=0.35;stock-=out/568;
     var sd3=tiltA>0?1:-1,dyB=246+Math.sin(T*2.2)*6;
     while(spillAcc>2.2){
       spillAcc-=2.2;
@@ -968,7 +965,6 @@ function updBal(dt){
       speak('AW NAW...');
     }
   }
-  if(spillFlash>0)spillFlash-=dt;
   for(var bd=balDrops.length-1;bd>=0;bd--){
     var D=balDrops[bd];D.t-=dt;D.vy+=330*dt;D.x+=D.vx*dt;D.y+=D.vy*dt;
     if(D.t<=0||D.y>H-40)balDrops.splice(bd,1);
@@ -979,6 +975,7 @@ function updBal(dt){
     if(pint.ml>0)pint.ml=Math.max(0,pint.ml-45*dt);
     if(Math.random()<dt*6)sfx('spill');
     if(brinkT>=0.4){
+      stock-=pint.ml/568; /* the hail rest o' the pint, doon the drain */
       balFail=true;balFailT=0;pint.ml=0;
       sfx('splash');shake=6;
       calloutMsg('SPILT IT!!','#ff5252');
@@ -1002,9 +999,9 @@ function updBal(dt){
 }
 function finishStrut(){
   scene='GARDEN';
-  /* normal weather on returnin' — an' the rain clock starts its 1s grace,
-     since ye're staunin' ootside the circle wi' a fu' pint */
-  wasInSun=false;rainCnt=0.0001;rain.warned=false;
+  /* normal weather on returnin' — ony auld rain's blawn ower, an' the rain
+     clock starts fresh: 1s grace, THEN thunder, since ye're ootside the circle */
+  rain.active=false;rain.warned=false;wasInSun=false;rainCnt=0.0001;
   /* hame wi' a fu' pint, aye — nae hauf-measures in yer ain gairden */
   if(pint.has&&pint.ml<560)popup(dude.x,dude.y-56,"TAPPED AFF FU'",'#7ec850');
   pint.has=true;pint.ml=568;pint.watered=0;fetching=false;
@@ -1046,13 +1043,15 @@ function updStrut(dt){
 function update(dt){
   T+=dt;menuT+=dt;
   if(nawT>0)nawT-=dt;
+  if(spillFlash>0)spillFlash-=dt;
+  if(state==='PLAY'&&stock<=0){stock=0;sfx('lose');calloutMsg("THAT'S THE LOT GONE",'#ff6b6b');gameOver();}
   updSong(dt);
   /* bliss follows the chorus: sight an' sound move thegither */
   if(songEndPending&&state==='PLAY'&&(scene==='GARDEN'||scene==='STREET'||scene==='PUB')){
     songEndPending=false;state='SONGEND';
     lbAdd(Math.floor(score));sfx('cheer');
   }
-  var bt=(sunOn&&state==='PLAY'&&(scene==='GARDEN'||scene==='STRUT'))?1:0;
+  var bt=(sunOn&&state==='PLAY'&&(scene==='GARDEN'||scene==='STRUT')&&pint.has&&pint.ml>0)?1:0;
   blissV+=(bt-blissV)*Math.min(1,dt*3);
   if(blissV>0.4&&(scene==='GARDEN'||scene==='STRUT')&&Math.random()<dt*20*blissV){
     var _a=Math.random()*TAU,_r=Math.sqrt(Math.random())*patch.r;
@@ -1119,6 +1118,10 @@ function drawGardenSky(){
   /* sun face keekin' through the gap */
   if(patch.alpha>0.1){
     ctx.save();ctx.translate(gx,28);ctx.globalAlpha=patch.alpha;
+    if(blissV>0.5&&Math.sin(T*0.35)>0.45){ /* whiles, the sun has a wee dance */
+      ctx.translate(Math.sin(T*6)*2.2*blissV,-Math.abs(Math.sin(T*12))*2.2*blissV);
+      ctx.rotate(Math.sin(T*6)*0.14*blissV);
+    }
     ctx.fillStyle='#ffd23f';
     ctx.save();ctx.rotate(T*0.25);
     for(var i=0;i<8;i++){ctx.rotate(TAU/8);ctx.fillRect(12,-2,6+blissV*5,4);}
@@ -1207,18 +1210,18 @@ function drawGardenSet(){
     var gx=gapX(),bp=beatPulse();
     ctx.save();
     ctx.globalAlpha=patch.alpha;
-    ctx.fillStyle='rgba(255,235,140,'+(0.13+blissV*0.08+bp*0.05)+')';
+    ctx.fillStyle='rgba(255,235,140,'+(0.13+blissV*0.04+bp*0.025)+')';
     ctx.beginPath();
     ctx.moveTo(gx-13,40);ctx.lineTo(gx+13,40);
     ctx.lineTo(patch.x+patch.r*0.85,patch.y);ctx.lineTo(patch.x-patch.r*0.85,patch.y);
     ctx.closePath();ctx.fill();
-    ctx.fillStyle='rgba(255,235,140,'+(0.34+blissV*0.13+bp*0.07)+')';
+    ctx.fillStyle='rgba(255,235,140,'+(0.34+blissV*0.065+bp*0.035)+')';
     ctx.beginPath();ctx.ellipse(patch.x,patch.y,patch.r,patch.r*0.6,0,0,TAU);ctx.fill();
-    ctx.strokeStyle='rgba(255,245,190,'+(0.5+Math.sin(T*4)*0.15+bp*0.18)+')';
-    ctx.lineWidth=1.5+blissV*0.95+bp*0.7;
+    ctx.strokeStyle='rgba(255,245,190,'+(0.5+Math.sin(T*4)*0.15+bp*0.09)+')';
+    ctx.lineWidth=1.5+blissV*0.5+bp*0.35;
     ctx.beginPath();ctx.ellipse(patch.x,patch.y,patch.r,patch.r*0.6,0,0,TAU);ctx.stroke();
     if(blissV>0.2){ /* gold halo ring, breathin' on the beat */
-      ctx.strokeStyle='rgba(255,210,63,'+(0.28*blissV+bp*0.15)+')';
+      ctx.strokeStyle='rgba(255,210,63,'+(0.14*blissV+bp*0.08)+')';
       ctx.lineWidth=1;
       ctx.beginPath();ctx.ellipse(patch.x,patch.y,patch.r+3+bp*3,(patch.r+3+bp*3)*0.6,0,0,TAU);ctx.stroke();
     }
@@ -2012,20 +2015,18 @@ function drawStrutUI(){
 
 /* ---------- HUD, menus ---------- */
 function drawPintLives(big){
-  /* the richtmost stocked pint IS the ane in yer haun — it drains as ye spill.
-     big=true in the flight: twice the size, sae the drain reads at a glance */
+  /* the three icons are ONE beer-health pool — each shows its third o' the fill.
+     Rain an' spillage drain it; the drainin' third flashes. */
   var w=big?12:7,h=big?15:10,gap=big?16:13,y0=big?2:8;
   for(var i=0;i<3;i++){
     var lx=big?(W-10-(3-i)*gap):(W-62+i*13); /* wee anes sit clear o' the mute icon */
-    ctx.globalAlpha=i<stock?1:0.22;
-    var fr=i<stock?1:0;
-    var mine=i===stock-1&&pint.has&&(scene==='BAL'||scene==='CUT');
-    if(mine)fr=clamp(pint.ml/568,0,1);
+    var fr=clamp(stock-i,0,1);
+    ctx.globalAlpha=fr>0?1:0.22;
     px(lx,y0,w,h,'#241c12');
     if(fr>0){
       var fh=Math.max(1,Math.round(h*fr));
-      var col=(mine&&spillFlash>0&&Math.floor(T*10)%2===0)?'#ff8830':'#e8a020';
-      px(lx,y0+h-fh,w,fh,col);
+      var draining=fr<1&&spillFlash>0&&Math.floor(T*10)%2===0;
+      px(lx,y0+h-fh,w,fh,draining?'#ff8830':'#e8a020');
     }
     if(fr>0.9)px(lx,y0,w,2,'#fff8e0');
     ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.strokeRect(lx-0.5,y0-0.5,w+1,h+1);
@@ -2201,10 +2202,10 @@ function renderGarden(){
     ctx.save();
     ctx.globalCompositeOperation='lighter';
     var gl=ctx.createRadialGradient(patch.x,patch.y,10,patch.x,patch.y,190);
-    gl.addColorStop(0,'rgba(255,214,90,'+(0.18*blissV+bp2*0.07)+')');
+    gl.addColorStop(0,'rgba(255,214,90,'+(0.09*blissV+bp2*0.035)+')');
     gl.addColorStop(1,'rgba(255,214,90,0)');
     ctx.fillStyle=gl;ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='rgba(255,190,60,'+(0.05*blissV)+')';
+    ctx.fillStyle='rgba(255,190,60,'+(0.025*blissV)+')';
     ctx.fillRect(0,0,W,H);
     ctx.restore();
   }
