@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PopNoodler — Adam Bari</title>
+<meta name="description" content="Daft wee games, made in Scotland. Play Beer In The Sun, buy me a pint, and meet my mum's Hebridean oil paintings.">
+<meta property="og:title" content="PopNoodler — Adam Bari">
+<meta property="og:description" content="Daft wee games, made in Scotland. Play Beer In The Sun free in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://popnoodler.github.io/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍺</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#7ec8f2; --sky-bottom:#fde9b8;
+    --paper:#fdf6e9; --card:#ffffff;
+    --ink:#1e2a3a; --ink-soft:#54617a;
+    --amber:#f0a418; --amber-deep:#c97f06;
+    --grass:#3f9b4f; --sea:#2b6fa8;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6;
+  }
+  h1,h2,h3,.btn{font-family:"Fredoka","Segoe UI",sans-serif}
+
+  /* ---- hero ---- */
+  .hero{
+    background:linear-gradient(to bottom,var(--sky-top) 0%,var(--sky-bottom) 100%);
+    text-align:center; padding:4.5rem 1.25rem 5.5rem; position:relative; overflow:hidden;
+  }
+  .sun{
+    width:110px;height:110px;border-radius:50%;
+    background:radial-gradient(circle at 38% 35%,#fff6c8,#ffd23f 55%,#f5a623);
+    box-shadow:0 0 60px 22px rgba(255,210,63,.55);
+    margin:0 auto 1.5rem; animation:bob 5s ease-in-out infinite;
+  }
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .hero h1{font-size:clamp(2.2rem,6vw,3.4rem);font-weight:700;letter-spacing:-.02em}
+  .hero p.tag{font-size:clamp(1.05rem,2.6vw,1.3rem);color:#2c3e55;max-width:34rem;margin:.6rem auto 0}
+  .hero .cloud{
+    position:absolute;background:#ffffffd9;border-radius:999px;filter:blur(2px);
+  }
+  .cloud.c1{width:180px;height:48px;top:14%;left:-40px;animation:drift 38s linear infinite}
+  .cloud.c2{width:130px;height:38px;top:30%;right:-30px;animation:drift 52s linear infinite reverse}
+  @keyframes drift{from{transform:translateX(-10vw)}to{transform:translateX(110vw)}}
+
+  /* ---- layout ---- */
+  main{max-width:44rem;margin:-3rem auto 0;padding:0 1.25rem 4rem;position:relative}
+  .card{
+    background:var(--card); border-radius:var(--radius);
+    box-shadow:0 6px 24px rgba(30,42,58,.10);
+    padding:2rem 1.75rem; margin-bottom:1.5rem;
+  }
+  .card h2{font-size:1.5rem;font-weight:600;margin-bottom:.65rem}
+  .card p{color:var(--ink-soft);margin-bottom:.85rem}
+  .card p:last-of-type{margin-bottom:0}
+  .kicker{
+    display:inline-block;font-size:.78rem;font-weight:700;letter-spacing:.08em;
+    text-transform:uppercase;border-radius:999px;padding:.2rem .7rem;margin-bottom:.9rem;
+  }
+
+  .btn{
+    display:inline-block;font-weight:600;font-size:1.05rem;text-decoration:none;
+    border-radius:999px;padding:.7rem 1.6rem;margin-top:1rem;
+    transition:transform .12s ease,box-shadow .12s ease;
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn-play{background:var(--grass);color:#fff;box-shadow:0 4px 14px rgba(63,155,79,.4)}
+  .btn-pint{background:var(--amber);color:#fff;box-shadow:0 4px 14px rgba(240,164,24,.4)}
+  .btn-ghost{border:2px solid var(--sea);color:var(--sea);padding:.6rem 1.5rem}
+
+  .game .kicker{background:#e3f4e6;color:var(--grass)}
+  .pint .kicker{background:#fdeecb;color:var(--amber-deep)}
+  .art .kicker{background:#e2eefb;color:var(--sea)}
+
+  .emoji-h{font-size:1.9rem;line-height:1;margin-bottom:.6rem}
+
+  footer{
+    text-align:center;color:var(--ink-soft);font-size:.9rem;padding:0 1.25rem 3rem;
+  }
+  footer a{color:var(--sea);text-decoration:none;font-weight:600}
+  footer a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="sun" aria-hidden="true"></div>
+  <h1>PopNoodler</h1>
+  <p class="tag">Adam Bari. I make daft wee games in Scotland — and when the sun's out, I'm probably playtesting.</p>
+</header>
+
+<main>
+
+  <section class="card game">
+    <span class="kicker">The Game</span>
+    <div class="emoji-h">🍺☀️</div>
+    <h2>Beer In The Sun</h2>
+    <p>A free one-button arcade game about the great Scottish ritual: drag your deckchair into the one gap in the clouds, chug your pint before the rain gets it, pour your own at the Buzy Bee, and balance a full pint on your palm all the way hame over the rooftops.</p>
+    <p>Works on your phone. Traffic never hurts you. Scotland does.</p>
+    <a class="btn btn-play" href="https://popnoodler.github.io/beer-in-the-sun/">▶ Play it free</a>
+  </section>
+
+  <section class="card pint">
+    <span class="kicker">Support</span>
+    <div class="emoji-h">🍻</div>
+    <h2>Buy me a pint</h2>
+    <p>The games are free and always will be. If one of them made you laugh, you can stand me a round on Ko-fi — every pint goes toward keeping the daft ideas coming.</p>
+    <a class="btn btn-pint" href="https://ko-fi.com/popnoodler">🍺 Buy me a pint on Ko-fi</a>
+  </section>
+
+  <section class="card art">
+    <span class="kicker">The Family Business</span>
+    <div class="emoji-h">🎨</div>
+    <h2>My mum paints the Hebrides</h2>
+    <p>Pauline Bari paints Barra and Vatersay in oils — the beaches, the light, the weather that features so heavily in my games. Original paintings and prints are coming online soon.</p>
+    <p><em>Shop opening soon — watch this space.</em></p>
+  </section>
+
+  <section class="card">
+    <span class="kicker" style="background:#eee;color:var(--ink-soft)">More</span>
+    <h2>Other daft things</h2>
+    <p>Games, experiments and half-ideas live on my GitHub.</p>
+    <a class="btn btn-ghost" href="https://github.com/PopNoodler">GitHub → @PopNoodler</a>
+  </section>
+
+</main>
+
+<footer>
+  <p>Made with 🍺 and ☀️ in Scotland · <a href="https://github.com/PopNoodler">GitHub</a></p>
+</footer>
+
+</body>
+</html>
