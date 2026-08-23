@@ -2016,7 +2016,7 @@ function drawPintLives(big){
      big=true in the flight: twice the size, sae the drain reads at a glance */
   var w=big?12:7,h=big?15:10,gap=big?16:13,y0=big?2:8;
   for(var i=0;i<3;i++){
-    var lx=W-10-(3-i)*gap;
+    var lx=big?(W-10-(3-i)*gap):(W-62+i*13); /* wee anes sit clear o' the mute icon */
     ctx.globalAlpha=i<stock?1:0.22;
     var fr=i<stock?1:0;
     var mine=i===stock-1&&pint.has&&(scene==='BAL'||scene==='CUT');
