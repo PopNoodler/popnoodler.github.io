@@ -1,0 +1,74 @@
+/* Adam Bari — portfolio, in the family style of adambari.co.uk */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #fafafa; --card: #ffffff; --ink: #1c1e21; --muted: #5f6570;
+  --line: #e7e8ea; --dark: #16181d; --amber: #f0a418; --amber-deep: #c97f06;
+  --accent: #2f6fed; --radius: 14px;
+}
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg); color: var(--ink); min-height: 100dvh; line-height: 1.55;
+}
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  color: #fff; padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top));
+  background: var(--dark);
+}
+.brand { display: flex; flex-direction: column; align-items: flex-start; color: #fff; text-decoration: none; }
+.brand-name { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.01em; line-height: 1.1; color: #fff; }
+.brand-sub { font-size: 0.75rem; color: #9aa1ab; line-height: 1.2; white-space: nowrap; }
+.home-pill {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 32px;
+  font-size: 0.78rem; font-weight: 700; white-space: nowrap;
+  color: var(--amber); text-decoration: none;
+  background: rgba(240,164,24,0.12); border: 1px solid rgba(240,164,24,0.7);
+  padding: 4px 12px; border-radius: 999px;
+}
+.home-pill:hover { background: rgba(240,164,24,0.22); }
+.view { max-width: 720px; margin: 0 auto; padding: 20px 16px 40px; }
+.page-title { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.01em; margin: 4px 0 4px; }
+.meta { color: var(--muted); font-size: 0.88rem; margin-bottom: 14px; }
+.meta b { color: var(--ink); }
+.intro { margin-bottom: 8px; }
+.muted { color: var(--muted); font-size: 0.9rem; }
+.section-heading {
+  font-size: 0.78rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.09em; margin: 24px 0 8px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-heading::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+ul.work { margin: 0 0 8px 1.2rem; color: var(--muted); font-size: 0.93rem; }
+ul.work li { margin-bottom: 6px; }
+.gallery { display: grid; gap: 10px; margin: 8px 0 4px; }
+.gallery img, .hero-img {
+  width: 100%; height: auto; display: block;
+  border-radius: var(--radius); border: 1px solid var(--line);
+}
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.8rem; font-weight: 700; text-decoration: none;
+  padding: 6px 14px; border-radius: 999px; margin: 8px 6px 2px 0;
+}
+.pill-solid { background: var(--dark); color: #fff; }
+.pill-solid:hover { background: #2a2d34; }
+.pill-outline { color: var(--ink); border: 1px solid #cfd2d6; background: transparent; }
+.pill-outline:hover { background: #f1f2f4; }
+.pcard {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  overflow: hidden; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(20,22,26,0.05);
+  display: block; text-decoration: none; color: inherit;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.pcard:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(20,22,26,0.1); }
+.pcard img { width: 100%; height: 210px; object-fit: cover; display: block; border-bottom: 1px solid var(--line); }
+.pcard .pbody { padding: 12px 14px 14px; }
+.pcard .ptitle { font-weight: 750; font-size: 1.05rem; margin-bottom: 2px; }
+.pcard .pdesc { color: var(--muted); font-size: 0.9rem; }
+footer { text-align: center; padding: 8px 16px 32px; }
+footer p { color: var(--muted); font-size: 0.8rem; }
+footer a { color: var(--amber-deep); font-weight: 600; text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+a.backlink { color: var(--accent); font-weight: 600; text-decoration: none; font-size: 0.9rem; }
+a.backlink:hover { text-decoration: underline; }
