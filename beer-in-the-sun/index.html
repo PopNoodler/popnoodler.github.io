@@ -364,6 +364,7 @@ var BAL_LEN=8;
 var balT=0,hx=108,tiltA=0,tiltV=0,balPX=null,brinkT=0;
 var balDrops=[],flightSpill=0,spillAcc=0; /* beer oot the mug, drop by drop */
 var surfSA=0,surfSV=0,prevHx2=108,prevVx2=0; /* the liquid: a damped spring wi' a temper */
+var spillFlash=0; /* >0 while beer's actively leavin' the gless */
 var pendCorr=0,dudeOff=0,turbT=0.6;
 var swayPh=0,hicT=2,lagBuf=0; /* the drink catches up wi' ye */
 var gust={t:2.5,warn:0,dir:1,power:0};
@@ -914,7 +915,7 @@ function updBal(dt){
   if(pint.has&&pint.ml>0&&edgeUp>headroom+1.2){
     var sd4=surfSA>0?-1:1;
     var ov=Math.min(pint.ml,(edgeUp-headroom)*10*dt);
-    pint.ml-=ov;flightSpill+=ov;spillAcc+=ov*0.8;
+    pint.ml-=ov;flightSpill+=ov;spillAcc+=ov*0.8;spillFlash=0.35;
     var dyB2=246+Math.sin(T*2.2)*6;
     while(spillAcc>2.2){spillAcc-=2.2;
       balDrops.push({x:hx+sd4*(11+rnd(0,7)),y:dyB2-66-34+rnd(-3,5),
@@ -961,7 +962,7 @@ function updBal(dt){
   if(aa2>0.45&&pint.has&&pint.ml>0){
     var sRate=lerp(8,90,Math.pow((aa2-0.45)/0.7,1.4));
     var out=Math.min(pint.ml,sRate*dt);
-    pint.ml-=out;flightSpill+=out;spillAcc+=out;
+    pint.ml-=out;flightSpill+=out;spillAcc+=out;spillFlash=0.35;
     var sd3=tiltA>0?1:-1,dyB=246+Math.sin(T*2.2)*6;
     while(spillAcc>2.2){
       spillAcc-=2.2;
@@ -975,6 +976,7 @@ function updBal(dt){
       speak('AW NAW...');
     }
   }
+  if(spillFlash>0)spillFlash-=dt;
   for(var bd=balDrops.length-1;bd>=0;bd--){
     var D=balDrops[bd];D.t-=dt;D.vy+=330*dt;D.x+=D.vx*dt;D.y+=D.vy*dt;
     if(D.t<=0||D.y>H-40)balDrops.splice(bd,1);
@@ -1986,7 +1988,7 @@ function drawBalScene(){
   /* letterbox + the one instruction that matters */
   px(0,0,W,20,'#0a0f1c');px(0,H-24,W,24,'#0a0f1c');
   text('THE WAY HAME',W/2,10,7,'rgba(255,255,255,0.55)');
-  drawPintLives(); /* watch yer pint-life drain as ye spill */
+  drawPintLives(true); /* watch yer pint-life drain as ye spill */
   var pintsDoon=Math.floor(drankMl/568);
   if(pintsDoon>=1)text(pintsDoon+' PINT'+(pintsDoon>1?'S':'')+' DOON',W-8,30,6,'rgba(255,210,63,0.8)','right');
   if(!balFail)text('SWIPE — KEEP YER HAUN UNDER THE PINT',W/2,H-12,7,'#ffd23f');
@@ -2014,17 +2016,24 @@ function drawStrutUI(){
 }
 
 /* ---------- HUD, menus ---------- */
-function drawPintLives(){
-  /* the richtmost stocked pint IS the ane in yer haun — it drains as ye spill */
+function drawPintLives(big){
+  /* the richtmost stocked pint IS the ane in yer haun — it drains as ye spill.
+     big=true in the flight: twice the size, sae the drain reads at a glance */
+  var w=big?12:7,h=big?15:10,gap=big?16:13,y0=big?2:8;
   for(var i=0;i<3;i++){
-    var lx=W-62+i*13;
+    var lx=W-10-(3-i)*gap;
     ctx.globalAlpha=i<stock?1:0.22;
     var fr=i<stock?1:0;
-    if(i===stock-1&&pint.has&&(scene==='BAL'||scene==='CUT'))fr=clamp(pint.ml/568,0,1);
-    px(lx,8,7,10,'#241c12');
-    if(fr>0){var fh=Math.max(1,Math.round(10*fr));px(lx,8+10-fh,7,fh,'#e8a020');}
-    if(fr>0.9)px(lx,8,7,2,'#fff8e0');
-    ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.strokeRect(lx-0.5,7.5,8,11);
+    var mine=i===stock-1&&pint.has&&(scene==='BAL'||scene==='CUT');
+    if(mine)fr=clamp(pint.ml/568,0,1);
+    px(lx,y0,w,h,'#241c12');
+    if(fr>0){
+      var fh=Math.max(1,Math.round(h*fr));
+      var col=(mine&&spillFlash>0&&Math.floor(T*10)%2===0)?'#ff8830':'#e8a020';
+      px(lx,y0+h-fh,w,fh,col);
+    }
+    if(fr>0.9)px(lx,y0,w,2,'#fff8e0');
+    ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.strokeRect(lx-0.5,y0-0.5,w+1,h+1);
   }
   ctx.globalAlpha=1;
 }
@@ -2353,6 +2362,7 @@ function frame(ts){
   if(dt>0.05)dt=0.05;if(dt<0)dt=0;
   dtG=dt;
   if(state!=='PAUSE'&&state!=='SONGEND')update(dt);
+  else updSong(dt); /* paused = back tae the main track, gently */
   render();
   requestAnimationFrame(frame);
 }
