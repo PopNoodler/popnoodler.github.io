@@ -5,93 +5,79 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>PopNoodler — Adam Bari</title>
 <meta name="description" content="Adam Bari — game developer from the Isle of Barra, now in Edinburgh. Passion-project games, played right in your browser.">
-<meta name="theme-color" content="#0e3c46">
+<meta name="theme-color" content="#16181d">
 <meta property="og:title" content="PopNoodler — Adam Bari">
 <meta property="og:description" content="Adam Bari — game developer from the Isle of Barra, now in Edinburgh. Passion-project games, played right in your browser.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://adambari.co.uk/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍺</text></svg>">
 <style>
-  /* Palette shared with Gather — drawn from Barra itself */
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
-    --sea-deep: #0e3c46;
-    --sea: #14525c;
-    --turquoise: #2ba9a2;
-    --turquoise-deep: #17756f;
-    --machair: #5c8d57;
-    --machair-deep: #46703f;
-    --sand: #f7f2e7;
-    --shell: #fffdf7;
-    --gold: #e3b23c;
-    --ink: #2f2a22;
-    --muted: #6b6353;
-    --line: #e5dccb;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --ink: #1c1e21;
+    --muted: #5f6570;
+    --line: #e7e8ea;
+    --dark: #16181d;
+    --amber: #f0a418;
+    --amber-deep: #c97f06;
+    --accent: #2f6fed;
     --radius: 14px;
-    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   }
   html { -webkit-text-size-adjust: 100%; }
   body {
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: var(--sand);
+    background: var(--bg);
     color: var(--ink);
     min-height: 100dvh;
     line-height: 1.55;
   }
 
-  /* ── Top bar: tweed over deep sea, wave-cut lower edge ── */
+  /* ── Top bar ── */
   .topbar {
     position: sticky; top: 0; z-index: 20;
     display: flex; align-items: center; justify-content: space-between;
     gap: 8px;
     color: #fff;
-    padding: 12px 16px 18px;
+    padding: 12px 16px;
     padding-top: calc(12px + env(safe-area-inset-top));
-    background:
-      repeating-linear-gradient(45deg,  rgba(255,255,255,0.04) 0 2px, transparent 2px 6px),
-      repeating-linear-gradient(-45deg, rgba(0,0,0,0.06)       0 2px, transparent 2px 6px),
-      linear-gradient(170deg, var(--sea-deep), var(--sea));
-  }
-  .topbar::after {
-    content: "";
-    position: absolute; left: 0; right: 0; bottom: -1px;
-    height: 8px;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M0 8V4Q7.5 0 15 4T30 4T45 4T60 4T75 4T90 4T105 4T120 4V8Z' fill='%23f7f2e7'/%3E%3C/svg%3E") repeat-x bottom / 120px 8px;
+    background: var(--dark);
   }
   .brand { display: flex; flex-direction: column; align-items: flex-start; color: #fff; text-decoration: none; }
   .brand-name {
-    font-family: var(--serif);
-    font-size: 1.5rem; font-weight: 800; letter-spacing: 0.03em;
-    line-height: 1.05; color: #fffdf7;
+    font-size: 1.25rem; font-weight: 800; letter-spacing: -0.01em;
+    line-height: 1.1; color: #fff;
   }
   .brand-sub {
-    font-family: var(--serif); font-style: italic;
-    font-size: 0.78rem; color: #9fd6cf;
-    line-height: 1; margin-top: 2px; white-space: nowrap;
+    font-size: 0.75rem; color: #9aa1ab;
+    line-height: 1.2; white-space: nowrap;
   }
   .support-pill {
     display: inline-flex; align-items: center; gap: 5px;
     min-height: 32px;
     font-size: 0.78rem; font-weight: 700; white-space: nowrap;
-    color: var(--gold); text-decoration: none;
-    background: rgba(227, 178, 60, 0.12); border: 1px solid rgba(227, 178, 60, 0.75);
+    color: var(--amber); text-decoration: none;
+    background: rgba(240, 164, 24, 0.12); border: 1px solid rgba(240, 164, 24, 0.7);
     padding: 4px 12px; border-radius: 999px;
   }
+  .support-pill:hover { background: rgba(240, 164, 24, 0.22); }
 
   /* ── Layout ── */
-  .view { max-width: 640px; margin: 0 auto; padding: 16px 16px 40px; }
+  .view { max-width: 640px; margin: 0 auto; padding: 20px 16px 40px; }
   .page-title {
-    font-family: var(--serif);
-    font-size: 1.5rem; color: var(--sea-deep);
-    margin: 8px 0 6px;
+    font-size: 1.5rem; font-weight: 800; letter-spacing: -0.01em;
+    margin: 4px 0 6px;
   }
   .intro { margin-bottom: 6px; }
   .muted { color: var(--muted); font-size: 0.88rem; }
+  .muted a { color: var(--amber-deep); font-weight: 600; text-decoration: none; }
+  .muted a:hover { text-decoration: underline; }
 
   .section-heading {
-    font-size: 0.82rem; font-weight: 700; color: var(--turquoise-deep);
+    font-size: 0.78rem; font-weight: 700; color: var(--muted);
     text-transform: uppercase; letter-spacing: 0.09em;
-    margin: 24px 0 8px;
+    margin: 26px 0 8px;
     display: flex; align-items: center; gap: 10px;
   }
   .section-heading::after {
@@ -101,30 +87,30 @@
 
   /* ── Cards ── */
   .card {
-    background: var(--shell);
+    background: var(--card);
     border: 1px solid var(--line);
     border-radius: var(--radius);
     padding: 14px;
     margin-bottom: 10px;
-    box-shadow: 0 1px 3px rgba(14, 60, 70, 0.07);
+    box-shadow: 0 1px 3px rgba(20, 22, 26, 0.05);
     display: flex; gap: 12px; align-items: flex-start;
   }
   .card-tile {
     flex: 0 0 auto;
     width: 46px; height: 46px;
-    background: var(--sea-deep);
+    background: #f1f2f4;
+    border: 1px solid var(--line);
     border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
     font-size: 1.35rem;
   }
   .card-body { min-width: 0; }
   .card-title {
-    font-family: var(--serif);
-    font-weight: 700; font-size: 1.08rem; color: var(--sea-deep);
+    font-weight: 750; font-size: 1.05rem; color: var(--ink);
     margin-bottom: 2px;
   }
   .card-body p { color: var(--muted); font-size: 0.9rem; margin-bottom: 8px; }
-  .card-body p a { color: var(--turquoise-deep); font-weight: 600; text-decoration: none; }
+  .card-body p a { color: var(--accent); font-weight: 600; text-decoration: none; }
   .card-body p a:hover { text-decoration: underline; }
 
   .pill {
@@ -133,14 +119,14 @@
     padding: 6px 14px; border-radius: 999px;
     margin-right: 6px; margin-bottom: 2px;
   }
-  .pill-solid { background: var(--turquoise-deep); color: #fffdf7; }
-  .pill-solid:hover { background: var(--turquoise); }
-  .pill-outline { color: var(--turquoise-deep); border: 1px solid var(--turquoise-deep); background: transparent; }
-  .pill-outline:hover { background: rgba(43, 169, 162, 0.08); }
+  .pill-solid { background: var(--dark); color: #fff; }
+  .pill-solid:hover { background: #2a2d34; }
+  .pill-outline { color: var(--ink); border: 1px solid #cfd2d6; background: transparent; }
+  .pill-outline:hover { background: #f1f2f4; }
 
   footer { text-align: center; padding: 8px 16px 32px; }
   footer p { color: var(--muted); font-size: 0.8rem; }
-  footer a { color: var(--turquoise-deep); font-weight: 600; text-decoration: none; }
+  footer a { color: var(--amber-deep); font-weight: 600; text-decoration: none; }
   footer a:hover { text-decoration: underline; }
 </style>
 </head>
@@ -161,7 +147,7 @@
   in the Western Isles of Scotland, and now live in Edinburgh. I build passion projects in my
   spare time.</p>
   <p class="muted">If one of these made your day easier or gave you a laugh, you can
-  <a href="https://ko-fi.com/AdamBari" style="color:var(--turquoise-deep);font-weight:600;text-decoration:none">stand me a pint</a>.</p>
+  <a href="https://ko-fi.com/AdamBari">stand me a pint</a>.</p>
 
   <h2 class="section-heading">Games</h2>
 
