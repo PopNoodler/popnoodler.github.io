@@ -2,130 +2,217 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>PopNoodler — Adam Bari</title>
-<meta name="description" content="Adam Bari — game developer from the Isle of Barra, now in Edinburgh. Free passion-project games, played right in your browser.">
+<meta name="description" content="Adam Bari — game developer from the Isle of Barra, now in Edinburgh. Passion-project games, played right in your browser.">
+<meta name="theme-color" content="#0e3c46">
 <meta property="og:title" content="PopNoodler — Adam Bari">
-<meta property="og:description" content="Adam Bari — game developer from the Isle of Barra, now in Edinburgh. Free passion-project games, played right in your browser.">
+<meta property="og:description" content="Adam Bari — game developer from the Isle of Barra, now in Edinburgh. Passion-project games, played right in your browser.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://adambari.co.uk/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍺</text></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --sky-top:#7ec8f2; --sky-bottom:#fde9b8;
-    --paper:#fdf6e9; --card:#ffffff;
-    --ink:#1e2a3a; --ink-soft:#54617a;
-    --amber:#f0a418; --amber-deep:#c97f06;
-    --grass:#3f9b4f; --sea:#2b6fa8;
-    --radius:18px;
+  /* Palette shared with Gather — drawn from Barra itself */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --sea-deep: #0e3c46;
+    --sea: #14525c;
+    --turquoise: #2ba9a2;
+    --turquoise-deep: #17756f;
+    --machair: #5c8d57;
+    --machair-deep: #46703f;
+    --sand: #f7f2e7;
+    --shell: #fffdf7;
+    --gold: #e3b23c;
+    --ink: #2f2a22;
+    --muted: #6b6353;
+    --line: #e5dccb;
+    --radius: 14px;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{
-    background:var(--paper); color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    line-height:1.6;
-  }
-  h1,h2,h3,.btn{font-family:"Fredoka","Segoe UI",sans-serif}
-
-  /* ---- header ---- */
-  .hero{
-    background:linear-gradient(to bottom,var(--sky-top) 0%,var(--sky-bottom) 100%);
-    text-align:center; padding:2.5rem 1.25rem 3.25rem;
-  }
-  .hero h1{font-size:clamp(2rem,5vw,2.8rem);font-weight:700;letter-spacing:-.02em}
-  .hero p.tag{font-size:clamp(1rem,2.4vw,1.15rem);color:#2c3e55;max-width:36rem;margin:.6rem auto 0}
-  .hero .btn-pint{margin-top:1.25rem}
-  .hero p.free{font-size:.9rem;color:#2c3e55;margin-top:.8rem;opacity:.85}
-
-  /* ---- layout ---- */
-  main{max-width:44rem;margin:-1.75rem auto 0;padding:0 1.25rem 4rem;position:relative}
-  .card{
-    background:var(--card); border-radius:var(--radius);
-    box-shadow:0 6px 24px rgba(30,42,58,.10);
-    padding:2rem 1.75rem; margin-bottom:1.5rem;
-  }
-  .card h2{font-size:1.5rem;font-weight:600;margin-bottom:.65rem}
-  .card p{color:var(--ink-soft);margin-bottom:.85rem}
-  .card p a{color:var(--sea);font-weight:600;text-decoration:none}
-  .card p a:hover{text-decoration:underline}
-  .card p:last-of-type{margin-bottom:0}
-  .kicker{
-    display:inline-block;font-size:.78rem;font-weight:700;letter-spacing:.08em;
-    text-transform:uppercase;border-radius:999px;padding:.2rem .7rem;margin-bottom:.9rem;
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--sand);
+    color: var(--ink);
+    min-height: 100dvh;
+    line-height: 1.55;
   }
 
-  .btn{
-    display:inline-block;font-weight:600;font-size:1.05rem;text-decoration:none;
-    border-radius:999px;padding:.7rem 1.6rem;margin-top:1rem;
-    transition:transform .12s ease,box-shadow .12s ease;
+  /* ── Top bar: tweed over deep sea, wave-cut lower edge ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+    color: #fff;
+    padding: 12px 16px 18px;
+    padding-top: calc(12px + env(safe-area-inset-top));
+    background:
+      repeating-linear-gradient(45deg,  rgba(255,255,255,0.04) 0 2px, transparent 2px 6px),
+      repeating-linear-gradient(-45deg, rgba(0,0,0,0.06)       0 2px, transparent 2px 6px),
+      linear-gradient(170deg, var(--sea-deep), var(--sea));
   }
-  .btn:hover{transform:translateY(-2px)}
-  .btn-play{background:var(--grass);color:#fff;box-shadow:0 4px 14px rgba(63,155,79,.4)}
-  .btn-pint{background:var(--amber);color:#fff;box-shadow:0 4px 14px rgba(240,164,24,.4)}
-  .btn-ghost{border:2px solid var(--sea);color:var(--sea);padding:.6rem 1.5rem}
-
-  .game .kicker{background:#e3f4e6;color:var(--grass)}
-  .splash .kicker{background:#e2eefb;color:var(--sea)}
-  .btn-splash{background:var(--sea);color:#fff;box-shadow:0 4px 14px rgba(43,111,168,.4)}
-  .pint .kicker{background:#fdeecb;color:var(--amber-deep)}
-  .art .kicker{background:#e2eefb;color:var(--sea)}
-
-  .emoji-h{font-size:1.9rem;line-height:1;margin-bottom:.6rem}
-
-  footer{
-    text-align:center;color:var(--ink-soft);font-size:.9rem;padding:0 1.25rem 3rem;
+  .topbar::after {
+    content: "";
+    position: absolute; left: 0; right: 0; bottom: -1px;
+    height: 8px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 8' preserveAspectRatio='none'%3E%3Cpath d='M0 8V4Q7.5 0 15 4T30 4T45 4T60 4T75 4T90 4T105 4T120 4V8Z' fill='%23f7f2e7'/%3E%3C/svg%3E") repeat-x bottom / 120px 8px;
   }
-  footer a{color:var(--sea);text-decoration:none;font-weight:600}
-  footer a:hover{text-decoration:underline}
+  .brand { display: flex; flex-direction: column; align-items: flex-start; color: #fff; text-decoration: none; }
+  .brand-name {
+    font-family: var(--serif);
+    font-size: 1.5rem; font-weight: 800; letter-spacing: 0.03em;
+    line-height: 1.05; color: #fffdf7;
+  }
+  .brand-sub {
+    font-family: var(--serif); font-style: italic;
+    font-size: 0.78rem; color: #9fd6cf;
+    line-height: 1; margin-top: 2px; white-space: nowrap;
+  }
+  .support-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    min-height: 32px;
+    font-size: 0.78rem; font-weight: 700; white-space: nowrap;
+    color: var(--gold); text-decoration: none;
+    background: rgba(227, 178, 60, 0.12); border: 1px solid rgba(227, 178, 60, 0.75);
+    padding: 4px 12px; border-radius: 999px;
+  }
+
+  /* ── Layout ── */
+  .view { max-width: 640px; margin: 0 auto; padding: 16px 16px 40px; }
+  .page-title {
+    font-family: var(--serif);
+    font-size: 1.5rem; color: var(--sea-deep);
+    margin: 8px 0 6px;
+  }
+  .intro { margin-bottom: 6px; }
+  .muted { color: var(--muted); font-size: 0.88rem; }
+
+  .section-heading {
+    font-size: 0.82rem; font-weight: 700; color: var(--turquoise-deep);
+    text-transform: uppercase; letter-spacing: 0.09em;
+    margin: 24px 0 8px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-heading::after {
+    content: ""; flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--line), transparent);
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--shell);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(14, 60, 70, 0.07);
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .card-tile {
+    flex: 0 0 auto;
+    width: 46px; height: 46px;
+    background: var(--sea-deep);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.35rem;
+  }
+  .card-body { min-width: 0; }
+  .card-title {
+    font-family: var(--serif);
+    font-weight: 700; font-size: 1.08rem; color: var(--sea-deep);
+    margin-bottom: 2px;
+  }
+  .card-body p { color: var(--muted); font-size: 0.9rem; margin-bottom: 8px; }
+  .card-body p a { color: var(--turquoise-deep); font-weight: 600; text-decoration: none; }
+  .card-body p a:hover { text-decoration: underline; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.8rem; font-weight: 700; text-decoration: none;
+    padding: 6px 14px; border-radius: 999px;
+    margin-right: 6px; margin-bottom: 2px;
+  }
+  .pill-solid { background: var(--turquoise-deep); color: #fffdf7; }
+  .pill-solid:hover { background: var(--turquoise); }
+  .pill-outline { color: var(--turquoise-deep); border: 1px solid var(--turquoise-deep); background: transparent; }
+  .pill-outline:hover { background: rgba(43, 169, 162, 0.08); }
+
+  footer { text-align: center; padding: 8px 16px 32px; }
+  footer p { color: var(--muted); font-size: 0.8rem; }
+  footer a { color: var(--turquoise-deep); font-weight: 600; text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
 
-<header class="hero">
-  <h1>PopNoodler</h1>
-  <p class="tag">Hi, I'm Adam — a game developer by profession and hobby. I grew up on the Isle of Barra in the Western Isles of Scotland, and now live in Edinburgh. I build passion projects in my spare time.</p>
-  <a class="btn btn-pint" href="https://ko-fi.com/AdamBari">🍺 Buy me a pint</a>
-  <p class="free">If one of these projects made your day easier or gave you a laugh, you can stand me a pint.</p>
+<header class="topbar">
+  <a href="/" class="brand">
+    <span class="brand-name">Adam Bari</span>
+    <span class="brand-sub">PopNoodler · made in Scotland</span>
+  </a>
+  <a class="support-pill" href="https://ko-fi.com/AdamBari">🍺 Buy me a pint</a>
 </header>
 
-<main>
+<main class="view">
 
-  <section class="card game">
-    <span class="kicker">The Game</span>
-    <div class="emoji-h">🍺☀️</div>
-    <h2>Beer In The Sun</h2>
-    <p>My free one-button arcade game about the great Scottish ritual: drag your deckchair into the one gap in the clouds, chug your pint before the rain gets it, pour your own at the Buzy Bee, and balance a full pint on your palm all the way hame over the rooftops.</p>
-    <p>I made it as a fan tribute to Graeme "GMCG" McGuigan and his song <em>Beer In The Sun</em> — hear the real thing on <a href="https://open.spotify.com/track/4gxDGM8LNht9higommwH7h">Spotify</a> and <a href="https://www.youtube.com/watch?v=1_zYiWzLaXQ">YouTube</a>.</p>
-    <a class="btn btn-play" href="https://adambari.co.uk/beer-in-the-sun/">▶ Play it free</a>
-  </section>
+  <h1 class="page-title">Hi, I'm Adam</h1>
+  <p class="intro">I'm a game developer by profession and hobby. I grew up on the Isle of Barra
+  in the Western Isles of Scotland, and now live in Edinburgh. I build passion projects in my
+  spare time.</p>
+  <p class="muted">If one of these made your day easier or gave you a laugh, you can
+  <a href="https://ko-fi.com/AdamBari" style="color:var(--turquoise-deep);font-weight:600;text-decoration:none">stand me a pint</a>.</p>
 
-  <section class="card splash">
-    <span class="kicker">Fire Fighting the Sun</span>
-    <div class="emoji-h">🚒💦</div>
-    <h2>Water Hero</h2>
-    <p>My fast, juicy firefighter tycoon. Spray the fires, dodge the flames, ride the truck out, then upgrade your HQ until you're putting out the whole solar system.</p>
-    <p>On iPhone: open in Safari and Add to Home Screen to play fullscreen and offline.</p>
-    <a class="btn btn-splash" href="https://adambari.co.uk/WaterHero/">▶ Play it free</a>
-  </section>
+  <h2 class="section-heading">Games</h2>
 
-  <section class="card art">
-    <span class="kicker">The Family Business</span>
-    <div class="emoji-h">🎨</div>
-    <h2>My mum paints the Hebrides</h2>
-    <p>My mum, Pauline Bari, paints Barra and Vatersay in oils — the beaches, the light and the weather I grew up in. I'm building her a website so we can ship her art around the world as prints and canvases.</p>
-    <a class="btn btn-ghost" href="https://paulinebari.com">PaulineBari.com</a>
-  </section>
+  <div class="card">
+    <div class="card-tile">🍺</div>
+    <div class="card-body">
+      <div class="card-title">Beer In The Sun</div>
+      <p>A one-button arcade game about the great Scottish ritual: drag your deckchair
+      into the one gap in the clouds, chug your pint before the rain gets it, pour your own
+      at the Buzy Bee, and balance a full pint all the way hame over the rooftops.</p>
+      <p>I made it as a fan tribute to Graeme "GMCG" McGuigan and his song
+      <em>Beer In The Sun</em> — hear the real thing on
+      <a href="https://open.spotify.com/track/4gxDGM8LNht9higommwH7h">Spotify</a>.</p>
+      <a class="pill pill-solid" href="https://adambari.co.uk/beer-in-the-sun/">▶ Play</a>
+    </div>
+  </div>
 
-  <section class="card">
-    <span class="kicker" style="background:#eee;color:var(--ink-soft)">More</span>
-    <h2>Other daft things</h2>
-    <p>Games, experiments and half-ideas live on my GitHub.</p>
-    <a class="btn btn-ghost" href="https://github.com/PopNoodler">GitHub → @PopNoodler</a>
-  </section>
+  <div class="card">
+    <div class="card-tile">🚒</div>
+    <div class="card-body">
+      <div class="card-title">Water Hero</div>
+      <p>A fast, juicy firefighter tycoon. Spray the fires, dodge the flames, ride the truck
+      out, then upgrade your HQ until you're putting out the whole solar system.</p>
+      <p>On iPhone: open in Safari and Add to Home Screen to play fullscreen and offline.</p>
+      <a class="pill pill-solid" href="https://adambari.co.uk/WaterHero/">▶ Play</a>
+    </div>
+  </div>
+
+  <h2 class="section-heading">The Family Business</h2>
+
+  <div class="card">
+    <div class="card-tile">🎨</div>
+    <div class="card-body">
+      <div class="card-title">Pauline Bari — Hebridean Oils</div>
+      <p>My mum, Pauline Bari, paints Barra and Vatersay in oils — the beaches, the light and
+      the weather I grew up in. I'm building her a website so we can ship her art around the
+      world as prints and canvases.</p>
+      <a class="pill pill-outline" href="https://paulinebari.com">PaulineBari.com</a>
+    </div>
+  </div>
+
+  <h2 class="section-heading">More</h2>
+
+  <div class="card">
+    <div class="card-tile">🛠️</div>
+    <div class="card-body">
+      <div class="card-title">Other daft things</div>
+      <p>Games, experiments and half-ideas live on my GitHub.</p>
+      <a class="pill pill-outline" href="https://github.com/PopNoodler">@PopNoodler</a>
+    </div>
+  </div>
 
 </main>
 
