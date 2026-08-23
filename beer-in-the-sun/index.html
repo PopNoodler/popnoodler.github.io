@@ -563,7 +563,8 @@ function updDrink(dt){
   var still=clamp(1-dude.speed/50,0,1);
   var drinking=sunny&&still>0.05&&pint.has&&pint.ml>0;
   if(drinking){
-    var sip=Math.min(pint.ml,142*still*dt);
+    var chugRate=95*(1-0.45*drunkLvl()); /* the drunker ye are, the slower it goes doon */
+    var sip=Math.min(pint.ml,chugRate*still*dt);
     pint.ml-=sip;drankMl+=sip;
     score+=sip;
     if(hintStill&&drankMl>150)hintStill=false;
@@ -572,7 +573,7 @@ function updDrink(dt){
     if(glugT<=0){glugT=0.24;sfx('glug');
       parts.push({x:dude.x+dude.face*6+rnd(-2,2),y:dude.y-26,vx:rnd(-6,6),vy:-rnd(14,26),t:0.5,life:0.5,col:'#fff3c4',sz:1});
     }
-    if(Math.random()<dt*2.5)popup(dude.x+rnd(-10,10),dude.y-36,'+142','#ffd23f');
+    if(Math.random()<dt*2.5)popup(dude.x+rnd(-10,10),dude.y-36,'+'+Math.round(chugRate),'#ffd23f');
     exposure+=dt;
   }
   if(sunny&&!drinking)exposure+=dt*0.5;
