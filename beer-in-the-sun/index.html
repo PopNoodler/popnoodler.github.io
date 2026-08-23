@@ -51,7 +51,7 @@ var hi=+(localStorage.bs_hi||0);
 var muted=localStorage.bs_mute==='1';
 var cutsSeen=+(localStorage.bs_cuts||0);
 
-/* ---------- audio (all original chiptune — no copyrighted audio) ---------- */
+/* ---------- audio: chiptune fallback + "Beer In The Sun" by GMCG (used with his blessing) ---------- */
 var AC=null,master=null,musGain=null,nextStep=0,stepIdx=0;
 var STEP=60/130/2; /* eighth notes at 130 BPM, same tempo as the song */
 function initAudio(){
@@ -62,6 +62,7 @@ function initAudio(){
     musGain=AC.createGain();musGain.gain.value=0.9;musGain.connect(master);
     nextStep=AC.currentTime+0.1;
     setInterval(musicPump,110);
+    initSong();
   }catch(e){AC=null;}
 }
 function setMuted(m){
@@ -92,6 +93,7 @@ var LEAD=[329.63,392,440,0,523.25,0,440,392, 329.63,392,440,523.25,587.33,523.25
           659.25,0,587.33,523.25,440,392,440,0, 392,329.63,392,440,392,0,0,0];
 var BASS=[130.81,110,174.61,196];
 function scheduleStep(i,t){
+  if(songBuf)return; /* the real song has taken over — the chiptune retires gracefully */
   if(musGain)musGain.gain.setTargetAtTime(rainOnScreen()?0.3:0.9,t,0.3);
   var L=LEAD[i];
   if(L)tone(L,t,0.14,'square',0.045,0,musGain);
@@ -134,6 +136,68 @@ function sfx(name){
     tone(440,t+0.2,0.09,'sawtooth',0.06);
     tone(392,t+0.29,0.09,'sawtooth',0.06);
     tone(329.63,t+0.38,0.34,'sawtooth',0.07,392);
+  }
+}
+
+/* ---------- the real thing: "Beer In The Sun" by GMCG, used with his blessing.
+   One decoded buffer, two players: the full song sits quietly under the whole
+   game, and the bit Graeme picked (2:52-3:15, pre-chorus intae the chorus)
+   blooms in loud while ye're staunin' in the sun. Each player keeps its ain
+   place and resumes where it left off, wi' quick fades both ways. ---------- */
+var SUN_A=172,SUN_B=195;          /* seconds: the section that loops in the sun */
+var BG_VOL=0.22,SUN_VOL=0.9;
+var songBuf=null,bgSrc=null,sunSrc=null,bgGain=null,sunGain=null;
+var bgPos=0,sunPos=SUN_A,bgT0=0,sunT0=0,sunOn=false,sunHold=0,bgStopT=0,sunStopT=0;
+function initSong(){
+  if(!AC||bgGain)return;
+  bgGain=AC.createGain();bgGain.gain.value=0;bgGain.connect(master);
+  sunGain=AC.createGain();sunGain.gain.value=0;sunGain.connect(master);
+  fetch('song.mp3').then(function(r){if(!r.ok)throw 0;return r.arrayBuffer();}).then(function(ab){
+    AC.decodeAudioData(ab,function(buf){songBuf=buf;if(SUN_B>buf.duration)SUN_B=buf.duration;},function(){});
+  }).catch(function(){ /* nae bother — the chiptune carries on */ });
+}
+function songStartBg(){
+  if(!songBuf||bgSrc)return;
+  bgSrc=AC.createBufferSource();bgSrc.buffer=songBuf;bgSrc.loop=true;
+  bgSrc.connect(bgGain);bgPos=bgPos%songBuf.duration;
+  bgSrc.start(0,bgPos);bgT0=AC.currentTime;
+}
+function songHoldBg(){
+  if(!bgSrc)return;
+  bgPos=(bgPos+AC.currentTime-bgT0)%songBuf.duration;
+  try{bgSrc.stop();}catch(e){}
+  bgSrc=null;bgStopT=0;
+}
+function songStartSun(){
+  if(!songBuf||sunSrc)return;
+  sunSrc=AC.createBufferSource();sunSrc.buffer=songBuf;
+  sunSrc.loop=true;sunSrc.loopStart=SUN_A;sunSrc.loopEnd=SUN_B;
+  sunSrc.connect(sunGain);
+  if(sunPos<SUN_A||sunPos>=SUN_B)sunPos=SUN_A;
+  sunSrc.start(0,sunPos);sunT0=AC.currentTime;
+}
+function songHoldSun(){
+  if(!sunSrc)return;
+  sunPos=SUN_A+(((sunPos-SUN_A)+(AC.currentTime-sunT0))%(SUN_B-SUN_A));
+  try{sunSrc.stop();}catch(e){}
+  sunSrc=null;sunStopT=0;
+}
+function updSong(dt){
+  if(!AC||!songBuf)return;
+  var wantSun=state==='PLAY'&&scene==='GARDEN'&&!fetching&&inSunPatch();
+  if(wantSun!==sunOn){sunHold+=dt;if(sunHold>0.22){sunOn=wantSun;sunHold=0;}}
+  else sunHold=0;
+  var t=AC.currentTime;
+  if(sunOn){
+    if(!sunSrc)songStartSun();
+    sunGain.gain.setTargetAtTime(SUN_VOL,t,0.12);
+    bgGain.gain.setTargetAtTime(0.0001,t,0.15);
+    if(bgSrc){bgStopT+=dt;if(bgStopT>0.9)songHoldBg();}
+  }else{
+    if(!bgSrc)songStartBg();
+    bgGain.gain.setTargetAtTime(rainOnScreen()?BG_VOL*0.5:BG_VOL,t,0.25);
+    sunGain.gain.setTargetAtTime(0.0001,t,0.15);
+    if(sunSrc){sunStopT+=dt;if(sunStopT>0.9)songHoldSun();}
   }
 }
 
@@ -821,6 +885,7 @@ function updStrut(dt){
 /* ---------- update ---------- */
 function update(dt){
   T+=dt;menuT+=dt;
+  updSong(dt);
   /* the world hauds its breath while ye're gettin' run ower an' walkin' it off */
   if(scene!=='CUT'&&scene!=='STRUT'&&scene!=='BAL'){updPatch(dt);updRain(dt);}
   if(guitarCd>0)guitarCd-=dt;
