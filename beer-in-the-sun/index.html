@@ -24,7 +24,7 @@
    oot the gate tae the Buzy Bee an' pour yer ain pint -> get run over on the
    street on the way hame (on purpose) -> fly hame balancin' the pint -> walk it off. */
 
-var VER='v55';
+var VER='v62';
 var W=216,H=384,TAU=Math.PI*2;
 var RES=3; /* supersample: art stays chunky, text renders crisp on big screens */
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -144,10 +144,22 @@ function sfx(name){
    game, and the bit Graeme picked (2:52-3:15, pre-chorus intae the chorus)
    blooms in loud while ye're staunin' in the sun. Each player keeps its ain
    place and resumes where it left off, wi' quick fades both ways. ---------- */
-var SUN_A=172;                      /* 2:52 — start o' the pre-chorus, a doonbeat */
-var BAR=(60/130)*4;                 /* one bar at 130 BPM; the grid is anchored at SUN_A */
-var SUN_LEN=12*BAR;                 /* the section loops as 12 clean bars */
-var SUN_B=SUN_A+SUN_LEN;
+/* the TRUE beat map o' the recording (ms), extracted fae the studio WAV wi' a
+   DP beat tracker — the track breathes (~129.2 BPM, human feel), sae every
+   quantisation uses these actual beats, never a rigid grid */
+var BEATS=[197,662,1126,1579,2043,2508,2972,3425,3889,4354,4818,5271,5735,6200,6687,7129,7581,8046,8499,8963,9427,9892,10321,10809,11273,11749,12202,12666,13131,13584,14048,14512,14965,15430,15871,16347,16811,17276,17740,18204,18657,19122,19586,20050,20515,20956,21420,21885,22326,22802,23278,23742,24195,24660,25101,25577,26041,26517,26970,27423,27887,28352,28816,29280,29745,30209,30674,31115,31591,32032,32508,32961,33425,33890,34342,34807,35271,35736,36212,36664,37117,37581,38023,38499,38951,39427,39880,40345,40821,41285,41749,42202,42667,43119,43584,44048,44478,44965,45441,45894,46347,46823,47276,47729,48193,48669,49122,49575,50039,50492,50945,51421,51885,52349,52802,53267,53731,54195,54671,55136,55577,56041,56506,56959,57411,57887,58352,58805,59257,59733,60198,60662,61127,61591,62044,62508,62973,63437,63890,64354,64819,65283,65736,66200,66653,67117,67582,68046,68510,68963,69416,69880,70345,70798,71250,71715,72191,72655,73108,73561,74048,74513,74977,75407,75883,76347,76812,77276,77729,78205,78658,79122,79586,80039,80504,80968,81432,81897,82361,82814,83278,83743,84230,84660,85124,85589,86065,86518,86970,87412,87899,88352,88816,89281,89745,90198,90662,91127,91591,92044,92508,92973,93437,93901,94354,94819,95283,95747,96212,96665,97117,97582,98023,98487,98940,99405,99892,100345,100798,101251,101715,102191,102667,103131,103584,104037,104501,104966,105430,105883,106359,106823,107276,107741,108193,108658,109122,109587,110039,110504,110968,111433,111897,112361,112826,113279,113731,114196,114660,115125,115589,116053,116518,116971,117423,117876,118329,118817,119281,119734,120210,120662,121127,121591,122044,122508,122973,123426,123890,124354,124830,125283,125736,126200,126665,127118,127594,128058,128511,128975,129440,129892,130368,130810,131262,131727,132203,132656,133120,133573,134049,134513,134978,135430,135895,136336,136812,137276,137741,138194,138670,139122,139587,140051,140504,140968,141433,141886,142362,142814,143279,143732,144196,144660,145125,145578,146054,146506,146971,147423,147888,148341,148793,149281,149734,150175,150639,151104,151580,152056,152509,152950,153414,153867,154343,154819,155260,155736,156201,156665,157129,157582,158047,158511,158964,159405,159869,160345,160810,161263,161727,162203,162667,163132,163585,164049,164513,164966,165431,165883,166348,166812,167277,167741,168205,168670,169123,169575,170028,170504,170980,171433,171897,172350,172815,173279,173743,174196,174649,175125,175589,176042,176506,176971,177435,177888,178352,178817,179281,179746,180198,180663,181116,181592,182044,182497,182973,183438,183890,184355,184819,185272,185736,186201,186665,187118,187582,188047,188488,188941,189428,189893,190346,190810,191286,191739,192192,192656,193109,193573,194049,194502,194955,195408,195872,196348,196824,197277,197741,198194,198670,199123,199587,200040,200516,200969,201421,201886,202362,202815,203279,203743,204196,204661,205137,205589,206054,206507,206959,207424,207888,208353,208817,209270,209746,210199,210663,211116,211592,212045,212509,212973,213426,213891,214355,214831,215284,215737,216201,216665,217130,217583,218047,218500,218976,219429,219893,220346,220822,221275,221739,222203,222668,223132,223585,224049,224502,224943,225431,225895,226360,226813,227265,227741,228206,228659,229123,229587,230052,230504,230980,231433,231886,232350,232815,233279,233744,234196,234661,235125,235590,236042,236507,236960,237424,237888,238353,238817,239282,239723,240199,240663,241128,241580,242045,242498,242974,243438,243891,244344,244820,245272,245737,246201,246677,247130,247583,248047,248512,248964,249429,249882,250358,250810,251275,251739,252204,252656,253121,253585,254050,254514,254967,255431,255896,256348,256813,257277,257741,258206,258659,259123,259587,260052,260516,260969,261433,261898,262351,262815,263279,263744,264208,264661,265125,265590,266043,266507,266983,267436,267900,268353,268817,269282,269746];
+var BEAT_ANCHOR=372;                /* the doonbeat at 2:52 — Graeme's cue */
+var SUN_BEATS=50;                   /* the section is 12.5 bars: 2:52 -> 3:15 exactly */
+function bT(i){if(i<0)i=0;if(i>BEATS.length-1)i=BEATS.length-1;return BEATS[i]/1000;}
+function bIdx(pos){
+  var ms=pos*1000,lo=0,hi=BEATS.length-1;
+  while(lo<hi){var mid=(lo+hi+1)>>1;if(BEATS[mid]<=ms)lo=mid;else hi=mid-1;}
+  return lo;
+}
+/* pre-chorus+chorus instances (beat-index ranges) — nae comin' IN inside these */
+var CHORUS_ZONES=[[100,150],[204,254],[BEAT_ANCHOR,BEAT_ANCHOR+SUN_BEATS],[452,502]];
+var SUN_A=bT(BEAT_ANCHOR),SUN_B=bT(BEAT_ANCHOR+SUN_BEATS),SUN_LEN=SUN_B-SUN_A;
+var BAR=(60/129.2)*4;               /* only the offline fallback pulse uses this */
 var BG_VOL=0.3,SUN_VOL=0.3,CF=0.6;  /* keep these EQUAL — the filter, no' the volume, is the difference */
 var STRUT_TAIL=5;                   /* the chorus lingers this lang efter walkin' it aff */
 var songBuf=null,bgSrc=null,sunSrc=null,bgGain=null,sunGain=null,bgFilt=null;
@@ -177,26 +189,34 @@ function activePos(t){
 }
 /* every switch waits for the next bar line, then crossfades — both layers land on the grid */
 function scheduleSwitch(toSun,fresh){
-  var t=AC.currentTime,p=activePos(t),BEAT=BAR/4;
-  /* switch on the next BEAT, keepin' the coont: the incomin' layer enters at the
-     same beat o' its ain bar, sae the rhythm never stutters. The fade straddles it. */
-  var nb=SUN_A+Math.ceil((p+CF/2+0.1-SUN_A)/BEAT)*BEAT;
-  var at=t+(nb-p)-CF/2;
-  var phase=((nb-SUN_A)%BAR+BAR)%BAR; /* whaur in the bar we are at the switch */
-  var inSrc=makeSrc(toSun),base,inPos;
+  var t=AC.currentTime,p=activePos(t);
+  /* next TRUE beat o' the audible material, wi' room for the pre-roll.
+     The coont (beat-in-bar) carries across the switch, aff the real beat map. */
+  var k=bIdx(p)+1;
+  while(bT(k)-p<CF/2+0.08&&k<BEATS.length-1)k++;
+  if(sunOn)while(k>=BEAT_ANCHOR+SUN_BEATS)k-=SUN_BEATS; /* the loop wraps */
+  var swT=bT(k),d=swT-p;
+  if(sunOn&&d<0)d+=SUN_LEN;
+  var at=t+d-CF/2;
+  var c=((k-BEAT_ANCHOR)%4+4)%4;
+  var inSrc=makeSrc(toSun),base,inB,inPos;
   if(toSun){
-    base=(fresh||sunPos<0)?SUN_A:gridSnap(sunPos);
-    if(base<SUN_A||base>=SUN_B)base=SUN_A;
-    inPos=SUN_A+(((base-SUN_A)+phase)%SUN_LEN);
+    if(fresh||sunPos<0)base=BEAT_ANCHOR;
+    else{base=bIdx(sunPos);if(base<BEAT_ANCHOR||base>=BEAT_ANCHOR+SUN_BEATS)base=BEAT_ANCHOR;}
+    inB=base+(((c-((base-BEAT_ANCHOR)%4))%4)+4)%4;
+    if(inB>=BEAT_ANCHOR+SUN_BEATS)inB=BEAT_ANCHOR+((inB-BEAT_ANCHOR)%4);
+    inPos=bT(inB);
   }else{
-    base=gridSnap(bgPos)%songBuf.duration;if(base<0)base+=songBuf.duration;
-    /* the main track never comes IN inside the highlight, nor the 8-bar
-       build-up intae it — continue fae the next available bar instead */
-    if(base>=SUN_A-8*BAR-0.01&&base<SUN_B-0.01)base=SUN_B;
-    inPos=(base+phase)%songBuf.duration;
+    base=bIdx(bgPos);
+    /* never come IN inside a chorus (or its pre-chorus) onywhere in the sang —
+       continue fae the bar at the end o' that chorus, on the equivalent beat */
+    for(var z=0;z<CHORUS_ZONES.length;z++)
+      if(base>=CHORUS_ZONES[z][0]-1&&base<CHORUS_ZONES[z][1])base=CHORUS_ZONES[z][1];
+    inB=base+(((c-((base-BEAT_ANCHOR)%4))%4)+4)%4;
+    if(inB>=BEATS.length-4)inB=c+4; /* aff the end: back near the tap, same coont */
+    inPos=bT(inB);
   }
   inPos-=CF/2; /* start half a fade early so the beat lands at full presence */
-  if(!toSun){if(inPos<0)inPos+=songBuf.duration;}
   inSrc.start(at,Math.max(0,inPos));
   var inGain=toSun?sunGain:bgGain,outGain=toSun?bgGain:sunGain;
   inGain.gain.cancelScheduledValues(t);
@@ -259,11 +279,7 @@ function updSong(dt){
       sunHold=0;scheduleSwitch(true);
     }else{
       sunHold+=dt; /* oot the sun: hysteresis only on the wey oot */
-      if(sunHold>1.0){
-        sunHold=0;scheduleSwitch(false);
-        /* Scotland punishes ye for leavin' the light */
-        if(scene==='GARDEN'&&state==='PLAY'&&!rain.active)rain.nextT=Math.min(rain.nextT,1.2);
-      }
+      if(sunHold>1.0){sunHold=0;scheduleSwitch(false);}
     }
   }else sunHold=0;
   if(!sunOn&&bgSrc&&!pend)bgGain.gain.setTargetAtTime(rainOnScreen()?BG_VOL*0.5:BG_VOL,t,0.4);
@@ -288,7 +304,7 @@ var GATE={x:32,y:352};        /* gap in the back fence, bottom-left — aff yer 
 var GUITAR={x:82,y:98};       /* his pride an' joy, by the back door */
 var WHIRL={x:150,y:216};      /* the whirligig — shelter under the washin' */
 var BINS=[{x:17,y:128},{x:38,y:126}];
-var FLOWERS={x:28,y:210};
+var FLOWERS={x:38,y:222};
 
 /* ---------- state ---------- */
 var state='MENU';                 /* MENU / PLAY / OVER / PAUSE */
@@ -307,6 +323,7 @@ var pint={has:true,ml:568,watered:0};
 var stock=3,fetching=false;
 var patch={x:108,y:260,r:34,tx:108,ty:260,alpha:1,moveT:1.2};
 var rain={active:false,t:0,nextT:24,warned:false};
+var rainCnt=0,wasInSun=false; /* the leave-the-circle rain trigger */
 var wateredSpoke=false;
 var guitarCd=0,bumpCd=0,bumpN=0;
 /* the lassies fae the reels — wan tae start, anither every time ye come hame */
@@ -345,6 +362,7 @@ var cutT=0,cutWord='',cutBonus=0,cutBig=false,hitCar=null;
 var BAL_LEN=8;
 var balT=0,hx=108,tiltA=0,tiltV=0,balPX=null,brinkT=0;
 var balDrops=[],flightSpill=0,spillAcc=0; /* beer oot the mug, drop by drop */
+var surfSA=0,surfSV=0,prevHx2=108,prevVx2=0; /* the liquid: a damped spring wi' a temper */
 var pendCorr=0,dudeOff=0,turbT=0.6;
 var swayPh=0,hicT=2,lagBuf=0; /* the drink catches up wi' ye */
 var gust={t:2.5,warn:0,dir:1,power:0};
@@ -392,7 +410,7 @@ function reset(){
   cutT=0;
   balT=0;hx=108;tiltA=0;tiltV=0;brinkT=0;pendCorr=0;dudeOff=0;turbT=0.6;
   swayPh=0;hicT=2;lagBuf=0;
-  gust={t:2.5,warn:0,dir:1,power:0};balFail=false;balFailT=0;flights=0;balDrops.length=0;flightSpill=0;spillAcc=0;
+  gust={t:2.5,warn:0,dir:1,power:0};balFail=false;balFailT=0;flights=0;balDrops.length=0;flightSpill=0;spillAcc=0;surfSA=0;surfSV=0;prevHx2=108;prevVx2=0;
   tutCard=null;tutCardT=0;tutSeen={};
   strutT=0;strutBeat=0;strutSteps=0;strutTapped=false;strutDir=1;lickT=0;
   pour={ml:0,hold:false,done:false,doneT:0,msg:'',perfect:false,tries:0};
@@ -462,7 +480,7 @@ function inShade(){
   return dist(dude.x,dude.y,WHIRL.x,WHIRL.y-4)<24;
 }
 function inSunPatch(){
-  return scene==='GARDEN'&&patch.alpha>0.6&&dist(dude.x,dude.y,patch.x,patch.y)<patch.r-2&&!inShade();
+  return scene==='GARDEN'&&patch.alpha>0.6&&dist(dude.x,dude.y,patch.x,patch.y)<patch.r-2;
 }
 function inRain(){
   /* it rains everywhere the sun isnae */
@@ -592,23 +610,20 @@ function updPatch(dt){
   patch.alpha=Math.min(1,patch.alpha+dt*2);
 }
 function updRain(dt){
-  var R=clamp(T/150,0,1);
-  if(rain.active){
-    rain.t-=dt;
-    if(rain.t<=0){
-      rain.active=false;rain.warned=false;
-      rain.nextT=rnd(lerp(24,15,R),lerp(36,24,R));
-      if(state==='PLAY'&&scene==='GARDEN'&&Math.random()<0.7)speak("THAT'S IT AFF.");
-    }
-  }else{
-    rain.nextT-=dt;
-    if(rain.nextT<=1.5&&!rain.warned){
-      rain.warned=true;
-      sfx('thunder');flashWhite=0.2;
-      if(state==='PLAY'&&scene==='GARDEN'){calloutMsg("RAIN COMIN'!",'#6bc5ff');speak('AW NAW. RAIN.');}
-    }
-    if(rain.nextT<=0){
-      rain.active=true;rain.t=rnd(lerp(6,8,R),lerp(9,12,R));
+  /* deterministic Scotland: leave the circle -> thunder -> rain at 1s.
+     step back intae the light -> sky clears. Nae randomness, nae timers. */
+  var inSun=state==='PLAY'&&scene==='GARDEN'&&inSunPatch();
+  if(inSun&&rain.active){
+    rain.active=false;rain.warned=false;rainCnt=0;
+    calloutMsg('SUN BEATS RAIN!','#ffd23f');sfx('twinkle');
+  }
+  if(inSun){rainCnt=0;wasInSun=true;}
+  else if(state==='PLAY'&&scene==='GARDEN'&&tutDone){
+    if(wasInSun){wasInSun=false;rainCnt=0.0001;} /* the leave-the-circle event */
+    if(rainCnt>0&&!rain.active){
+      rainCnt+=dt;
+      if(!rain.warned){rain.warned=true;sfx('thunder');flashWhite=0.2;calloutMsg("RAIN COMIN'!",'#6bc5ff');}
+      if(rainCnt>=1){rain.active=true;}
     }
   }
   if(rainOnScreen()){
@@ -837,7 +852,7 @@ function streetHit(c){
   swayPh=rnd(0,TAU);hicT=2;lagBuf=0;
   tiltA=rnd(0.12,0.22)*(Math.random()<0.5?-1:1);tiltV=0;
   gust={t:rnd(1.2,2),warn:0,dir:1,power:0};
-  balFail=false;balFailT=0;balDrops.length=0;flightSpill=0;spillAcc=0;
+  balFail=false;balFailT=0;balDrops.length=0;flightSpill=0;spillAcc=0;surfSA=0;surfSV=0;prevHx2=108;prevVx2=0;
   shake=9;sfx('squash');
   dragging=false;dragId=null;
   if(navigator.vibrate)try{navigator.vibrate(60);}catch(e){}
@@ -883,6 +898,25 @@ function updBal(dt){
   dudeOff=clamp(dudeOff+apply*0.45,-34,34);
   dudeOff*=Math.max(0,1-dt*2.2);
   hx=108+dudeOff;
+  /* liquid physics: the surface chases world-level, kicked by tilt AND by yer haun */
+  var vHx=(hx-prevHx2)/Math.max(dt,0.001);
+  var aHx=(vHx-prevVx2)/Math.max(dt,0.001);
+  prevHx2=hx;prevVx2=vHx;
+  var surfTgt=-tiltA-clamp(aHx*0.0016,-0.6,0.6);
+  surfSV+=((surfTgt-surfSA)*26-surfSV*4.5)*dt;
+  surfSA+=surfSV*dt;
+  /* slosh ower the rim: the raised edge splashes */
+  var fillN=clamp(pint.ml/568,0,1);
+  var edgeUp=Math.abs(surfSA)*4.2,headroom=(1-fillN)*14;
+  if(pint.has&&pint.ml>0&&edgeUp>headroom+1.2){
+    var sd4=surfSA>0?-1:1;
+    var ov=Math.min(pint.ml,(edgeUp-headroom)*10*dt);
+    pint.ml-=ov;flightSpill+=ov;spillAcc+=ov*0.8;
+    var dyB2=246+Math.sin(T*2.2)*6;
+    while(spillAcc>2.2){spillAcc-=2.2;
+      balDrops.push({x:hx+sd4*(11+rnd(0,7)),y:dyB2-66-34+rnd(-3,5),
+        vx:sd4*rnd(14,40)+vHx*0.5,vy:rnd(-30,0),t:rnd(0.6,1.0)});}
+  }
   /* pint physics: it tips — get under it */
   var R=drunk;
   /* body sway — the drink's daein' its ain steerin' */
@@ -930,6 +964,12 @@ function updBal(dt){
       spillAcc-=2.2;
       balDrops.push({x:hx+sd3*(13+rnd(0,9)),y:dyB-66-34+rnd(-4,6),
         vx:sd3*rnd(18,55)+tiltV*25,vy:rnd(-25,5),t:rnd(0.7,1.1)});
+    }
+    if(pint.ml<=0&&!balFail){ /* dribbled the hail thing awa — that's a life */
+      balFail=true;balFailT=0;
+      sfx('splash');shake=6;
+      calloutMsg("DRIBBLED IT A' AWA!",'#ff5252');
+      speak('AW NAW...');
     }
   }
   for(var bd=balDrops.length-1;bd>=0;bd--){
@@ -1014,7 +1054,7 @@ function update(dt){
   }
   var bt=(sunOn&&state==='PLAY'&&(scene==='GARDEN'||scene==='STRUT'))?1:0;
   blissV+=(bt-blissV)*Math.min(1,dt*3);
-  if(blissV>0.4&&(scene==='GARDEN'||scene==='STRUT')&&Math.random()<dt*14*blissV){
+  if(blissV>0.4&&(scene==='GARDEN'||scene==='STRUT')&&Math.random()<dt*20*blissV){
     var _a=Math.random()*TAU,_r=Math.sqrt(Math.random())*patch.r;
     parts.push({x:patch.x+Math.cos(_a)*_r,y:patch.y+Math.sin(_a)*_r*0.6,vx:rnd(-3,3),vy:-rnd(8,20),t:rnd(0.6,1.1),life:1.1,col:Math.random()<0.5?'#ffe98a':'#fff6c8',sz:1});
   }
@@ -1063,11 +1103,13 @@ function text(str,x,y,size,col,align){
 
 /* ---------- garden drawing ---------- */
 function gapX(){return clamp(patch.x,36,180);}
-function beatPulse(){ /* 1 on each beat o' the audible track, decayin' — for the bliss VFX */
+function beatPulse(){ /* 1 on each TRUE beat o' the audible track, decayin' — for the bliss VFX */
   if(blissV<=0.02)return 0;
   var ph;
-  if(AC&&songBuf){ph=((activePos(AC.currentTime)-SUN_A)/(60/130))%1;if(ph<0)ph+=1;}
-  else ph=(T*(130/60))%1;
+  if(AC&&songBuf){
+    var p=activePos(AC.currentTime),i=bIdx(p),b0=bT(i),b1=bT(i+1);
+    ph=b1>b0?clamp((p-b0)/(b1-b0),0,1):0;
+  }else ph=(T*(129.2/60))%1;
   return blissV*Math.pow(1-ph,3);
 }
 function drawGardenSky(){
@@ -1162,19 +1204,24 @@ function drawGardenSet(){
   drawGuitar(GUITAR.x,GUITAR.y);
   /* the ray fights through the gap */
   if(patch.alpha>0.03){
-    var gx=gapX();
+    var gx=gapX(),bp=beatPulse();
     ctx.save();
     ctx.globalAlpha=patch.alpha;
-    ctx.fillStyle='rgba(255,235,140,0.13)';
+    ctx.fillStyle='rgba(255,235,140,'+(0.13+blissV*0.10+bp*0.08)+')';
     ctx.beginPath();
     ctx.moveTo(gx-13,40);ctx.lineTo(gx+13,40);
     ctx.lineTo(patch.x+patch.r*0.85,patch.y);ctx.lineTo(patch.x-patch.r*0.85,patch.y);
     ctx.closePath();ctx.fill();
-    ctx.fillStyle='rgba(255,235,140,0.34)';
+    ctx.fillStyle='rgba(255,235,140,'+(0.34+blissV*0.16+bp*0.12)+')';
     ctx.beginPath();ctx.ellipse(patch.x,patch.y,patch.r,patch.r*0.6,0,0,TAU);ctx.fill();
-    ctx.strokeStyle='rgba(255,245,190,'+(0.5+Math.sin(T*4)*0.15)+')';
-    ctx.lineWidth=1.5;
+    ctx.strokeStyle='rgba(255,245,190,'+(0.5+Math.sin(T*4)*0.15+bp*0.3)+')';
+    ctx.lineWidth=1.5+blissV*1.2+bp*1.2;
     ctx.beginPath();ctx.ellipse(patch.x,patch.y,patch.r,patch.r*0.6,0,0,TAU);ctx.stroke();
+    if(blissV>0.2){ /* gold halo ring, breathin' on the beat */
+      ctx.strokeStyle='rgba(255,210,63,'+(0.35*blissV+bp*0.25)+')';
+      ctx.lineWidth=1;
+      ctx.beginPath();ctx.ellipse(patch.x,patch.y,patch.r+3+bp*3,(patch.r+3+bp*3)*0.6,0,0,TAU);ctx.stroke();
+    }
     ctx.restore();
   }
 }
@@ -1398,7 +1445,7 @@ function drawKilt(x,y,w,h){
   ctx.fillStyle='#c9a96a';ctx.fillRect(sx,y+2,6,h-2);
   ctx.fillStyle='#8a7358';ctx.fillRect(sx,y+2,6,2);
 }
-function drawPint(x,y,tilted,surfA){
+function drawPint(x,y,tilted,surfA,surfBow){
   ctx.save();ctx.translate(x,y);
   if(tilted&&scene==='GARDEN')ctx.rotate(-0.5*dude.face);
   var fill=clamp(pint.ml/568,0,1);
@@ -1406,12 +1453,17 @@ function drawPint(x,y,tilted,surfA){
   if(pint.has&&fill>0){
     var beerCol=mix([232,160,32],[180,190,200],pint.watered);
     if(typeof surfA==='number'){
-      /* the beer inside stays level wi' the warld while the gless tips */
+      /* the beer inside chases world-level an' bows wi' the slosh */
+      var bw=surfBow||0;
       ctx.save();
       ctx.beginPath();ctx.rect(-4,-9,8,14);ctx.clip();
       ctx.translate(0,-9+14*(1-fill));ctx.rotate(surfA);
-      ctx.fillStyle=beerCol;ctx.fillRect(-11,0,22,26);
-      ctx.fillStyle='#fff8e0';ctx.fillRect(-11,0,22,1.4);
+      ctx.fillStyle=beerCol;
+      ctx.beginPath();ctx.moveTo(-11,0);ctx.quadraticCurveTo(0,bw,11,0);
+      ctx.lineTo(11,26);ctx.lineTo(-11,26);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#fff8e0';
+      ctx.beginPath();ctx.moveTo(-11,0);ctx.quadraticCurveTo(0,bw,11,0);
+      ctx.lineTo(11,1.4);ctx.quadraticCurveTo(0,bw+1.4,-11,1.4);ctx.closePath();ctx.fill();
       ctx.restore();
     }else{
       ctx.fillStyle=beerCol;ctx.fillRect(-4,-9+14*(1-fill),8,14*fill);
@@ -1876,7 +1928,7 @@ function drawBalScene(){
   if(!balFail){
     ctx.save();
     ctx.translate(hx,dy3-66);ctx.rotate(tiltA);ctx.scale(2.6,2.6);ctx.translate(0,-6);
-    drawPint(0,0,false,-tiltA+clamp(tiltV,-1.5,1.5)*0.12);
+    drawPint(0,0,false,surfSA,clamp(-surfSV*1.5,-4,4));
     ctx.restore();
     if(Math.abs(tiltA)>0.45){
       var sd=tiltA>0?1:-1;
@@ -1931,8 +1983,9 @@ function drawBalScene(){
   /* letterbox + the one instruction that matters */
   px(0,0,W,20,'#0a0f1c');px(0,H-24,W,24,'#0a0f1c');
   text('THE WAY HAME',W/2,10,7,'rgba(255,255,255,0.55)');
+  drawPintLives(); /* watch yer pint-life drain as ye spill */
   var pintsDoon=Math.floor(drankMl/568);
-  if(pintsDoon>=1)text(pintsDoon+' PINT'+(pintsDoon>1?'S':'')+' DOON',W-8,10,6,'rgba(255,210,63,0.8)','right');
+  if(pintsDoon>=1)text(pintsDoon+' PINT'+(pintsDoon>1?'S':'')+' DOON',W-8,30,6,'rgba(255,210,63,0.8)','right');
   if(!balFail)text('SWIPE — KEEP YER HAUN UNDER THE PINT',W/2,H-12,7,'#ffd23f');
 }
 function drawTutCard(){
@@ -1958,16 +2011,24 @@ function drawStrutUI(){
 }
 
 /* ---------- HUD, menus ---------- */
-function drawHUD(){
-  text(Math.floor(score)+' ml',8,12,9,'#fff','left');
-  text('BEST '+Math.max(hi,Math.floor(score)),8,24,6,'rgba(255,255,255,0.75)','left');
+function drawPintLives(){
+  /* the richtmost stocked pint IS the ane in yer haun — it drains as ye spill */
   for(var i=0;i<3;i++){
     var lx=W-62+i*13;
     ctx.globalAlpha=i<stock?1:0.22;
-    px(lx,8,7,10,'#e8a020');px(lx,8,7,2,'#fff8e0');
+    var fr=i<stock?1:0;
+    if(i===stock-1&&pint.has&&(scene==='BAL'||scene==='CUT'))fr=clamp(pint.ml/568,0,1);
+    px(lx,8,7,10,'#241c12');
+    if(fr>0){var fh=Math.max(1,Math.round(10*fr));px(lx,8+10-fh,7,fh,'#e8a020');}
+    if(fr>0.9)px(lx,8,7,2,'#fff8e0');
     ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.strokeRect(lx-0.5,7.5,8,11);
   }
   ctx.globalAlpha=1;
+}
+function drawHUD(){
+  text(Math.floor(score)+' ml',8,12,9,'#fff','left');
+  text('BEST '+Math.max(hi,Math.floor(score)),8,24,6,'rgba(255,255,255,0.75)','left');
+  drawPintLives();
   drawMuteIcon();
   /* rain's on — get tae the sun spot */
   if(scene==='GARDEN'&&rain.active&&inRain()&&pint.has&&pint.ml>0&&Math.floor(T*3)%2===0){
@@ -2128,6 +2189,18 @@ function renderGarden(){
   for(var i=0;i<items.length;i++)items[i].f();
   drawBackFence();
   drawRain();
+  if(blissV>0.02){ /* OTT: the whole garden gets its holidays */
+    var bp2=beatPulse();
+    ctx.save();
+    ctx.globalCompositeOperation='lighter';
+    var gl=ctx.createRadialGradient(patch.x,patch.y,10,patch.x,patch.y,190);
+    gl.addColorStop(0,'rgba(255,214,90,'+(0.22*blissV+bp2*0.12)+')');
+    gl.addColorStop(1,'rgba(255,214,90,0)');
+    ctx.fillStyle=gl;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(255,190,60,'+(0.06*blissV)+')';
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
 }
 function render(){
   ctx.setTransform(RES,0,0,RES,0,0);
