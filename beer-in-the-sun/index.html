@@ -695,7 +695,22 @@ function drawLassHead(x,y,g){ /* y = tap o' the heid */
 }
 function drawLassie(g){
   ctx.save();ctx.translate(g.x,g.y);
-  if(g.state==='walking'){
+  var shelter=rain.active&&!(patch.alpha>0.5&&dist(g.x,g.y,patch.x,patch.y)<patch.r);
+  if(shelter){
+    /* rain's on — towel ower the heid, party's paused */
+    if(g.face<0)ctx.scale(-1,1);
+    drawLassHead(0,-26,g);
+    px(-4,-16,8,11,'#f0c8a0');
+    px(-4,-15,8,3,g.bikini);
+    px(-4,-8,8,3,g.bikini);
+    px(0,-10,1,1,'rgba(160,100,70,0.8)');
+    px(-4,-5,3,7,'#f0c8a0');px(1,-5,3,7,'#f0c8a0');
+    px(-7,-24,2,9,'#f0c8a0');px(5,-24,2,9,'#f0c8a0');    /* airms up, haudin it */
+    var flap=Math.sin(T*9+g.baseAng)*1.2;
+    px(-10,-34+flap*0.5,20,4,g.towel);                    /* the towel, ower the heid */
+    ctx.fillStyle='rgba(255,255,255,0.35)';ctx.fillRect(-10,-32+flap*0.5,20,1);
+    if(Math.floor(T*2.5+g.baseAng)%5===0)text('!',12,-30,7,'rgba(200,230,255,0.8)');
+  }else if(g.state==='walking'){
     if(g.face<0)ctx.scale(-1,1);
     var stp=Math.sin(T*13)*2;
     drawLassHead(0,-28,g);
