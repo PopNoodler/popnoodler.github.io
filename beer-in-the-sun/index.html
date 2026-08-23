@@ -263,7 +263,7 @@ function updSong(dt){
   else if(scene!=='GARDEN')strutTail=0;
   else if(strutTail>0)strutTail-=dt;
   var wantSun=strutNow||(state==='PLAY'&&scene==='GARDEN'&&strutTail>0)
-    ||(state==='PLAY'&&scene==='GARDEN'&&!fetching&&inSunPatch());
+    ||(state==='PLAY'&&scene==='GARDEN'&&!fetching&&inSunPatch()&&pint.has&&pint.ml>0);
   if(!strutNow)strutCued=false;
   if(pend){
     if(t>pend.at+CF+0.05)finishSwitch();
@@ -274,7 +274,7 @@ function updSong(dt){
     scheduleSwitch(true,true);strutCued=true;return; /* walk it aff tae the chorus, fae the tap */
   }
   /* sticky: quick tae bring the chorus in, gey reluctant tae let it go */
-  if(sunOn&&!wantSun&&!strutNow&&scene==='GARDEN'&&patch.alpha>0.4&&dist(dude.x,dude.y,patch.x,patch.y)<patch.r+14)wantSun=true;
+  if(sunOn&&!wantSun&&!strutNow&&scene==='GARDEN'&&pint.has&&pint.ml>0&&patch.alpha>0.4&&dist(dude.x,dude.y,patch.x,patch.y)<patch.r+14)wantSun=true;
   if(wantSun!==sunOn){
     if(wantSun){ /* intae the sun: nae delay — the bar-lock is a' the timing needed */
       sunHold=0;scheduleSwitch(true);
@@ -620,7 +620,9 @@ function updRain(dt){
   }
   if(inSun){rainCnt=0;wasInSun=true;}
   else if(state==='PLAY'&&scene==='GARDEN'&&tutDone){
-    if(wasInSun){wasInSun=false;rainCnt=0.0001;} /* the leave-the-circle event */
+    /* the leave-the-circle event — but rain only threatens a pint at risk */
+    if(wasInSun){wasInSun=false;rainCnt=(pint.has&&pint.ml>0)?0.0001:0;}
+    if(!(pint.has&&pint.ml>0))rainCnt=0;
     if(rainCnt>0&&!rain.active){
       rainCnt+=dt;
       if(!rain.warned){rain.warned=true;sfx('thunder');flashWhite=0.2;calloutMsg("RAIN COMIN'!",'#6bc5ff');}
@@ -1208,18 +1210,18 @@ function drawGardenSet(){
     var gx=gapX(),bp=beatPulse();
     ctx.save();
     ctx.globalAlpha=patch.alpha;
-    ctx.fillStyle='rgba(255,235,140,'+(0.13+blissV*0.10+bp*0.08)+')';
+    ctx.fillStyle='rgba(255,235,140,'+(0.13+blissV*0.08+bp*0.05)+')';
     ctx.beginPath();
     ctx.moveTo(gx-13,40);ctx.lineTo(gx+13,40);
     ctx.lineTo(patch.x+patch.r*0.85,patch.y);ctx.lineTo(patch.x-patch.r*0.85,patch.y);
     ctx.closePath();ctx.fill();
-    ctx.fillStyle='rgba(255,235,140,'+(0.34+blissV*0.16+bp*0.12)+')';
+    ctx.fillStyle='rgba(255,235,140,'+(0.34+blissV*0.13+bp*0.07)+')';
     ctx.beginPath();ctx.ellipse(patch.x,patch.y,patch.r,patch.r*0.6,0,0,TAU);ctx.fill();
-    ctx.strokeStyle='rgba(255,245,190,'+(0.5+Math.sin(T*4)*0.15+bp*0.3)+')';
-    ctx.lineWidth=1.5+blissV*1.2+bp*1.2;
+    ctx.strokeStyle='rgba(255,245,190,'+(0.5+Math.sin(T*4)*0.15+bp*0.18)+')';
+    ctx.lineWidth=1.5+blissV*0.95+bp*0.7;
     ctx.beginPath();ctx.ellipse(patch.x,patch.y,patch.r,patch.r*0.6,0,0,TAU);ctx.stroke();
     if(blissV>0.2){ /* gold halo ring, breathin' on the beat */
-      ctx.strokeStyle='rgba(255,210,63,'+(0.35*blissV+bp*0.25)+')';
+      ctx.strokeStyle='rgba(255,210,63,'+(0.28*blissV+bp*0.15)+')';
       ctx.lineWidth=1;
       ctx.beginPath();ctx.ellipse(patch.x,patch.y,patch.r+3+bp*3,(patch.r+3+bp*3)*0.6,0,0,TAU);ctx.stroke();
     }
@@ -2195,10 +2197,10 @@ function renderGarden(){
     ctx.save();
     ctx.globalCompositeOperation='lighter';
     var gl=ctx.createRadialGradient(patch.x,patch.y,10,patch.x,patch.y,190);
-    gl.addColorStop(0,'rgba(255,214,90,'+(0.22*blissV+bp2*0.12)+')');
+    gl.addColorStop(0,'rgba(255,214,90,'+(0.18*blissV+bp2*0.07)+')');
     gl.addColorStop(1,'rgba(255,214,90,0)');
     ctx.fillStyle=gl;ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='rgba(255,190,60,'+(0.06*blissV)+')';
+    ctx.fillStyle='rgba(255,190,60,'+(0.05*blissV)+')';
     ctx.fillRect(0,0,W,H);
     ctx.restore();
   }
