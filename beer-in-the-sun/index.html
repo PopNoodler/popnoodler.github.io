@@ -144,61 +144,103 @@ function sfx(name){
    game, and the bit Graeme picked (2:52-3:15, pre-chorus intae the chorus)
    blooms in loud while ye're staunin' in the sun. Each player keeps its ain
    place and resumes where it left off, wi' quick fades both ways. ---------- */
-var SUN_A=172,SUN_B=195;          /* seconds: the section that loops in the sun */
-var BG_VOL=0.11,SUN_VOL=0.9;
-var songBuf=null,bgSrc=null,sunSrc=null,bgGain=null,sunGain=null;
-var bgPos=0,sunPos=SUN_A,bgT0=0,sunT0=0,sunOn=false,sunHold=0,bgStopT=0,sunStopT=0;
+var SUN_A=172;                      /* 2:52 — start o' the pre-chorus, a doonbeat */
+var BAR=(60/130)*4;                 /* one bar at 130 BPM; the grid is anchored at SUN_A */
+var SUN_LEN=12*BAR;                 /* the section loops as 12 clean bars */
+var SUN_B=SUN_A+SUN_LEN;
+var BG_VOL=0.3,SUN_VOL=0.3,CF=0.6;  /* keep these EQUAL — the filter, no' the volume, is the difference */
+var songBuf=null,bgSrc=null,sunSrc=null,bgGain=null,sunGain=null,bgFilt=null;
+var bgPos=0,sunPos=-1,bgT0=0,sunT0=0; /* sunPos -1 = first visit enters at SUN_A */
+var sunOn=false,sunHold=0,pend=null,airCued=false; /* pend = a switch waiting for its bar line */
 function initSong(){
   if(!AC||bgGain)return;
-  bgGain=AC.createGain();bgGain.gain.value=0;bgGain.connect(master);
+  /* the background song sits ahint the clouds: low-passed and quiet */
+  bgFilt=AC.createBiquadFilter();bgFilt.type='lowpass';bgFilt.frequency.value=1300;bgFilt.Q.value=0.7;
+  bgGain=AC.createGain();bgGain.gain.value=0;
+  bgFilt.connect(bgGain);bgGain.connect(master);
   sunGain=AC.createGain();sunGain.gain.value=0;sunGain.connect(master);
   fetch('song.mp3').then(function(r){if(!r.ok)throw 0;return r.arrayBuffer();}).then(function(ab){
-    AC.decodeAudioData(ab,function(buf){songBuf=buf;if(SUN_B>buf.duration)SUN_B=buf.duration;},function(){});
+    AC.decodeAudioData(ab,function(buf){songBuf=buf;if(SUN_B>buf.duration){SUN_B=buf.duration;SUN_LEN=SUN_B-SUN_A;}},function(){});
   }).catch(function(){ /* nae bother — the chiptune carries on */ });
 }
-function songStartBg(){
-  if(!songBuf||bgSrc)return;
-  bgSrc=AC.createBufferSource();bgSrc.buffer=songBuf;bgSrc.loop=true;
-  bgSrc.connect(bgGain);bgPos=bgPos%songBuf.duration;
-  bgSrc.start(0,bgPos);bgT0=AC.currentTime;
+function makeSrc(sun){
+  var s=AC.createBufferSource();s.buffer=songBuf;s.loop=true;
+  if(sun){s.loopStart=SUN_A;s.loopEnd=SUN_B;s.connect(sunGain);}
+  else s.connect(bgFilt);
+  return s;
 }
-function songHoldBg(){
-  if(!bgSrc)return;
-  bgPos=(bgPos+AC.currentTime-bgT0)%songBuf.duration;
-  try{bgSrc.stop();}catch(e){}
-  bgSrc=null;bgStopT=0;
+function gridSnap(p){return SUN_A+Math.round((p-SUN_A)/BAR)*BAR;}
+function activePos(t){
+  if(sunOn)return SUN_A+(((sunPos-SUN_A)+(t-sunT0))%SUN_LEN);
+  return (bgPos+(t-bgT0))%songBuf.duration;
 }
-function songStartSun(){
-  if(!songBuf||sunSrc)return;
-  sunSrc=AC.createBufferSource();sunSrc.buffer=songBuf;
-  sunSrc.loop=true;sunSrc.loopStart=SUN_A;sunSrc.loopEnd=SUN_B;
-  sunSrc.connect(sunGain);
-  if(sunPos<SUN_A||sunPos>=SUN_B)sunPos=SUN_A;
-  sunSrc.start(0,sunPos);sunT0=AC.currentTime;
+/* every switch waits for the next bar line, then crossfades — both layers land on the grid */
+function scheduleSwitch(toSun,rightNow){
+  var t=AC.currentTime,p=activePos(t),nb,at;
+  if(rightNow){nb=gridSnap(p);at=t+0.06;}  /* scene cuts dinnae wait for the bar */
+  else{nb=SUN_A+Math.ceil((p+0.15-SUN_A)/BAR)*BAR;at=t+(nb-p);}
+  var inSrc=makeSrc(toSun),inPos;
+  if(toSun){
+    inPos=(sunPos<0)?SUN_A:gridSnap(sunPos);
+    if(inPos<SUN_A||inPos>=SUN_B)inPos=SUN_A;
+  }else{
+    inPos=gridSnap(bgPos)%songBuf.duration;if(inPos<0)inPos+=songBuf.duration;
+  }
+  inSrc.start(at,inPos);
+  var inGain=toSun?sunGain:bgGain,outGain=toSun?bgGain:sunGain;
+  inGain.gain.cancelScheduledValues(t);
+  inGain.gain.setValueAtTime(0.0001,at);
+  inGain.gain.linearRampToValueAtTime(toSun?SUN_VOL:BG_VOL,at+CF);
+  outGain.gain.cancelScheduledValues(t);
+  outGain.gain.setValueAtTime(outGain.gain.value,t);
+  outGain.gain.setValueAtTime(outGain.gain.value,at);
+  outGain.gain.linearRampToValueAtTime(0.0001,at+CF);
+  pend={to:toSun,at:at,src:inSrc,inPos:inPos,outPos:nb};
 }
-function songHoldSun(){
-  if(!sunSrc)return;
-  sunPos=SUN_A+(((sunPos-SUN_A)+(AC.currentTime-sunT0))%(SUN_B-SUN_A));
-  try{sunSrc.stop();}catch(e){}
-  sunSrc=null;sunStopT=0;
+function finishSwitch(){
+  if(pend.to){
+    if(bgSrc){try{bgSrc.stop();}catch(e){} bgPos=pend.outPos%songBuf.duration;}
+    bgSrc=null;sunSrc=pend.src;sunPos=pend.inPos;sunT0=pend.at;sunOn=true;
+  }else{
+    if(sunSrc){try{sunSrc.stop();}catch(e){} sunPos=SUN_A+((pend.outPos-SUN_A)%SUN_LEN);}
+    sunSrc=null;bgSrc=pend.src;bgPos=pend.inPos;bgT0=pend.at;sunOn=false;
+  }
+  pend=null;
+}
+function cancelSwitch(){
+  var t=AC.currentTime;
+  try{pend.src.stop(t);}catch(e){}
+  var inGain=pend.to?sunGain:bgGain,outGain=pend.to?bgGain:sunGain;
+  inGain.gain.cancelScheduledValues(t);inGain.gain.setValueAtTime(0.0001,t);
+  outGain.gain.cancelScheduledValues(t);
+  outGain.gain.setValueAtTime(outGain.gain.value,t);
+  outGain.gain.setTargetAtTime(pend.to?BG_VOL:SUN_VOL,t,0.15);
+  pend=null;
 }
 function updSong(dt){
   if(!AC||!songBuf)return;
-  var wantSun=state==='PLAY'&&scene==='GARDEN'&&!fetching&&inSunPatch();
-  if(wantSun!==sunOn){sunHold+=dt;if(sunHold>0.22){sunOn=wantSun;sunHold=0;}}
-  else sunHold=0;
   var t=AC.currentTime;
-  if(sunOn){
-    if(!sunSrc)songStartSun();
-    sunGain.gain.setTargetAtTime(SUN_VOL,t,0.12);
-    bgGain.gain.setTargetAtTime(0.0001,t,0.15);
-    if(bgSrc){bgStopT+=dt;if(bgStopT>0.9)songHoldBg();}
-  }else{
-    if(!bgSrc)songStartBg();
-    bgGain.gain.setTargetAtTime(rainOnScreen()?BG_VOL*0.5:BG_VOL,t,0.25);
-    sunGain.gain.setTargetAtTime(0.0001,t,0.15);
-    if(sunSrc){sunStopT+=dt;if(sunStopT>0.9)songHoldSun();}
+  if(!bgSrc&&!sunSrc&&!pend){ /* first start: the song drifts in ahint the clouds */
+    bgSrc=makeSrc(false);bgPos=bgPos%songBuf.duration;
+    bgSrc.start(0,bgPos);bgT0=t;
+    bgGain.gain.setTargetAtTime(BG_VOL,t,0.5);
+    return;
   }
+  var airNow=state==='PLAY'&&(scene==='BAL'||scene==='STRUT');
+  var wantSun=airNow||(state==='PLAY'&&scene==='GARDEN'&&!fetching&&inSunPatch());
+  if(!airNow)airCued=false;
+  if(pend){
+    if(t>pend.at+CF+0.05)finishSwitch();
+    else if(wantSun!==pend.to&&t<pend.at-0.08)cancelSwitch();
+    else return;
+  }
+  if(airNow&&!sunOn&&!airCued&&!pend){
+    sunPos=-1;               /* the flight hame gets the chorus fae the tap, immediately */
+    scheduleSwitch(true,true);airCued=true;return;
+  }
+  if(wantSun!==sunOn){sunHold+=dt;if(sunHold>0.18){sunHold=0;scheduleSwitch(wantSun);}}
+  else sunHold=0;
+  if(!sunOn&&bgSrc&&!pend)bgGain.gain.setTargetAtTime(rainOnScreen()?BG_VOL*0.5:BG_VOL,t,0.4);
 }
 
 /* ---------- layout: a cooncil hoose back garden ---------- */
