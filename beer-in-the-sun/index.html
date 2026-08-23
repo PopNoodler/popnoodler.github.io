@@ -595,9 +595,14 @@ function updDrink(dt){
   if(sunburn>0.55&&!burnCalled){burnCalled=true;calloutMsg('FACTOR 50? NAE CHANCE','#ff9d6b');speak("AH'M ROASTIN'");}
   /* oot in the rain, yer beer-life drains — the three icons ARE yer health */
   if(inRain()&&pint.has&&pint.ml>0&&tutDone){
+    var prevStock=stock;
     stock-=dt/4.5;spillFlash=0.35;
     flashRed=Math.max(flashRed,0.08);
     if(!wateredSpoke&&stock<2.2){wateredSpoke=true;speak("AH'M LOSIN' MA BEER!");}
+    if(Math.ceil(prevStock)!==Math.ceil(stock)&&stock>0){
+      /* a hail icon's gane tae the rain: pint's deid, aff tae the pub — an' it KEEPS rainin' */
+      ruinPint("THE RAIN'S TAEN A HAIL PINT!","AWAY TAE THE PUB WI' YE");
+    }
   }else wateredSpoke=false;
 }
 
