@@ -179,14 +179,23 @@ function initSong(){
 }
 function makeSrc(sun){
   var s=AC.createBufferSource();s.buffer=songBuf;s.loop=true;
-  if(sun)s.connect(sunGain); /* nae loop cage: efter the chorus it plays richt on */
+  if(sun){
+    /* plays richt on past the chorus — but when the SONG ends, it wraps
+       back tae the stairt o' the chorus, no' the track's intro */
+    s.loopStart=SUN_A;s.loopEnd=songBuf.duration;
+    s.connect(sunGain);
+  }
   else s.connect(bgFilt);
   return s;
 }
 function gridSnap(p){return SUN_A+Math.round((p-SUN_A)/BAR)*BAR;}
 function activePos(t){
-  var pp=sunOn?sunPos+(t-sunT0):bgPos+(t-bgT0);
-  pp%=songBuf.duration;if(pp<0)pp+=songBuf.duration;return pp;
+  if(sunOn){
+    var pp=sunPos+(t-sunT0);
+    if(pp>=songBuf.duration){var L=songBuf.duration-SUN_A;pp=SUN_A+((pp-songBuf.duration)%L);}
+    return pp;
+  }
+  var b=(bgPos+(t-bgT0))%songBuf.duration;if(b<0)b+=songBuf.duration;return b;
 }
 /* every switch waits for the next bar line, then crossfades — both layers land on the grid */
 function scheduleSwitch(toSun,fresh){
