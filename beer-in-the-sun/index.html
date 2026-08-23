@@ -156,8 +156,9 @@ function bIdx(pos){
   while(lo<hi){var mid=(lo+hi+1)>>1;if(BEATS[mid]<=ms)lo=mid;else hi=mid-1;}
   return lo;
 }
-/* pre-chorus+chorus instances (beat-index ranges) — nae comin' IN inside these */
-var CHORUS_ZONES=[[100,150],[204,254],[BEAT_ANCHOR,BEAT_ANCHOR+SUN_BEATS],[452,502]];
+/* pre-chorus+chorus instances (beat-index ranges) — nae comin' IN inside these.
+   (3:29 is the ootro, no' a chorus — comin' in there is fine) */
+var CHORUS_ZONES=[[100,150],[204,254],[BEAT_ANCHOR,BEAT_ANCHOR+SUN_BEATS]];
 var SUN_A=bT(BEAT_ANCHOR),SUN_B=bT(BEAT_ANCHOR+SUN_BEATS),SUN_LEN=SUN_B-SUN_A;
 var BAR=(60/129.2)*4;               /* only the offline fallback pulse uses this */
 var BG_VOL=0.3,SUN_VOL=0.3,CF=0.6;  /* keep these EQUAL — the filter, no' the volume, is the difference */
