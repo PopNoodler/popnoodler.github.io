@@ -177,22 +177,26 @@ function activePos(t){
 }
 /* every switch waits for the next bar line, then crossfades — both layers land on the grid */
 function scheduleSwitch(toSun,fresh){
-  var t=AC.currentTime,p=activePos(t);
-  /* the fade straddles the bar line — half in, half oot, doonbeat in the middle */
-  var nb=SUN_A+Math.ceil((p+CF/2+0.12-SUN_A)/BAR)*BAR;
+  var t=AC.currentTime,p=activePos(t),BEAT=BAR/4;
+  /* switch on the next BEAT, keepin' the coont: the incomin' layer enters at the
+     same beat o' its ain bar, sae the rhythm never stutters. The fade straddles it. */
+  var nb=SUN_A+Math.ceil((p+CF/2+0.1-SUN_A)/BEAT)*BEAT;
   var at=t+(nb-p)-CF/2;
-  var inSrc=makeSrc(toSun),inBar;
+  var phase=((nb-SUN_A)%BAR+BAR)%BAR; /* whaur in the bar we are at the switch */
+  var inSrc=makeSrc(toSun),base,inPos;
   if(toSun){
-    inBar=(fresh||sunPos<0)?SUN_A:gridSnap(sunPos);
-    if(inBar<SUN_A||inBar>=SUN_B)inBar=SUN_A;
+    base=(fresh||sunPos<0)?SUN_A:gridSnap(sunPos);
+    if(base<SUN_A||base>=SUN_B)base=SUN_A;
+    inPos=SUN_A+(((base-SUN_A)+phase)%SUN_LEN);
   }else{
-    inBar=gridSnap(bgPos)%songBuf.duration;if(inBar<0)inBar+=songBuf.duration;
+    base=gridSnap(bgPos)%songBuf.duration;if(base<0)base+=songBuf.duration;
     /* the main track never comes IN inside the highlight, nor the 8-bar
-       build-up intae it — skip past. (reachin' it naturally while playin' is fine) */
-    if(inBar>=SUN_A-8*BAR-0.01&&inBar<SUN_B-0.01)inBar=SUN_B;
+       build-up intae it — continue fae the next available bar instead */
+    if(base>=SUN_A-8*BAR-0.01&&base<SUN_B-0.01)base=SUN_B;
+    inPos=(base+phase)%songBuf.duration;
   }
-  var inPos=inBar-CF/2; /* start half a fade early so the doonbeat lands at full presence */
-  if(!toSun){inPos%=songBuf.duration;if(inPos<0)inPos+=songBuf.duration;}
+  inPos-=CF/2; /* start half a fade early so the beat lands at full presence */
+  if(!toSun){if(inPos<0)inPos+=songBuf.duration;}
   inSrc.start(at,Math.max(0,inPos));
   var inGain=toSun?sunGain:bgGain,outGain=toSun?bgGain:sunGain;
   inGain.gain.cancelScheduledValues(t);
@@ -263,6 +267,20 @@ function updSong(dt){
     }
   }else sunHold=0;
   if(!sunOn&&bgSrc&&!pend)bgGain.gain.setTargetAtTime(rainOnScreen()?BG_VOL*0.5:BG_VOL,t,0.4);
+  /* first full listen: when the main track rows ower its last bar, mark the occasion */
+  if(!songDone&&!sunOn&&bgSrc){
+    var curP=activePos(t);
+    if(lastBgP>60&&curP<lastBgP-60){songDone=true;songEndPending=true;}
+    lastBgP=curP;
+  }
+}
+function lbLoad(){try{return JSON.parse(localStorage.bs_lb||'[]');}catch(e){return[];}}
+function lbAdd(s){
+  var lb=lbLoad();
+  lb.push({s:s,d:new Date().toISOString().slice(0,10)});
+  lb.sort(function(a,b){return b.s-a.s;});lb=lb.slice(0,5);
+  try{localStorage.bs_lb=JSON.stringify(lb);}catch(e){}
+  for(var i=0;i<lb.length;i++)if(lb[i].s===s){newLbAt=i;break;}
 }
 
 /* ---------- layout: a cooncil hoose back garden ---------- */
@@ -277,6 +295,8 @@ var state='MENU';                 /* MENU / PLAY / OVER / PAUSE */
 var scene='GARDEN';               /* GARDEN / PUB / STREET / CUT / STRUT */
 var volTries=0,nawT=0,nawMsg='';  /* the volume slider that says naw */
 var blissV=0;                     /* 0..1: how much the world is lovin' this */
+var stumbleT=0,stumbleCd=6;       /* fu' legs: the grund gets closer whiles */
+var songDone=false,songEndPending=false,lastBgP=0,newLbAt=-1; /* first full listen o' the song */
 var fadeV=0,fadeDir=0,fadeNext=null;
 var T=0,score=0,menuT=0,overT=0,newBest=false;
 var dude={x:108,y:250,tx:108,ty:250,speed:0,vx:0,vy:0,face:1};
@@ -451,6 +471,11 @@ function inRain(){
 
 /* ---------- movement (garden + street) ---------- */
 function updMove(dt){
+  if(stumbleT>0){ /* doon — gie him a second */
+    stumbleT-=dt;
+    dude.vx=0;dude.vy=0;dude.speed=0;
+    return;
+  }
   var maxSp=85;
   var txv=0,tyv=0;
   if(dragging){
@@ -468,6 +493,16 @@ function updMove(dt){
   dude.y=clamp(dude.y+dude.vy*dt,by1,by2);
   dude.speed=Math.hypot(dude.vx,dude.vy);
   if(Math.abs(dude.vx)>8)dude.face=dude.vx>0?1:-1;
+  /* the drink does its ain choreography */
+  stumbleCd-=dt;
+  var drk=drunkLvl();
+  if(tutDone&&stumbleCd<=0&&drk>0.25&&dude.speed>30&&Math.random()<dt*(drk-0.2)*2){
+    stumbleT=1.0;stumbleCd=rnd(8,15);
+    sfx('boot');shake=Math.max(shake,3);
+    popup(dude.x,dude.y-30,'*STUMBLE*','#ffd23f');
+    speak(["MAIR BEER'LL FIX IT.","THAT WIS THE GRUND'S FAULT.","WHA MOVED THE GAIRDEN?","STEADY... STEADY...","THAE SLABS ARE OOT TAE GET ME."][Math.floor(Math.random()*5)]);
+    for(var sp2=0;sp2<6;sp2++)parts.push({x:dude.x+rnd(-8,8),y:dude.y+10,vx:rnd(-18,18),vy:-rnd(4,16),t:0.45,life:0.45,col:'#c9bfa8',sz:1});
+  }
   if(scene==='GARDEN'){
     /* dinnae trample the flooers, the bins — or the lassies */
     var solids=[{x:FLOWERS.x,y:FLOWERS.y,r:15},{x:BINS[0].x,y:BINS[0].y,r:11},{x:BINS[1].x,y:BINS[1].y,r:11},{x:WHIRL.x,y:WHIRL.y+4,r:6}];
@@ -973,6 +1008,10 @@ function update(dt){
   if(nawT>0)nawT-=dt;
   updSong(dt);
   /* bliss follows the chorus: sight an' sound move thegither */
+  if(songEndPending&&state==='PLAY'&&(scene==='GARDEN'||scene==='STREET'||scene==='PUB')){
+    songEndPending=false;state='SONGEND';
+    lbAdd(Math.floor(score));sfx('cheer');
+  }
   var bt=(sunOn&&state==='PLAY'&&(scene==='GARDEN'||scene==='STRUT'))?1:0;
   blissV+=(bt-blissV)*Math.min(1,dt*3);
   if(blissV>0.4&&(scene==='GARDEN'||scene==='STRUT')&&Math.random()<dt*14*blissV){
@@ -2038,8 +2077,8 @@ function drawOver(){
   if(tidyPints>0){text('TIDY PINTS POURED: '+tidyPints,W/2,ln,6,'#7ec850');ln+=11;}
   if(newBest&&Math.floor(overT*3)%2===0)text('NEW BEST!',W/2,ln+6,10,'#ffd23f');
   else text('BEST: '+hi+' ml',W/2,ln+6,8,'#fff');
-  text('GO CHECK IT OUT PLEASE AND',W/2,262,7,'#cfe6f5');
-  text('THANK YOU IN ADVANCE',W/2,274,7,'#cfe6f5');
+  text('GMCG ON INSTAGRAM FOR UPDATES',W/2,262,7,'#cfe6f5');
+  text('MADE BY ADAM — ADAMBARI.CO.UK',W/2,274,7,'#cfe6f5');
   text('♡',W/2,286,9,'#7ec850');
   if(overT>0.8&&Math.floor(overT*2)%2===0)text('TAP TO GO AGAIN',W/2,314,9,'#fff');
 }
@@ -2047,6 +2086,21 @@ function drawPause(){
   ctx.fillStyle='rgba(10,16,30,0.7)';ctx.fillRect(0,0,W,H);
   text('PAUSED',W/2,H/2-10,16,'#ffd23f');
   text('TAP TO RESUME',W/2,H/2+14,8,'#fff');
+}
+function drawSongEnd(){
+  ctx.fillStyle='rgba(10,16,30,0.8)';ctx.fillRect(0,0,W,H);
+  text("THAT'S THE HAIL SONG!",W/2,76,11,'#ffd23f');
+  text('BEER IN THE SUN SO FAR:',W/2,104,7,'#fff');
+  text(Math.floor(score)+' ml',W/2,130,20,'#ffd23f');
+  text(score>hi?'ON FOR A NEW BEST!':'BEST: '+hi+' ml',W/2,152,8,score>hi?'#7ec850':'#fff');
+  text('LEADERBOARD',W/2,182,8,'rgba(255,255,255,0.75)');
+  var lb=lbLoad();
+  for(var i=0;i<lb.length&&i<5;i++){
+    var me=i===newLbAt;
+    text((i+1)+'.  '+lb[i].s+' ml  '+(lb[i].d||''),W/2,198+i*13,7,me?'#ffd23f':'#cfe6f5');
+  }
+  text('THE SESSION ROLLS ON —',W/2,290,7,'#cfe6f5');
+  text("TAP TO KEEP DRINKIN'",W/2,306,9,'#fff');
 }
 
 /* ---------- render ---------- */
@@ -2059,7 +2113,13 @@ function renderGarden(){
     {y:BINS[1].y+9,f:function(){drawBin(BINS[1].x,BINS[1].y,'#3a5a8a');}},
     {y:FLOWERS.y+8,f:drawFlowerBed},
     {y:WHIRL.y+8,f:drawWhirligig},
-    {y:dude.y+11,f:drawDude}
+    {y:dude.y+11,f:function(){
+      if(stumbleT>0){ /* a wee birl on the wey doon */
+        ctx.save();ctx.translate(dude.x,dude.y);
+        ctx.rotate(Math.sin(stumbleT*16)*0.3*Math.min(1,stumbleT*2.2));
+        ctx.translate(-dude.x,-dude.y);drawDude();ctx.restore();
+      }else drawDude();
+    }}
   ];
   for(var li2=0;li2<lassies.length;li2++){
     (function(g){items.push({y:g.y+7,f:function(){drawLassie(g);}});})(lassies[li2]);
@@ -2101,6 +2161,7 @@ function render(){
   if(state==='MENU')drawMenu();
   if(state==='OVER'){overT+=dtG;drawOver();}
   if(state==='PAUSE')drawPause();
+  if(state==='SONGEND')drawSongEnd();
   if(fadeV>0){ctx.fillStyle='rgba(6,10,20,'+fadeV+')';ctx.fillRect(0,0,W,H);}
   drawDoubleVision();
   drawScanlines();
@@ -2127,6 +2188,7 @@ cv.addEventListener('pointerdown',function(e){
   }
   if(state==='OVER'){if(overT>0.8){state='MENU';menuT=0;}return;}
   if(state==='PAUSE'){state='PLAY';return;}
+  if(state==='SONGEND'){state='PLAY';return;}
   if(state!=='PLAY')return;
   if(tutCard){if(tutCardT>0.5)tutCard=null;return;}
   if(scene==='BAL'){balPX=p.x;return;} /* touch doon anywhere — swipin' steers */
@@ -2181,6 +2243,7 @@ addEventListener('keydown',function(e){
     if(state==='MENU')start();
     else if(state==='OVER'){if(overT>0.8){state='MENU';menuT=0;}}
     else if(state==='PAUSE')state='PLAY';
+    else if(state==='SONGEND')state='PLAY';
     else if(state==='PLAY'){
       if(tutCard){if(tutCardT>0.5)tutCard=null;}
       else if(scene==='STRUT'||scene==='CUT'){}
@@ -2209,7 +2272,7 @@ function frame(ts){
   var dt=(ts-last)/1000;last=ts;
   if(dt>0.05)dt=0.05;if(dt<0)dt=0;
   dtG=dt;
-  if(state!=='PAUSE')update(dt);
+  if(state!=='PAUSE'&&state!=='SONGEND')update(dt);
   render();
   requestAnimationFrame(frame);
 }
