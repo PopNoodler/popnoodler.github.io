@@ -238,8 +238,12 @@ function updSong(dt){
     sunPos=-1;               /* the flight hame gets the chorus fae the tap, immediately */
     scheduleSwitch(true,true);airCued=true;return;
   }
-  if(wantSun!==sunOn){sunHold+=dt;if(sunHold>0.18){sunHold=0;scheduleSwitch(wantSun);}}
-  else sunHold=0;
+  /* sticky: quick tae bring the chorus in, gey reluctant tae let it go */
+  if(sunOn&&!wantSun&&!airNow&&scene==='GARDEN'&&patch.alpha>0.4&&dist(dude.x,dude.y,patch.x,patch.y)<patch.r+14)wantSun=true;
+  if(wantSun!==sunOn){
+    sunHold+=dt;
+    if(sunHold>(wantSun?0.15:(scene==='GARDEN'?3.5:1.0))){sunHold=0;scheduleSwitch(wantSun);}
+  }else sunHold=0;
   if(!sunOn&&bgSrc&&!pend)bgGain.gain.setTargetAtTime(rainOnScreen()?BG_VOL*0.5:BG_VOL,t,0.4);
 }
 
