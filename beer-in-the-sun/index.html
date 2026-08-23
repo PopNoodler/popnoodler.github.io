@@ -2169,17 +2169,25 @@ function drawMenu(){
   text('GET RUN OWER ON THE WAY HAME',W/2,245,6,'#ffd23f');
   text('BALANCE YER PINT IN THE AIR',W/2,256,6,'#ff9d6b');
   text("DRAIN 3 PINTS AN' YER DONE",W/2,267,6,'#7ec850');
-  if(hi>0)text('BEST: '+hi+' ml',W/2,284,8,'#7ec850');
-  if(Math.floor(menuT*2)%2===0)text('TAP TO START',W/2,294,10,'#fff');
+  /* the lower panel: score, start, slider an' credits thegither */
+  ctx.fillStyle='rgba(6,12,24,0.72)';
+  ctx.fillRect(16,282,W-32,94);
+  ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=1;
+  ctx.strokeRect(16.5,282.5,W-33,93);
+  if(hi>0)text('BEST: '+hi+' ml',W/2,292,8,'#7ec850');
+  if(Math.floor(menuT*2)%2===0)text('TAP TO START',W/2,304,10,'#fff');
   /* the volume slider (dinnae bother) */
-  text('VOLUME',W/2,308,6,'rgba(255,255,255,0.75)');
-  ctx.fillStyle='rgba(255,255,255,0.25)';ctx.fillRect(W/2-40,317,80,3);
+  text('VOLUME',W/2,318,6,'rgba(255,255,255,0.75)');
+  ctx.fillStyle='rgba(255,255,255,0.25)';ctx.fillRect(W/2-40,326,80,3);
   var kx=W/2+16+(nawT>0?Math.sin(menuT*40)*3:0);
-  ctx.fillStyle='#ffd23f';ctx.fillRect(kx-2,313,5,11);
-  if(nawT>0)text(nawMsg,W/2,334,8,'#ff9d6b');
-  text('Fan tribute - with blessings from GMCG',W/2,344,6,'rgba(255,255,255,0.65)');
-  text('♪ STREAM BEER IN THE SUN ♪',W/2,357,7,'#1ed760');
-  text('♡  '+VER,W/2,368,7,'#7ec850');
+  ctx.fillStyle='#ffd23f';ctx.fillRect(kx-2,322,5,11);
+  if(nawT>0)text(nawMsg,W/2,338,8,'#ff9d6b');
+  text('Fan tribute - with blessings from GMCG',W/2,346,6,'rgba(255,255,255,0.65)');
+  /* the stream link — a proper wee Spotify-green button */
+  ctx.fillStyle='#1ed760';ctx.fillRect(30,351,W-60,15);
+  ctx.fillStyle='rgba(255,255,255,0.35)';ctx.fillRect(30,351,W-60,1);
+  text('♪ STREAM BEER IN THE SUN ♪',W/2,359,7,'#07301a');
+  text('♡  '+VER,W/2,372,6,'#7ec850');
 }
 function drawOver(){
   ctx.fillStyle='rgba(10,16,30,0.7)';ctx.fillRect(0,0,W,H);
@@ -2310,13 +2318,13 @@ cv.addEventListener('pointerdown',function(e){
   var p=canvasXY(e);
   if(p.x>W-28&&p.y<24){setMuted(!muted);return;}
   if(state==='MENU'){
-    if(p.y>300&&p.y<340&&p.x>W/2-60&&p.x<W/2+60){ /* the slider kens best */
+    if(p.y>312&&p.y<340&&p.x>W/2-60&&p.x<W/2+60){ /* the slider kens best */
       volTries++;
       var L=['NAW!','NAW.','STILL NAW.',"IT'S AT THE RIGHT LEVEL.","PERSISTENT, AREN'T YE?",'NAW MEANS NAW.'];
       nawMsg=L[Math.min(volTries-1,L.length-1)];
       nawT=1.5;sfx('squawk');return;
     }
-    if(p.y>349&&p.y<367){ /* stream the real thing */
+    if(p.y>347&&p.y<369){ /* stream the real thing */
       try{window.open('https://open.spotify.com/track/4gxDGM8LNht9higommwH7h','_blank');}catch(e){}
       return;
     }
