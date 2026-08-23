@@ -258,23 +258,15 @@ function updSong(dt){
     bgGain.gain.setTargetAtTime(BG_VOL,t,0.5);
     return;
   }
-  var strutNow=state==='PLAY'&&scene==='STRUT';
-  if(strutNow)strutTail=STRUT_TAIL;
-  else if(scene!=='GARDEN')strutTail=0;
-  else if(strutTail>0)strutTail-=dt;
-  var wantSun=strutNow||(state==='PLAY'&&scene==='GARDEN'&&strutTail>0)
-    ||(state==='PLAY'&&scene==='GARDEN'&&!fetching&&inSunPatch()&&pint.has&&pint.ml>0);
-  if(!strutNow)strutCued=false;
+  /* the chorus lives in the circle an' naewhere else */
+  var wantSun=state==='PLAY'&&scene==='GARDEN'&&!fetching&&inSunPatch()&&pint.has&&pint.ml>0;
   if(pend){
     if(t>pend.at+CF+0.05)finishSwitch();
     else if(wantSun!==pend.to&&t<pend.at-0.08)cancelSwitch();
     else return;
   }
-  if(strutNow&&!sunOn&&!strutCued&&!pend){
-    scheduleSwitch(true,true);strutCued=true;return; /* walk it aff tae the chorus, fae the tap */
-  }
   /* sticky: quick tae bring the chorus in, gey reluctant tae let it go */
-  if(sunOn&&!wantSun&&!strutNow&&scene==='GARDEN'&&pint.has&&pint.ml>0&&patch.alpha>0.4&&dist(dude.x,dude.y,patch.x,patch.y)<patch.r+14)wantSun=true;
+  if(sunOn&&!wantSun&&scene==='GARDEN'&&pint.has&&pint.ml>0&&patch.alpha>0.4&&dist(dude.x,dude.y,patch.x,patch.y)<patch.r+14)wantSun=true;
   if(wantSun!==sunOn){
     if(wantSun){ /* intae the sun: nae delay — the bar-lock is a' the timing needed */
       sunHold=0;scheduleSwitch(true);
@@ -1010,6 +1002,9 @@ function updBal(dt){
 }
 function finishStrut(){
   scene='GARDEN';
+  /* normal weather on returnin' — an' the rain clock starts its 1s grace,
+     since ye're staunin' ootside the circle wi' a fu' pint */
+  wasInSun=false;rainCnt=0.0001;rain.warned=false;
   /* hame wi' a fu' pint, aye — nae hauf-measures in yer ain gairden */
   if(pint.has&&pint.ml<560)popup(dude.x,dude.y-56,"TAPPED AFF FU'",'#7ec850');
   pint.has=true;pint.ml=568;pint.watered=0;fetching=false;
