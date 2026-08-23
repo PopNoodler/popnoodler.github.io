@@ -258,9 +258,10 @@ function updSong(dt){
     bgGain.gain.setTargetAtTime(BG_VOL,t,0.5);
     return;
   }
-  /* the chorus lives in the circle an' naewhere else — an' it plays on ower
-     an empty gless until ye actually leave for the pub */
-  var wantSun=state==='PLAY'&&scene==='GARDEN'&&inSunPatch();
+  /* the chorus lives in the circle — but ance yer pint's DONE it plays ye oot
+     across the hail gairden, richt until ye leave for the pub */
+  var pintDone=!(pint.has&&pint.ml>0);
+  var wantSun=state==='PLAY'&&scene==='GARDEN'&&(inSunPatch()||pintDone);
   if(pend){
     if(t>pend.at+CF+0.05)finishSwitch();
     else if(wantSun!==pend.to&&t<pend.at-0.08)cancelSwitch();
