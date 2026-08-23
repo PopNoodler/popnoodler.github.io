@@ -93,7 +93,7 @@ var LEAD=[329.63,392,440,0,523.25,0,440,392, 329.63,392,440,523.25,587.33,523.25
           659.25,0,587.33,523.25,440,392,440,0, 392,329.63,392,440,392,0,0,0];
 var BASS=[130.81,110,174.61,196];
 function scheduleStep(i,t){
-  if(songBuf)return; /* the real song has taken over — the chiptune retires gracefully */
+  if(!songFailed)return; /* the real song owns the soundtrack; chiptune only if it cannae load */
   if(musGain)musGain.gain.setTargetAtTime(rainOnScreen()?0.3:0.9,t,0.3);
   var L=LEAD[i];
   if(L)tone(L,t,0.14,'square',0.045,0,musGain);
@@ -151,7 +151,7 @@ var SUN_B=SUN_A+SUN_LEN;
 var BG_VOL=0.3,SUN_VOL=0.3,CF=0.6;  /* keep these EQUAL — the filter, no' the volume, is the difference */
 var songBuf=null,bgSrc=null,sunSrc=null,bgGain=null,sunGain=null,bgFilt=null;
 var bgPos=0,sunPos=-1,bgT0=0,sunT0=0; /* sunPos -1 = first visit enters at SUN_A */
-var sunOn=false,sunHold=0,pend=null,airCued=false; /* pend = a switch waiting for its bar line */
+var sunOn=false,sunHold=0,pend=null,airCued=false,songFailed=false; /* pend = a switch waiting for its bar line */
 function initSong(){
   if(!AC||bgGain)return;
   /* the background song sits ahint the clouds: low-passed and quiet */
@@ -160,8 +160,8 @@ function initSong(){
   bgFilt.connect(bgGain);bgGain.connect(master);
   sunGain=AC.createGain();sunGain.gain.value=0;sunGain.connect(master);
   fetch('song.mp3').then(function(r){if(!r.ok)throw 0;return r.arrayBuffer();}).then(function(ab){
-    AC.decodeAudioData(ab,function(buf){songBuf=buf;if(SUN_B>buf.duration){SUN_B=buf.duration;SUN_LEN=SUN_B-SUN_A;}},function(){});
-  }).catch(function(){ /* nae bother — the chiptune carries on */ });
+    AC.decodeAudioData(ab,function(buf){songBuf=buf;if(SUN_B>buf.duration){SUN_B=buf.duration;SUN_LEN=SUN_B-SUN_A;}},function(){songFailed=true;});
+  }).catch(function(){songFailed=true; /* nae bother — the chiptune steps in */ });
 }
 function makeSrc(sun){
   var s=AC.createBufferSource();s.buffer=songBuf;s.loop=true;
