@@ -271,10 +271,9 @@ function updSong(dt){
     bgGain.gain.setTargetAtTime(BG_VOL,t,0.5);
     return;
   }
-  /* the chorus lives in the circle — but ance yer pint's DONE it plays ye oot
-     across the hail gairden, richt until ye leave for the pub */
-  var pintDone=!(pint.has&&pint.ml>0);
-  var wantSun=state==='PLAY'&&scene==='GARDEN'&&(inSunPatch()||pintDone);
+  /* the chorus lives in the circle. A pint ye DRANK dry keeps the sun on
+     across the gairden — a pint the rain RUINED earns ye naething */
+  var wantSun=state==='PLAY'&&scene==='GARDEN'&&pint.has&&(inSunPatch()||pint.ml<=0);
   if(pend){
     if(t>pend.at+CF+0.05)finishSwitch();
     else if(wantSun!==pend.to&&t<pend.at-0.08)cancelSwitch();
@@ -624,7 +623,8 @@ function updPatch(dt){
 function updRain(dt){
   /* deterministic Scotland: leave the circle -> thunder -> rain at 1s.
      step back intae the light -> sky clears. Nae randomness, nae timers. */
-  var inSun=state==='PLAY'&&scene==='GARDEN'&&inSunPatch();
+  /* the circle only beats the rain when ye bring it beer */
+  var inSun=state==='PLAY'&&scene==='GARDEN'&&inSunPatch()&&pint.has&&pint.ml>0;
   if(inSun&&rain.active){
     rain.active=false;rain.warned=false;rainCnt=0;
     calloutMsg('SUN BEATS RAIN!','#ffd23f');sfx('twinkle');
@@ -2157,13 +2157,19 @@ function drawMenu(){
   text('BEER',W/2,128,26,'#ffd23f');
   text('IN THE SUN',W/2,152,17,'#ffd23f');
   text('~ THE GAME ~',W/2,172,8,'#fff');
-  text('CHUG IN THE SUN SPOTS',W/2,200,7,'#ffd23f');
-  text('EMPTY? OOT THE GATE TAE THE PUB',W/2,212,7,'#cfe6f5');
-  text('POUR YER AIN — STOP AT THE LINE',W/2,224,7,'#cfe6f5');
-  text('GET RUN OWER ON THE WAY HAME',W/2,236,7,'#ffd23f');
-  text('BALANCE YER PINT IN THE AIR',W/2,248,7,'#ff9d6b');
-  text("SPILL 3 PINTS AN' YER DONE",W/2,260,7,'#7ec850');
-  if(hi>0)text('BEST: '+hi+' ml',W/2,278,8,'#7ec850');
+  /* the how-it-goes panel — a' the rules in a tidy box */
+  ctx.fillStyle='rgba(6,12,24,0.72)';
+  ctx.fillRect(16,188,W-32,88);
+  ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=1;
+  ctx.strokeRect(16.5,188.5,W-33,87);
+  text('HOW IT GOES',W/2,199,6,'rgba(255,255,255,0.55)');
+  text('CHUG IN THE SUN SPOTS',W/2,212,7,'#ffd23f');
+  text('EMPTY? OOT THE GATE TAE THE PUB',W/2,223,6,'#cfe6f5');
+  text('POUR YER AIN — STOP AT THE LINE',W/2,234,6,'#cfe6f5');
+  text('GET RUN OWER ON THE WAY HAME',W/2,245,6,'#ffd23f');
+  text('BALANCE YER PINT IN THE AIR',W/2,256,6,'#ff9d6b');
+  text("DRAIN 3 PINTS AN' YER DONE",W/2,267,6,'#7ec850');
+  if(hi>0)text('BEST: '+hi+' ml',W/2,284,8,'#7ec850');
   if(Math.floor(menuT*2)%2===0)text('TAP TO START',W/2,294,10,'#fff');
   /* the volume slider (dinnae bother) */
   text('VOLUME',W/2,308,6,'rgba(255,255,255,0.75)');
