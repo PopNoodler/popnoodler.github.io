@@ -1,13 +1,13 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Beer In The Sun â€” The Game</title>
+<title>Beer In The Sun — The Game</title>
 <meta name="description" content="Chug in the sun spots o' yer garden, pour yer ain pint at the pub, get run over on the way hame. A daft wee retro fan tribute to GMCG's 'Beer In The Sun'.">
-<meta property="og:title" content="Beer In The Sun â€” The Game">
+<meta property="og:title" content="Beer In The Sun — The Game">
 <meta property="og:description" content="Chug in the sun spots, pour yer ain pint, get run over on the way hame, walk it off. A daft wee fan tribute to GMCG.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ðŸº</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍺</text></svg>">
 <style>
   html,body{margin:0;padding:0;height:100%;background:#101623;overflow:hidden}
   body{display:flex;align-items:center;justify-content:center}
@@ -19,12 +19,12 @@
 <script>
 (function(){
 'use strict';
-/* BEER IN THE SUN â€” the game (v7). Unofficial fan tribute to GMCG.
+/* BEER IN THE SUN — the game (v7). Unofficial fan tribute to GMCG.
    The story, lived on repeat: chug yer beer in the sun spots o' yer garden ->
    oot the gate tae the Buzy Bee an' pour yer ain pint -> get run over on the
    street on the way hame (on purpose) -> fly hame balancin' the pint -> walk it off. */
 
-var VER='v54';
+var VER='v55';
 var W=216,H=384,TAU=Math.PI*2;
 var RES=3; /* supersample: art stays chunky, text renders crisp on big screens */
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -144,11 +144,11 @@ function sfx(name){
    game, and the bit Graeme picked (2:52-3:15, pre-chorus intae the chorus)
    blooms in loud while ye're staunin' in the sun. Each player keeps its ain
    place and resumes where it left off, wi' quick fades both ways. ---------- */
-var SUN_A=172;                      /* 2:52 â€” start o' the pre-chorus, a doonbeat */
+var SUN_A=172;                      /* 2:52 — start o' the pre-chorus, a doonbeat */
 var BAR=(60/130)*4;                 /* one bar at 130 BPM; the grid is anchored at SUN_A */
 var SUN_LEN=12*BAR;                 /* the section loops as 12 clean bars */
 var SUN_B=SUN_A+SUN_LEN;
-var BG_VOL=0.3,SUN_VOL=0.3,CF=0.6;  /* keep these EQUAL â€” the filter, no' the volume, is the difference */
+var BG_VOL=0.3,SUN_VOL=0.3,CF=0.6;  /* keep these EQUAL — the filter, no' the volume, is the difference */
 var STRUT_TAIL=5;                   /* the chorus lingers this lang efter walkin' it aff */
 var songBuf=null,bgSrc=null,sunSrc=null,bgGain=null,sunGain=null,bgFilt=null;
 var bgPos=0,sunPos=-1,bgT0=0,sunT0=0; /* sunPos -1 = first visit enters at SUN_A */
@@ -162,7 +162,7 @@ function initSong(){
   sunGain=AC.createGain();sunGain.gain.value=0;sunGain.connect(master);
   fetch('song.mp3').then(function(r){if(!r.ok)throw 0;return r.arrayBuffer();}).then(function(ab){
     AC.decodeAudioData(ab,function(buf){songBuf=buf;if(SUN_B>buf.duration){SUN_B=buf.duration;SUN_LEN=SUN_B-SUN_A;}},function(){songFailed=true;});
-  }).catch(function(){songFailed=true; /* nae bother â€” the chiptune steps in */ });
+  }).catch(function(){songFailed=true; /* nae bother — the chiptune steps in */ });
 }
 function makeSrc(sun){
   var s=AC.createBufferSource();s.buffer=songBuf;s.loop=true;
@@ -175,10 +175,10 @@ function activePos(t){
   if(sunOn){var x=((sunPos-SUN_A)+(t-sunT0))%SUN_LEN;if(x<0)x+=SUN_LEN;return SUN_A+x;}
   var b=(bgPos+(t-bgT0))%songBuf.duration;if(b<0)b+=songBuf.duration;return b;
 }
-/* every switch waits for the next bar line, then crossfades â€” both layers land on the grid */
+/* every switch waits for the next bar line, then crossfades — both layers land on the grid */
 function scheduleSwitch(toSun,fresh){
   var t=AC.currentTime,p=activePos(t);
-  /* the fade straddles the bar line â€” half in, half oot, doonbeat in the middle */
+  /* the fade straddles the bar line — half in, half oot, doonbeat in the middle */
   var nb=SUN_A+Math.ceil((p+CF/2+0.12-SUN_A)/BAR)*BAR;
   var at=t+(nb-p)-CF/2;
   var inSrc=makeSrc(toSun),inBar;
@@ -187,9 +187,9 @@ function scheduleSwitch(toSun,fresh){
     if(inBar<SUN_A||inBar>=SUN_B)inBar=SUN_A;
   }else{
     inBar=gridSnap(bgPos)%songBuf.duration;if(inBar<0)inBar+=songBuf.duration;
-    /* the main track never comes IN inside the highlight â€” skip past it.
-       (reachin' it naturally while playin' is fine) */
-    if(inBar>=SUN_A-0.01&&inBar<SUN_B-0.01)inBar=SUN_B;
+    /* the main track never comes IN inside the highlight, nor the 8-bar
+       build-up intae it — skip past. (reachin' it naturally while playin' is fine) */
+    if(inBar>=SUN_A-8*BAR-0.01&&inBar<SUN_B-0.01)inBar=SUN_B;
   }
   var inPos=inBar-CF/2; /* start half a fade early so the doonbeat lands at full presence */
   if(!toSun){inPos%=songBuf.duration;if(inPos<0)inPos+=songBuf.duration;}
@@ -252,15 +252,19 @@ function updSong(dt){
   if(sunOn&&!wantSun&&!strutNow&&scene==='GARDEN'&&patch.alpha>0.4&&dist(dude.x,dude.y,patch.x,patch.y)<patch.r+14)wantSun=true;
   if(wantSun!==sunOn){
     sunHold+=dt;
-    if(sunHold>(wantSun?0.15:(scene==='GARDEN'?3.5:1.0))){sunHold=0;scheduleSwitch(wantSun);}
+    if(sunHold>(wantSun?0.15:1.0)){
+      sunHold=0;scheduleSwitch(wantSun);
+      /* Scotland punishes ye for leavin' the light */
+      if(!wantSun&&scene==='GARDEN'&&state==='PLAY'&&!rain.active)rain.nextT=Math.min(rain.nextT,1.2);
+    }
   }else sunHold=0;
   if(!sunOn&&bgSrc&&!pend)bgGain.gain.setTargetAtTime(rainOnScreen()?BG_VOL*0.5:BG_VOL,t,0.4);
 }
 
 /* ---------- layout: a cooncil hoose back garden ---------- */
-var GATE={x:32,y:352};        /* gap in the back fence, bottom-left â€” aff yer thumb */
+var GATE={x:32,y:352};        /* gap in the back fence, bottom-left — aff yer thumb */
 var GUITAR={x:82,y:98};       /* his pride an' joy, by the back door */
-var WHIRL={x:150,y:216};      /* the whirligig â€” shelter under the washin' */
+var WHIRL={x:150,y:216};      /* the whirligig — shelter under the washin' */
 var BINS=[{x:17,y:128},{x:38,y:126}];
 var FLOWERS={x:28,y:210};
 
@@ -281,7 +285,7 @@ var patch={x:108,y:260,r:34,tx:108,ty:260,alpha:1,moveT:1.2};
 var rain={active:false,t:0,nextT:24,warned:false};
 var wateredSpoke=false;
 var guitarCd=0,bumpCd=0,bumpN=0;
-/* the lassies fae the reels â€” wan tae start, anither every time ye come hame */
+/* the lassies fae the reels — wan tae start, anither every time ye come hame */
 var LASS_ROSTER=[
   {baseAng:0.8,towel:'#ff9d3f',bikini:'#ff5252',hair:'#ffd23f'},
   {baseAng:3.6,towel:'#6bc5ff',bikini:'#e86a9a',hair:'#5a3a1e'},
@@ -311,11 +315,12 @@ function spawnLassie(){
   lassies.push(makeLassie(i,x,y));
   return true;
 }
-var CUT_LEN=1.2; /* the comic panel â€” the car, the flight, the word */
+var CUT_LEN=1.2; /* the comic panel — the car, the flight, the word */
 var cutT=0,cutWord='',cutBonus=0,cutBig=false,hitCar=null;
 /* THE WAY HAME: pint on yer palm, drag tae keep yer haun under it */
 var BAL_LEN=8;
 var balT=0,hx=108,tiltA=0,tiltV=0,balPX=null,brinkT=0;
+var balDrops=[],flightSpill=0,spillAcc=0; /* beer oot the mug, drop by drop */
 var pendCorr=0,dudeOff=0,turbT=0.6;
 var swayPh=0,hicT=2,lagBuf=0; /* the drink catches up wi' ye */
 var gust={t:2.5,warn:0,dir:1,power:0};
@@ -326,7 +331,7 @@ var tutCard=null,tutCardT=0,tutSeen={};
 var TUTS={
   garden:{title:'YER GARDEN',lines:['DRAG YER CHAIR INTAE','THE SUN SPOT.',"SIT STILL AN' CHUG.",'THE RAIN CANNAE TOUCH','YE IN THE LIGHT.']},
   pub:{title:'THE BUZY BEE',lines:['HOLD = POUR.','STOP AT THE 568 LINE.','3 CHANCES TAE POUR.']},
-  street:{title:'TWA PUBS, WAN ROAD',lines:['CHUG AS YE CROSS.','REFILL AT THE ITHER SIDE â€”','BONUS EVERY CROSSIN\'.','GETTIN\' HIT = YER WAY HAME.','(THAT\'S FINE. WALK IT OFF.)']},
+  street:{title:'TWA PUBS, WAN ROAD',lines:['CHUG AS YE CROSS.','REFILL AT THE ITHER SIDE —','BONUS EVERY CROSSIN\'.','GETTIN\' HIT = YER WAY HAME.','(THAT\'S FINE. WALK IT OFF.)']},
   fly:{title:'THE WAY HAME',lines:['THE PINT IS ON YER HAUN.','SWIPE LEFT / RIGHT TAE','KEEP YER HAUN UNDER IT.','RIDE IT OOT TIL YER HAME.']}
 };
 function showTut(key){
@@ -349,7 +354,7 @@ var hintSun=true,hintStill=true,hintFetch=true;
 function rainOnScreen(){
   return rain.active&&(scene==='GARDEN'||scene==='STRUT');
 }
-/* the drink: never stops climbin' â€” easy at wan pint, near-impossible in the teens */
+/* the drink: never stops climbin' — easy at wan pint, near-impossible in the teens */
 function drunkLvl(){return 1-Math.exp(-(drankMl/568)/7);}
 function reset(){
   T=0;score=0;overT=0;newBest=false;
@@ -357,13 +362,13 @@ function reset(){
   dude={x:108,y:250,tx:108,ty:250,speed:0,vx:0,vy:0,face:1};
   dragging=false;dragId=null;
   pint={has:true,ml:568,watered:0};stock=3;fetching=false;
-  patch={x:108,y:260,r:34,tx:108,ty:260,alpha:1,moveT:1.2}; /* sun's aff early â€” nae dawdlin' */
+  patch={x:108,y:260,r:34,tx:108,ty:260,alpha:1,moveT:1.2}; /* sun's aff early — nae dawdlin' */
   rain={active:false,t:0,nextT:24,warned:false};wateredSpoke=false;guitarCd=0;
   bumpCd=0;bumpN=0;lassies=newLassies();
   cutT=0;
   balT=0;hx=108;tiltA=0;tiltV=0;brinkT=0;pendCorr=0;dudeOff=0;turbT=0.6;
   swayPh=0;hicT=2;lagBuf=0;
-  gust={t:2.5,warn:0,dir:1,power:0};balFail=false;balFailT=0;flights=0;
+  gust={t:2.5,warn:0,dir:1,power:0};balFail=false;balFailT=0;flights=0;balDrops.length=0;flightSpill=0;spillAcc=0;
   tutCard=null;tutCardT=0;tutSeen={};
   strutT=0;strutBeat=0;strutSteps=0;strutTapped=false;strutDir=1;lickT=0;
   pour={ml:0,hold:false,done:false,doneT:0,msg:'',perfect:false,tries:0};
@@ -460,7 +465,7 @@ function updMove(dt){
   dude.speed=Math.hypot(dude.vx,dude.vy);
   if(Math.abs(dude.vx)>8)dude.face=dude.vx>0?1:-1;
   if(scene==='GARDEN'){
-    /* dinnae trample the flooers, the bins â€” or the lassies */
+    /* dinnae trample the flooers, the bins — or the lassies */
     var solids=[{x:FLOWERS.x,y:FLOWERS.y,r:15},{x:BINS[0].x,y:BINS[0].y,r:11},{x:BINS[1].x,y:BINS[1].y,r:11},{x:WHIRL.x,y:WHIRL.y+4,r:6}];
     for(var li=0;li<lassies.length;li++)
       solids.push({x:lassies[li].x,y:lassies[li].y,r:lassies[li].state==='dancing'?11:8,lass:true});
@@ -544,7 +549,7 @@ function updPatch(dt){
   var sp=lerp(22,40,R);
   var dx=patch.tx-patch.x,dy=patch.ty-patch.y,d=Math.hypot(dx,dy)||1;
   if(d>2){patch.x+=dx/d*Math.min(sp,d*2)*dt;patch.y+=dy/d*Math.min(sp,d*2)*dt;}
-  /* the sun is ALWAYS there â€” it just wanders */
+  /* the sun is ALWAYS there — it just wanders */
   patch.alpha=Math.min(1,patch.alpha+dt*2);
 }
 function updRain(dt){
@@ -587,7 +592,7 @@ function updLassies(dt){
       if(g.thinkT<=0){
         g.thinkT=rnd(2.5,4.5);
         if(dist(g.x,g.y,patch.x,patch.y)>patch.r+36){
-          /* sun's aff â€” up she gets, towel an' a' */
+          /* sun's aff — up she gets, towel an' a' */
           var an=g.baseAng+rnd(-0.6,0.6);
           g.tx=clamp(patch.x+Math.cos(an)*(patch.r+rnd(10,22)),24,W-24);
           g.ty=clamp(patch.y+Math.sin(an)*(patch.r*0.6+rnd(10,20)),132,334);
@@ -631,7 +636,7 @@ function drawLassie(g){
     if(g.face<0)ctx.scale(-1,1);
     var stp=Math.sin(T*13)*2;
     drawLassHead(0,-28,g);
-    px(-4,-18,8,12,'#f0c8a0');          /* torso â€” tummy an' a' */
+    px(-4,-18,8,12,'#f0c8a0');          /* torso — tummy an' a' */
     px(-4,-17,8,3,g.bikini);            /* tap */
     px(0,-11,1,1,'rgba(160,100,70,0.8)');  /* belly button */
     px(-4,-9,8,3,g.bikini);             /* bottoms */
@@ -656,16 +661,16 @@ function drawLassie(g){
     px(-7,-26+aL,2,9,'#f0c8a0');px(5,-26+aR,2,9,'#f0c8a0');    /* airms up */
     drawLassHead(0,-30,g);
     ctx.restore();
-    if(Math.floor(T*3+g.baseAng)%4===0)text('â™ª',13,-26,7,'rgba(255,255,255,0.7)');
+    if(Math.floor(T*3+g.baseAng)%4===0)text('♪',13,-26,7,'rgba(255,255,255,0.7)');
   }
   ctx.restore();
 }
 /* ---------- garden taps ---------- */
 function tryTap(x,y){
-  /* his guitar â€” gie it a wee strum */
+  /* his guitar — gie it a wee strum */
   if(scene==='GARDEN'&&dist(x,y,GUITAR.x,GUITAR.y)<16&&guitarCd<=0){
     guitarCd=5;sfx('lick');score+=10;
-    popup(GUITAR.x,GUITAR.y-18,'â™ª','#ffd23f');
+    popup(GUITAR.x,GUITAR.y-18,'♪','#ffd23f');
     return true;
   }
   return false;
@@ -681,7 +686,7 @@ function pourRelease(){
     sfx('bliss');popup(W/2,180,'+100','#ffd23f');
     return;
   }
-  /* that's a pour used up â€” three an' ye're done */
+  /* that's a pour used up — three an' ye're done */
   pour.tries++;
   if(pour.tries>=3){
     pour.done=true;pour.msg="THAT'LL DAE.";sfx('ding');
@@ -720,7 +725,7 @@ function updPub(dt){
     pour.ml+=320*flowMul*dt;
     pourSfxT-=dt;
     if(pourSfxT<=0&&flowMul>0.2){pourSfxT=0.18;sfx('pour');}
-    if(pour.ml>590){ /* ower the line â€” that's it feenished */
+    if(pour.ml>590){ /* ower the line — that's it feenished */
       pour.hold=false;
       pour.done=true;pour.msg='OWER THE TAP! WASTED SOME';pour.ml=480;
       sfx('splash');
@@ -754,14 +759,14 @@ function updStreet(dt){
   updMove(dt);
   homeHintT+=dt;
   streetT+=dt;
-  /* chuggin' as ye go â€” but only doon tae the hauf-wey line */
+  /* chuggin' as ye go — but only doon tae the hauf-wey line */
   if(pint.has&&pint.ml>284){
     var sip=Math.min(pint.ml-284,90*dt);
     pint.ml-=sip;drankMl+=sip;score+=sip;
     glugT-=dt;
     if(glugT<=0){glugT=0.3;sfx('glug');}
   }
-  /* crossy-roads ramp: it gets mental fast â€” ye'll be hit eventually, an' that's fine */
+  /* crossy-roads ramp: it gets mental fast — ye'll be hit eventually, an' that's fine */
   streetRamp=clamp(streetT/20+crossings*0.15,0,1);
   for(var i=0;i<lanes.length;i++){
     var l=lanes[i];
@@ -793,7 +798,7 @@ function streetHit(c){
   swayPh=rnd(0,TAU);hicT=2;lagBuf=0;
   tiltA=rnd(0.12,0.22)*(Math.random()<0.5?-1:1);tiltV=0;
   gust={t:rnd(1.2,2),warn:0,dir:1,power:0};
-  balFail=false;balFailT=0;
+  balFail=false;balFailT=0;balDrops.length=0;flightSpill=0;spillAcc=0;
   shake=9;sfx('squash');
   dragging=false;dragId=null;
   if(navigator.vibrate)try{navigator.vibrate(60);}catch(e){}
@@ -814,16 +819,16 @@ function updBal(dt){
     balFailT+=dt;
     if(balFailT>1.2){
       balFailT=-999;
-      /* spilt it â€” right back tae the bar wi' ye */
+      /* spilt it — right back tae the bar wi' ye */
       ruinPint('SPILT THE HAIL PINT!','SAME AGAIN THEN...');
       if(state==='PLAY')goScene('PUB');
     }
     return;
   }
   balT+=dt;
-  /* the mair ye've had, the harder this gets â€” an' it never stops gettin' harder */
+  /* the mair ye've had, the harder this gets — an' it never stops gettin' harder */
   var drunk=drunkLvl();
-  /* swipes feed correction directly â€” nae walls, ye can ayeways steer */
+  /* swipes feed correction directly — nae walls, ye can ayeways steer */
   var kbMove=(kb.r?1:0)-(kb.l?1:0);
   if(kbMove)pendCorr+=kbMove*120*dt;
   var rawApply=clamp(pendCorr,-192*dt,192*dt);
@@ -839,9 +844,9 @@ function updBal(dt){
   dudeOff=clamp(dudeOff+apply*0.45,-34,34);
   dudeOff*=Math.max(0,1-dt*2.2);
   hx=108+dudeOff;
-  /* pint physics: it tips â€” get under it */
+  /* pint physics: it tips — get under it */
   var R=drunk;
-  /* body sway â€” the drink's daein' its ain steerin' */
+  /* body sway — the drink's daein' its ain steerin' */
   tiltV+=Math.sin(balT*1.4+swayPh)*0.8*drunk*dt;
   /* hiccups */
   hicT-=dt;
@@ -852,7 +857,7 @@ function updBal(dt){
     if(AC&&!muted)tone(rnd(500,700),AC.currentTime,0.08,'square',0.05,900);
     shake=Math.max(shake,2);
   }
-  /* ambient turbulence â€” it's aye daein' somethin' */
+  /* ambient turbulence — it's aye daein' somethin' */
   turbT-=dt;
   if(turbT<=0){turbT=rnd(0.5,0.9);tiltV+=rnd(-1,1)*lerp(0.4,0.95,R);}
   /* pow curve: lively near level (yer instinct fires), flattens near the brink */
@@ -872,10 +877,27 @@ function updBal(dt){
     }
   }
   tiltA+=tiltV*dt;
-  if(!tutDone)tiltA=clamp(tiltA,-0.8,0.8); /* safe first run â€” cannae tip past the brink */
+  if(!tutDone)tiltA=clamp(tiltA,-0.8,0.8); /* safe first run — cannae tip past the brink */
   tiltA=clamp(tiltA,-1.15,1.15);
   if(Math.abs(tiltA)>0.55&&Math.random()<dt*8)sfx('spill');
-  /* the brink: it hings there pourin' â€” 2 seconds tae save it */
+  /* gradual spillage: no' spill-or-nae-spill — the further ower, the mair comes oot */
+  var aa2=Math.abs(tiltA);
+  if(aa2>0.45&&pint.has&&pint.ml>0){
+    var sRate=lerp(8,90,Math.pow((aa2-0.45)/0.7,1.4));
+    var out=Math.min(pint.ml,sRate*dt);
+    pint.ml-=out;flightSpill+=out;spillAcc+=out;
+    var sd3=tiltA>0?1:-1,dyB=246+Math.sin(T*2.2)*6;
+    while(spillAcc>2.2){
+      spillAcc-=2.2;
+      balDrops.push({x:hx+sd3*(13+rnd(0,9)),y:dyB-66-34+rnd(-4,6),
+        vx:sd3*rnd(18,55)+tiltV*25,vy:rnd(-25,5),t:rnd(0.7,1.1)});
+    }
+  }
+  for(var bd=balDrops.length-1;bd>=0;bd--){
+    var D=balDrops[bd];D.t-=dt;D.vy+=330*dt;D.x+=D.vx*dt;D.y+=D.vy*dt;
+    if(D.t<=0||D.y>H-40)balDrops.splice(bd,1);
+  }
+  /* the brink: it hings there pourin' — 2 seconds tae save it */
   if(Math.abs(tiltA)>0.92){
     brinkT+=dt;
     if(pint.ml>0)pint.ml=Math.max(0,pint.ml-45*dt);
@@ -884,29 +906,30 @@ function updBal(dt){
       balFail=true;balFailT=0;pint.ml=0;
       sfx('splash');shake=6;
       calloutMsg('SPILT IT!!','#ff5252');
-      speak('NAW NAW NAWâ€”');
+      speak('NAW NAW NAW—');
       return;
     }
   }else brinkT=Math.max(0,brinkT-dt*1.5);
   if(balT>=BAL_LEN){
-    /* hame, pint intact â€” noo the strut */
+    /* hame, pint intact — noo the strut */
     walkOffs++;score+=100;
     scene='STRUT';
     dude.x=108;dude.y=250;dude.tx=108;dude.ty=250;
     strutT=0;strutBeat=0;strutSteps=0;
     strutDir=1;
     for(var i=0;i<8;i++)parts.push({x:dude.x+rnd(-10,10),y:dude.y+12,vx:rnd(-20,20),vy:-rnd(5,20),t:0.5,life:0.5,col:'#c9bfa8',sz:1});
-    popup(dude.x,dude.y-44,"NO' A DROP SPILT +100",'#7ec850');
+    if(flightSpill<5)popup(dude.x,dude.y-44,"NO' A DROP SPILT +100",'#7ec850');
+    else popup(dude.x,dude.y-44,Math.round(pint.ml)+"ml LANDED",'#ffd23f');
     calloutMsg('NOO WALK IT OFF!','#ffd23f');
     sfx('cheer');
   }
 }
 function finishStrut(){
   scene='GARDEN';
-  /* hame wi' a fu' pint, aye â€” nae hauf-measures in yer ain gairden */
+  /* hame wi' a fu' pint, aye — nae hauf-measures in yer ain gairden */
   if(pint.has&&pint.ml<560)popup(dude.x,dude.y-56,"TAPPED AFF FU'",'#7ec850');
   pint.has=true;pint.ml=568;pint.watered=0;fetching=false;
-  if(!tutDone){tutDone=true;localStorage.bs_tut='1';} /* first loop done â€” yer on yer ain noo */
+  if(!tutDone){tutDone=true;localStorage.bs_tut='1';} /* first loop done — yer on yer ain noo */
   calloutMsg(cutBig?'SO MUCH BETTER!':'WALKED IT OFF!','#ffd23f');
   sfx('bliss');lickT=0.15;
   /* anither lassie's turned up while ye were airborne */
@@ -917,10 +940,10 @@ function finishStrut(){
     else speak(['ANITHER WAN.','AYE, ON YE COME.',"WHAUR DAE THEY A' FIT?"][nL%3]);
   }else speak("THAT'S THE STUFF.");
   invuln=Math.max(invuln,1);
-  if(pint.has&&pint.ml>300)popup(dude.x,dude.y-40,"NO' A DROP SPILT",'#7ec850');
+  if(flightSpill<5)popup(dude.x,dude.y-40,"NO' A DROP SPILT",'#7ec850');
 }
 function updStrut(dt){
-  /* he walks it off himsel â€” nae input needed, on the beat at 130bpm */
+  /* he walks it off himsel — nae input needed, on the beat at 130bpm */
   var BEAT=0.4615;
   strutT+=dt;
   var beat=Math.floor(strutT/BEAT);
@@ -997,7 +1020,7 @@ function text(str,x,y,size,col,align){
 
 /* ---------- garden drawing ---------- */
 function gapX(){return clamp(patch.x,36,180);}
-function beatPulse(){ /* 1 on each beat o' the audible track, decayin' â€” for the bliss VFX */
+function beatPulse(){ /* 1 on each beat o' the audible track, decayin' — for the bliss VFX */
   if(blissV<=0.02)return 0;
   var ph;
   if(AC&&songBuf){ph=((activePos(AC.currentTime)-SUN_A)/(60/130))%1;if(ph<0)ph+=1;}
@@ -1023,7 +1046,7 @@ function drawGardenSky(){
     ctx.beginPath();ctx.arc(0,0,10+blissV*2,0,TAU);ctx.fill();
     var ang=Math.atan2(dude.y-28,dude.x-gx);
     if(blissV>0.35){
-      /* shades on â€” pure gallus */
+      /* shades on — pure gallus */
       ctx.fillStyle='#1c1c22';
       ctx.fillRect(-7,-4,6,4);ctx.fillRect(1,-4,6,4);
       ctx.fillRect(-1,-3,2,1);
@@ -1079,7 +1102,7 @@ function drawGardenSet(){
   /* satellite dish, obviously */
   ctx.fillStyle='#d8d8d8';ctx.beginPath();ctx.ellipse(196,64,8,9,-0.3,0,TAU);ctx.fill();
   ctx.fillStyle='#8f8a7d';ctx.fillRect(195,64,6,2);
-  /* the grass â€” patchy, honest */
+  /* the grass — patchy, honest */
   px(0,108,W,240,'#6fae52');
   px(0,108,W,3,'#7ec850');
   for(var i=0;i<5;i++)px(0,128+i*46,W,20,'rgba(90,150,70,0.2)');
@@ -1096,24 +1119,19 @@ function drawGardenSet(){
   drawGuitar(GUITAR.x,GUITAR.y);
   /* the ray fights through the gap */
   if(patch.alpha>0.03){
-    var gx=gapX(),bp=beatPulse();
+    var gx=gapX();
     ctx.save();
     ctx.globalAlpha=patch.alpha;
-    ctx.fillStyle='rgba(255,235,140,'+(0.13+blissV*0.10+bp*0.08)+')';
+    ctx.fillStyle='rgba(255,235,140,0.13)';
     ctx.beginPath();
     ctx.moveTo(gx-13,40);ctx.lineTo(gx+13,40);
     ctx.lineTo(patch.x+patch.r*0.85,patch.y);ctx.lineTo(patch.x-patch.r*0.85,patch.y);
     ctx.closePath();ctx.fill();
-    ctx.fillStyle='rgba(255,235,140,'+(0.34+blissV*0.16+bp*0.12)+')';
+    ctx.fillStyle='rgba(255,235,140,0.34)';
     ctx.beginPath();ctx.ellipse(patch.x,patch.y,patch.r,patch.r*0.6,0,0,TAU);ctx.fill();
-    ctx.strokeStyle='rgba(255,245,190,'+(0.5+Math.sin(T*4)*0.15+bp*0.3)+')';
-    ctx.lineWidth=1.5+blissV*1.2+bp*1.2;
+    ctx.strokeStyle='rgba(255,245,190,'+(0.5+Math.sin(T*4)*0.15)+')';
+    ctx.lineWidth=1.5;
     ctx.beginPath();ctx.ellipse(patch.x,patch.y,patch.r,patch.r*0.6,0,0,TAU);ctx.stroke();
-    if(blissV>0.2){ /* gold halo ring, breathin' on the beat */
-      ctx.strokeStyle='rgba(255,210,63,'+(0.35*blissV+bp*0.25)+')';
-      ctx.lineWidth=1;
-      ctx.beginPath();ctx.ellipse(patch.x,patch.y,patch.r+3+bp*3,(patch.r+3+bp*3)*0.6,0,0,TAU);ctx.stroke();
-    }
     ctx.restore();
   }
 }
@@ -1194,7 +1212,7 @@ function drawGuitar(x,y){
   for(var s=0;s<4;s++){var sx2=-1.2+s*0.8;ctx.moveTo(sx2,-18);ctx.lineTo(sx2,8);}
   ctx.stroke();
   ctx.restore();
-  if(guitarCd<=0&&Math.floor(T*2)%4===0)text('â™ª',x+9,y-22,7,'rgba(255,210,63,0.7)');
+  if(guitarCd<=0&&Math.floor(T*2)%4===0)text('♪',x+9,y-22,7,'rgba(255,210,63,0.7)');
 }
 function drawWashing(x,y,kind){
   ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(T*1.6+x)*0.07);
@@ -1337,15 +1355,25 @@ function drawKilt(x,y,w,h){
   ctx.fillStyle='#c9a96a';ctx.fillRect(sx,y+2,6,h-2);
   ctx.fillStyle='#8a7358';ctx.fillRect(sx,y+2,6,2);
 }
-function drawPint(x,y,tilted){
+function drawPint(x,y,tilted,surfA){
   ctx.save();ctx.translate(x,y);
   if(tilted&&scene==='GARDEN')ctx.rotate(-0.5*dude.face);
   var fill=clamp(pint.ml/568,0,1);
   ctx.fillStyle='rgba(220,235,245,0.5)';ctx.fillRect(-5,-10,10,16);
   if(pint.has&&fill>0){
     var beerCol=mix([232,160,32],[180,190,200],pint.watered);
-    ctx.fillStyle=beerCol;ctx.fillRect(-4,-9+14*(1-fill),8,14*fill);
-    ctx.fillStyle='#fff8e0';ctx.fillRect(-4,-10+14*(1-fill),8,2);
+    if(typeof surfA==='number'){
+      /* the beer inside stays level wi' the warld while the gless tips */
+      ctx.save();
+      ctx.beginPath();ctx.rect(-4,-9,8,14);ctx.clip();
+      ctx.translate(0,-9+14*(1-fill));ctx.rotate(surfA);
+      ctx.fillStyle=beerCol;ctx.fillRect(-11,0,22,26);
+      ctx.fillStyle='#fff8e0';ctx.fillRect(-11,0,22,1.4);
+      ctx.restore();
+    }else{
+      ctx.fillStyle=beerCol;ctx.fillRect(-4,-9+14*(1-fill),8,14*fill);
+      ctx.fillStyle='#fff8e0';ctx.fillRect(-4,-10+14*(1-fill),8,2);
+    }
   }
   ctx.strokeStyle='rgba(255,255,255,0.8)';ctx.lineWidth=1;ctx.strokeRect(-5.5,-10.5,11,17);
   if(pint.watered>0.35&&Math.floor(T*5)%2===0)text('RAIN!',0,-20,6,'#6bc5ff');
@@ -1353,20 +1381,37 @@ function drawPint(x,y,tilted){
 }
 function drawRain(){
   if(!rain.active)return;
-  /* it's on everywhere â€” except the sun spot */
+  /* it's on everywhere — except the sun spot */
   ctx.fillStyle='rgba(60,72,95,0.22)';
   ctx.fillRect(0,40,W,H-40);
-  ctx.strokeStyle='rgba(180,210,235,0.55)';ctx.lineWidth=1;
-  ctx.beginPath();
-  for(var i=0;i<46;i++){
-    var rx=((i*47+T*90)%W),ry=40+((i*89+T*230)%(H-40));
-    if(patch.alpha>0.5){
-      var ddx=(rx-patch.x)/(patch.r+6),ddy=(ry-patch.y)/(patch.r*0.6+6);
-      if(ddx*ddx+ddy*ddy<1)continue; /* dry in the beam */
-    }
-    ctx.moveTo(rx,ry);ctx.lineTo(rx-2,ry+7);
+  /* nae rain in the ray: solid drops ootside the beam, faint anes in the feathered edge */
+  var beamOn=patch.alpha>0.15,py2=patch.y;
+  function beamF(rx,ry){ /* 0 at the beam's centreline, 1 at its edge */
+    if(!beamOn||ry>py2)return 99;
+    var tt=(ry-40)/(py2-40);if(tt<0)return 99;
+    var cx3=gapX()+(patch.x-gapX())*tt;
+    var hw=(13+(patch.r*0.85-13)*tt)*patch.alpha;
+    if(hw<=0)return 99;
+    return Math.abs(rx-cx3)/hw;
   }
-  ctx.stroke();
+  ctx.lineWidth=1;
+  var passes=[['rgba(180,210,235,0.55)',2],['rgba(180,210,235,0.2)',1]];
+  for(var p2=0;p2<2;p2++){
+    ctx.strokeStyle=passes[p2][0];
+    ctx.beginPath();
+    for(var i=0;i<46;i++){
+      var rx=((i*47+T*90)%W),ry=40+((i*89+T*230)%(H-40));
+      if(patch.alpha>0.5){
+        var ddx=(rx-patch.x)/(patch.r+6),ddy=(ry-patch.y)/(patch.r*0.6+6);
+        if(ddx*ddx+ddy*ddy<1)continue; /* dry in the pool */
+      }
+      var f=beamF(rx,ry);
+      var zone=f<0.85?0:(f<1.25?1:2); /* core / feather / ootside */
+      if(zone!==passes[p2][1])continue;
+      ctx.moveTo(rx,ry);ctx.lineTo(rx-2,ry+7);
+    }
+    ctx.stroke();
+  }
   /* splashes aff the grass */
   if(Math.random()<0.5){
     var sx2=rnd(0,W),sy2=rnd(120,360);
@@ -1406,7 +1451,7 @@ function drawPubScene(){
   }
   px(0,10,W,4,'#2b2016');
   text('THE BUZY BEE',W/2,68,10,'#ffd23f');
-  /* the bar mirror â€” ye ken the wan */
+  /* the bar mirror — ye ken the wan */
   px(22,80,74,28,'#8a6a2a');
   px(25,83,68,22,'#f2eee2');
   drawBigT(30,86,'#d42a1e');
@@ -1424,7 +1469,7 @@ function drawPubScene(){
   ctx.fillStyle='#2e3d2e';ctx.fillRect(-8,-13,17,3);
   ctx.restore();
   if(!pour.done&&!pour.hold&&Math.floor(T*2)%3===0)text('EASY NOO...',172,176,6,'rgba(255,255,255,0.6)');
-  /* the tap â€” wi' the badge on it */
+  /* the tap — wi' the badge on it */
   px(100,118,10,30,'#b8b8c0');
   px(96,112,18,8,'#d8d8d8');
   var drunkP=drunkLvl();
@@ -1435,7 +1480,7 @@ function drawPubScene(){
   ctx.strokeStyle='#d42a1e';ctx.lineWidth=1;ctx.strokeRect(96.5,126.5,17,16);
   drawBigT(100,129,'#d42a1e');
   px(102,148,6,6,'#8f8f98');
-  /* the glass â€” big, so ye can see the line */
+  /* the glass — big, so ye can see the line */
   var gx1=88,gy1=170,gw=40,gh=90,cap=620;
   ctx.fillStyle='rgba(220,235,245,0.25)';ctx.fillRect(gx1,gy1,gw,gh);
   var fillH=clamp(pour.ml/cap,0,1)*gh;
@@ -1443,7 +1488,7 @@ function drawPubScene(){
     ctx.fillStyle='#e8a020';ctx.fillRect(gx1+2,gy1+gh-fillH,gw-4,fillH);
     ctx.fillStyle='#fff8e0';ctx.fillRect(gx1+2,gy1+gh-fillH-3,gw-4,4);
   }
-  /* pour stream â€” width follows the wanderin' flow */
+  /* pour stream — width follows the wanderin' flow */
   if(pour.hold&&!pour.done&&pourFlow>0.05){
     ctx.fillStyle='rgba(232,160,32,0.9)';
     var sw=2+3*pourFlow;
@@ -1516,15 +1561,15 @@ function drawStreetScene(){
   px(152,286,40,22,'#ffdf8a');px(154,288,36,18,'#f4b942');
   px(58,330,100,16,'#1e3528');
   text('THE ITHER PUB',108,338,7,'#ffd23f');
-  if(streetDir>0&&Math.floor(T*3)%2===0)text('â–¼',112,278,9,'#ffd23f');
-  if(streetDir<0&&Math.floor(T*3)%2===0)text('â–²',112,64,9,'#ffd23f');
+  if(streetDir>0&&Math.floor(T*3)%2===0)text('▼',112,278,9,'#ffd23f');
+  if(streetDir<0&&Math.floor(T*3)%2===0)text('▲',112,64,9,'#ffd23f');
   /* traffic */
   for(var i=0;i<lanes.length;i++){
     var l=lanes[i];
     for(var j=0;j<l.cars.length;j++)drawVehicle(l.cars[j],l.y);
   }
   /* the mission statement */
-  if(pint.has&&pint.ml<=284&&Math.floor(T*3)%2===0)text('HAUF DONE â€” CROSS FUR A TAP-UP!',W/2,H-14,7,'#6bc5ff');
+  if(pint.has&&pint.ml<=284&&Math.floor(T*3)%2===0)text('HAUF DONE — CROSS FUR A TAP-UP!',W/2,H-14,7,'#6bc5ff');
   else if(Math.floor(T*2)%2===0)text("CHUG AN' CROSS!",W/2,H-14,8,'#ffd23f');
   else text("(GETTIN' HIT = THE WAY HAME)",W/2,H-14,6,'rgba(255,255,255,0.6)');
 }
@@ -1620,7 +1665,7 @@ function drawCutscene(){
     var fy2=lerp(H-96,-46,fp*fp*0.9+fp*0.1);
     drawFlyGuy(fx2,fy2,p*TAU*2*hitCar.dir,1.35);
     if(pint.has)drawPint(fx2+16,fy2-8,false);
-    if(p>0.25&&p<0.8)text('AAAAAAHâ€”',fx2,fy2-30,8,'#fff');
+    if(p>0.25&&p<0.8)text('AAAAAAH—',fx2,fy2-30,8,'#fff');
   }
   px(0,0,W,24,'#0a0f1c');px(0,H-24,W,24,'#0a0f1c');
   text('RUN OWER!',W/2,12,7,'rgba(255,255,255,0.55)');
@@ -1685,7 +1730,7 @@ function drawBalScene(){
     ctx.moveTo(lx,ly);ctx.lineTo(lx+30,ly);
   }
   ctx.stroke();
-  /* Auld Reekie on the horizon â€” it's Edinburgh, ken */
+  /* Auld Reekie on the horizon — it's Edinburgh, ken */
   var roofY=H-64;
   drawEdinburgh(roofY);
   /* Edinburgh tenements rollin' by: sandstane, slate, dormers, chimney pots */
@@ -1715,7 +1760,7 @@ function drawBalScene(){
     ctx.fillStyle='#3d434c';ctx.fillRect(rx+22,ry-2,12,11);
     ctx.fillStyle='#2b3038';ctx.fillRect(rx+21,ry-4,14,3);
     ctx.fillStyle='#ffdf8a';ctx.fillRect(rx+25,ry+1,6,6);
-    /* chimney stack wi' the clay pots â€” rooted intae the slate */
+    /* chimney stack wi' the clay pots — rooted intae the slate */
     ctx.fillStyle='#8a7355';ctx.fillRect(rx+56,ry-20,18,24);
     ctx.fillStyle='rgba(0,0,0,0.22)';ctx.fillRect(rx+56,ry-20,18,2);
     ctx.fillStyle='#b56a3c';
@@ -1751,25 +1796,33 @@ function drawBalScene(){
   ctx.strokeStyle=skin;ctx.lineWidth=5;
   ctx.beginPath();ctx.moveTo(hx+8,dy3-22);ctx.lineTo(hx,dy3-62);ctx.stroke();
   px(hx-8,dy3-66,16,5,skin); /* the palm */
-  /* plumb guide â€” dead visual: whaur level IS */
+  /* plumb guide — dead visual: whaur level IS */
   ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=1;
   ctx.setLineDash([3,3]);
   ctx.beginPath();ctx.moveTo(hx,dy3-160);ctx.lineTo(hx,dy3-70);ctx.stroke();
   ctx.setLineDash([]);
-  /* THE PINT â€” big, pivoting on its base */
+  /* THE PINT — big, pivoting on its base */
   if(!balFail){
     ctx.save();
     ctx.translate(hx,dy3-66);ctx.rotate(tiltA);ctx.scale(2.6,2.6);ctx.translate(0,-6);
-    drawPint(0,0,false);
+    drawPint(0,0,false,-tiltA+clamp(tiltV,-1.5,1.5)*0.12);
     ctx.restore();
     if(Math.abs(tiltA)>0.45){
       var sd=tiltA>0?1:-1;
-      px(hx+sd*18+rnd(-2,2),dy3-104+rnd(0,4),3,3,'#e8a020');
-      px(hx+sd*22+rnd(-2,2),dy3-96+rnd(0,6),2,3,'#e8a020');
       /* the lean arrow: chase it! */
-      if(Math.floor(T*6)%2===0)text(sd>0?'â–º':'â—„',hx+sd*34,dy3-80,13,'#ff5252');
+      if(Math.floor(T*6)%2===0)text(sd>0?'►':'◄',hx+sd*34,dy3-80,13,'#ff5252');
     }
-    /* the brink: it's pourin' â€” 2s tae save it */
+    /* spillage, drop by drop */
+    if(balDrops.length){
+      ctx.fillStyle='#e8a020';
+      for(var bd2=0;bd2<balDrops.length;bd2++){
+        var D2=balDrops[bd2];
+        ctx.globalAlpha=clamp(D2.t*1.6,0,1);
+        ctx.fillRect(D2.x,D2.y,2,3);
+      }
+      ctx.globalAlpha=1;
+    }
+    /* the brink: it's pourin' — 2s tae save it */
     if(Math.abs(tiltA)>0.92){
       var sd2=tiltA>0?1:-1;
       ctx.fillStyle='#e8a020';
@@ -1789,14 +1842,14 @@ function drawBalScene(){
   }
   /* gust warnin' */
   if(gust.warn>0&&Math.floor(T*8)%2===0){
-    text(gust.dir>0?'GUST â–ºâ–º':'â—„â—„ GUST',W/2+gust.dir*52,120,10,'#e8f4ff');
+    text(gust.dir>0?'GUST ►►':'◄◄ GUST',W/2+gust.dir*52,120,10,'#e8f4ff');
   }
   /* danger tint */
   if(!balFail&&Math.abs(tiltA)>0.6){
     ctx.fillStyle='rgba(255,60,60,'+((Math.abs(tiltA)-0.6)*0.45).toFixed(3)+')';
     ctx.fillRect(0,0,W,H);
   }
-  ctx.restore(); /* end o' the sway â€” UI stays sober */
+  ctx.restore(); /* end o' the sway — UI stays sober */
   /* the road hame: progress bar */
   px(24,32,150,6,'rgba(0,0,0,0.4)');
   px(24,32,Math.round(150*clamp(balT/BAL_LEN,0,1)),6,'#ffd23f');
@@ -1809,7 +1862,7 @@ function drawBalScene(){
   text('THE WAY HAME',W/2,10,7,'rgba(255,255,255,0.55)');
   var pintsDoon=Math.floor(drankMl/568);
   if(pintsDoon>=1)text(pintsDoon+' PINT'+(pintsDoon>1?'S':'')+' DOON',W-8,10,6,'rgba(255,210,63,0.8)','right');
-  if(!balFail)text('SWIPE â€” KEEP YER HAUN UNDER THE PINT',W/2,H-12,7,'#ffd23f');
+  if(!balFail)text('SWIPE — KEEP YER HAUN UNDER THE PINT',W/2,H-12,7,'#ffd23f');
 }
 function drawTutCard(){
   ctx.fillStyle='rgba(6,10,20,0.72)';ctx.fillRect(0,0,W,H);
@@ -1845,13 +1898,13 @@ function drawHUD(){
   }
   ctx.globalAlpha=1;
   drawMuteIcon();
-  /* rain's on â€” get tae the sun spot */
+  /* rain's on — get tae the sun spot */
   if(scene==='GARDEN'&&rain.active&&inRain()&&pint.has&&pint.ml>0&&Math.floor(T*3)%2===0){
     text('GET OOT THE RAIN!',W/2,52,7,'#6bc5ff');
   }
   if(state==='PLAY'&&scene==='GARDEN'){
     if(fetching){
-      if(Math.floor(T*3)%2===0)text("PINT'S DONE â€” OOT THE GATE!",W/2,H-10,7,'#ffd23f');
+      if(Math.floor(T*3)%2===0)text("PINT'S DONE — OOT THE GATE!",W/2,H-10,7,'#ffd23f');
     }else if(hintSun&&patch.alpha>0.6&&!inSunPatch()){
       text('DRAG YER CHAIR TAE THE SUN SPOT',W/2,H-10,7,'#ffd23f');
     }else if(hintStill&&inSunPatch()){
@@ -1882,7 +1935,7 @@ function drawVignette(){
   if(flashRed>0){ctx.fillStyle='rgba(255,60,60,'+(flashRed*0.5)+')';ctx.fillRect(0,0,W,H);}
   if(flashWhite>0){ctx.fillStyle='rgba(255,255,255,'+(flashWhite*2)+')';ctx.fillRect(0,0,W,H);}
 }
-/* double vision â€” the pixels themselves are steamin' */
+/* double vision — the pixels themselves are steamin' */
 function drawDoubleVision(){
   var dr=state==='PLAY'?drunkLvl():0;
   if(dr<0.25)return;
@@ -1921,7 +1974,7 @@ function drawMenu(){
   text('~ THE GAME ~',W/2,172,8,'#fff');
   text('CHUG IN THE SUN SPOTS',W/2,200,7,'#ffd23f');
   text('EMPTY? OOT THE GATE TAE THE PUB',W/2,212,7,'#cfe6f5');
-  text('POUR YER AIN â€” STOP AT THE LINE',W/2,224,7,'#cfe6f5');
+  text('POUR YER AIN — STOP AT THE LINE',W/2,224,7,'#cfe6f5');
   text('GET RUN OWER ON THE WAY HAME',W/2,236,7,'#ffd23f');
   text('BALANCE YER PINT IN THE AIR',W/2,248,7,'#ff9d6b');
   text("SPILL 3 PINTS AN' YER DONE",W/2,260,7,'#7ec850');
@@ -1933,9 +1986,9 @@ function drawMenu(){
   var kx=W/2+16+(nawT>0?Math.sin(menuT*40)*3:0);
   ctx.fillStyle='#ffd23f';ctx.fillRect(kx-2,313,5,11);
   if(nawT>0)text(nawMsg,W/2,334,8,'#ff9d6b');
-  text("fan tribute â€” wi' the blessin' o' GMCG",W/2,344,6,'rgba(255,255,255,0.65)');
+  text("fan tribute — wi' the blessin' o' GMCG",W/2,344,6,'rgba(255,255,255,0.65)');
   text('stream BEER IN THE SUN everywhere',W/2,356,6,'rgba(255,255,255,0.65)');
-  text('â™¡  '+VER,W/2,368,7,'#7ec850');
+  text('♡  '+VER,W/2,368,7,'#7ec850');
 }
 function drawOver(){
   ctx.fillStyle='rgba(10,16,30,0.7)';ctx.fillRect(0,0,W,H);
@@ -1948,14 +2001,14 @@ function drawOver(){
   text('RANK:',W/2,172,7,'rgba(255,255,255,0.7)');
   text(rank,W/2,184,9,'#7ec850');
   var ln=200;
-  if(walkOffs>0){text('RAN OVER x'+walkOffs+' â€” WALKED THEM AFF',W/2,ln,6,'#ffd23f');ln+=11;}
+  if(walkOffs>0){text('RAN OVER x'+walkOffs+' — WALKED THEM AFF',W/2,ln,6,'#ffd23f');ln+=11;}
   if(swiftHaufs>0){text('SWIFT HAUFS SURVIVED: '+swiftHaufs,W/2,ln,6,'#6bc5ff');ln+=11;}
   if(tidyPints>0){text('TIDY PINTS POURED: '+tidyPints,W/2,ln,6,'#7ec850');ln+=11;}
   if(newBest&&Math.floor(overT*3)%2===0)text('NEW BEST!',W/2,ln+6,10,'#ffd23f');
   else text('BEST: '+hi+' ml',W/2,ln+6,8,'#fff');
   text('GO CHECK IT OUT PLEASE AND',W/2,262,7,'#cfe6f5');
   text('THANK YOU IN ADVANCE',W/2,274,7,'#cfe6f5');
-  text('â™¡',W/2,286,9,'#7ec850');
+  text('♡',W/2,286,9,'#7ec850');
   if(overT>0.8&&Math.floor(overT*2)%2===0)text('TAP TO GO AGAIN',W/2,314,9,'#fff');
 }
 function drawPause(){
@@ -1983,18 +2036,6 @@ function renderGarden(){
   for(var i=0;i<items.length;i++)items[i].f();
   drawBackFence();
   drawRain();
-  if(blissV>0.02){ /* OTT: the whole garden gets its holidays */
-    var bp=beatPulse();
-    ctx.save();
-    ctx.globalCompositeOperation='lighter';
-    var gl=ctx.createRadialGradient(patch.x,patch.y,10,patch.x,patch.y,190);
-    gl.addColorStop(0,'rgba(255,214,90,'+(0.16*blissV+bp*0.10)+')');
-    gl.addColorStop(1,'rgba(255,214,90,0)');
-    ctx.fillStyle=gl;ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='rgba(255,190,60,'+(0.05*blissV)+')';
-    ctx.fillRect(0,0,W,H);
-    ctx.restore();
-  }
 }
 function render(){
   ctx.setTransform(RES,0,0,RES,0,0);
@@ -2056,7 +2097,7 @@ cv.addEventListener('pointerdown',function(e){
   if(state==='PAUSE'){state='PLAY';return;}
   if(state!=='PLAY')return;
   if(tutCard){if(tutCardT>0.5)tutCard=null;return;}
-  if(scene==='BAL'){balPX=p.x;return;} /* touch doon anywhere â€” swipin' steers */
+  if(scene==='BAL'){balPX=p.x;return;} /* touch doon anywhere — swipin' steers */
   if(scene==='CUT'||scene==='STRUT')return; /* nae skippin' the ritual */
   if(scene==='PUB'){
     if(!pour.done){
