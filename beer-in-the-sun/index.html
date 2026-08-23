@@ -24,7 +24,7 @@
    oot the gate tae the Buzy Bee an' pour yer ain pint -> get run over on the
    street on the way hame (on purpose) -> fly hame balancin' the pint -> walk it off. */
 
-var VER='v46';
+var VER='v52';
 var W=216,H=384,TAU=Math.PI*2;
 var RES=3; /* supersample: art stays chunky, text renders crisp on big screens */
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -171,22 +171,25 @@ function makeSrc(sun){
 }
 function gridSnap(p){return SUN_A+Math.round((p-SUN_A)/BAR)*BAR;}
 function activePos(t){
-  if(sunOn)return SUN_A+(((sunPos-SUN_A)+(t-sunT0))%SUN_LEN);
-  return (bgPos+(t-bgT0))%songBuf.duration;
+  if(sunOn){var x=((sunPos-SUN_A)+(t-sunT0))%SUN_LEN;if(x<0)x+=SUN_LEN;return SUN_A+x;}
+  var b=(bgPos+(t-bgT0))%songBuf.duration;if(b<0)b+=songBuf.duration;return b;
 }
 /* every switch waits for the next bar line, then crossfades — both layers land on the grid */
-function scheduleSwitch(toSun,rightNow){
-  var t=AC.currentTime,p=activePos(t),nb,at;
-  if(rightNow){nb=gridSnap(p);at=t+0.06;}  /* scene cuts dinnae wait for the bar */
-  else{nb=SUN_A+Math.ceil((p+0.15-SUN_A)/BAR)*BAR;at=t+(nb-p);}
-  var inSrc=makeSrc(toSun),inPos;
+function scheduleSwitch(toSun,fresh){
+  var t=AC.currentTime,p=activePos(t);
+  /* the fade straddles the bar line — half in, half oot, doonbeat in the middle */
+  var nb=SUN_A+Math.ceil((p+CF/2+0.12-SUN_A)/BAR)*BAR;
+  var at=t+(nb-p)-CF/2;
+  var inSrc=makeSrc(toSun),inBar;
   if(toSun){
-    inPos=(sunPos<0)?SUN_A:gridSnap(sunPos);
-    if(inPos<SUN_A||inPos>=SUN_B)inPos=SUN_A;
+    inBar=(fresh||sunPos<0)?SUN_A:gridSnap(sunPos);
+    if(inBar<SUN_A||inBar>=SUN_B)inBar=SUN_A;
   }else{
-    inPos=gridSnap(bgPos)%songBuf.duration;if(inPos<0)inPos+=songBuf.duration;
+    inBar=gridSnap(bgPos)%songBuf.duration;if(inBar<0)inBar+=songBuf.duration;
   }
-  inSrc.start(at,inPos);
+  var inPos=inBar-CF/2; /* start half a fade early so the doonbeat lands at full presence */
+  if(!toSun){inPos%=songBuf.duration;if(inPos<0)inPos+=songBuf.duration;}
+  inSrc.start(at,Math.max(0,inPos));
   var inGain=toSun?sunGain:bgGain,outGain=toSun?bgGain:sunGain;
   inGain.gain.cancelScheduledValues(t);
   inGain.gain.setValueAtTime(0.0001,at);
@@ -195,7 +198,7 @@ function scheduleSwitch(toSun,rightNow){
   outGain.gain.setValueAtTime(outGain.gain.value,t);
   outGain.gain.setValueAtTime(outGain.gain.value,at);
   outGain.gain.linearRampToValueAtTime(0.0001,at+CF);
-  pend={to:toSun,at:at,src:inSrc,inPos:inPos,outPos:nb};
+  pend={to:toSun,at:at,src:inSrc,inPos:Math.max(0,inPos),outPos:nb};
 }
 function finishSwitch(){
   if(pend.to){
@@ -235,8 +238,7 @@ function updSong(dt){
     else return;
   }
   if(airNow&&!sunOn&&!airCued&&!pend){
-    sunPos=-1;               /* the flight hame gets the chorus fae the tap, immediately */
-    scheduleSwitch(true,true);airCued=true;return;
+    scheduleSwitch(true,true);airCued=true;return; /* flight hame: chorus fae the tap, on the bar */
   }
   /* sticky: quick tae bring the chorus in, gey reluctant tae let it go */
   if(sunOn&&!wantSun&&!airNow&&scene==='GARDEN'&&patch.alpha>0.4&&dist(dude.x,dude.y,patch.x,patch.y)<patch.r+14)wantSun=true;
@@ -257,6 +259,7 @@ var FLOWERS={x:28,y:210};
 /* ---------- state ---------- */
 var state='MENU';                 /* MENU / PLAY / OVER / PAUSE */
 var scene='GARDEN';               /* GARDEN / PUB / STREET / CUT / STRUT */
+var volTries=0,nawT=0,nawMsg='';  /* the volume slider that says naw */
 var fadeV=0,fadeDir=0,fadeNext=null;
 var T=0,score=0,menuT=0,overT=0,newBest=false;
 var dude={x:108,y:250,tx:108,ty:250,speed:0,vx:0,vy:0,face:1};
@@ -931,6 +934,7 @@ function updStrut(dt){
 /* ---------- update ---------- */
 function update(dt){
   T+=dt;menuT+=dt;
+  if(nawT>0)nawT-=dt;
   updSong(dt);
   /* the world hauds its breath while ye're gettin' run ower an' walkin' it off */
   if(scene!=='CUT'&&scene!=='STRUT'&&scene!=='BAL'){updPatch(dt);updRain(dt);}
@@ -1880,7 +1884,13 @@ function drawMenu(){
   text("SPILL 3 PINTS AN' YER DONE",W/2,260,7,'#7ec850');
   if(hi>0)text('BEST: '+hi+' ml',W/2,278,8,'#7ec850');
   if(Math.floor(menuT*2)%2===0)text('TAP TO START',W/2,294,10,'#fff');
-  text('unofficial fan tribute to GMCG',W/2,344,6,'rgba(255,255,255,0.65)');
+  /* the volume slider (dinnae bother) */
+  text('VOLUME',W/2,308,6,'rgba(255,255,255,0.75)');
+  ctx.fillStyle='rgba(255,255,255,0.25)';ctx.fillRect(W/2-40,317,80,3);
+  var kx=W/2+16+(nawT>0?Math.sin(menuT*40)*3:0);
+  ctx.fillStyle='#ffd23f';ctx.fillRect(kx-2,313,5,11);
+  if(nawT>0)text(nawMsg,W/2,334,8,'#ff9d6b');
+  text("fan tribute — wi' the blessin' o' GMCG",W/2,344,6,'rgba(255,255,255,0.65)');
   text('stream BEER IN THE SUN everywhere',W/2,356,6,'rgba(255,255,255,0.65)');
   text('♡  '+VER,W/2,368,7,'#7ec850');
 }
@@ -1978,7 +1988,15 @@ cv.addEventListener('pointerdown',function(e){
   if(AC&&AC.state==='suspended')AC.resume();
   var p=canvasXY(e);
   if(p.x>W-28&&p.y<24){setMuted(!muted);return;}
-  if(state==='MENU'){start();return;}
+  if(state==='MENU'){
+    if(p.y>300&&p.y<340&&p.x>W/2-60&&p.x<W/2+60){ /* the slider kens best */
+      volTries++;
+      var L=['NAW!','NAW.','STILL NAW.',"IT'S AT THE RIGHT LEVEL.","PERSISTENT, AREN'T YE?",'NAW MEANS NAW.'];
+      nawMsg=L[Math.min(volTries-1,L.length-1)];
+      nawT=1.5;sfx('squawk');return;
+    }
+    start();return;
+  }
   if(state==='OVER'){if(overT>0.8){state='MENU';menuT=0;}return;}
   if(state==='PAUSE'){state='PLAY';return;}
   if(state!=='PLAY')return;
