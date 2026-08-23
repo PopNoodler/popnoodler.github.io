@@ -179,14 +179,14 @@ function initSong(){
 }
 function makeSrc(sun){
   var s=AC.createBufferSource();s.buffer=songBuf;s.loop=true;
-  if(sun){s.loopStart=SUN_A;s.loopEnd=SUN_B;s.connect(sunGain);}
+  if(sun)s.connect(sunGain); /* nae loop cage: efter the chorus it plays richt on */
   else s.connect(bgFilt);
   return s;
 }
 function gridSnap(p){return SUN_A+Math.round((p-SUN_A)/BAR)*BAR;}
 function activePos(t){
-  if(sunOn){var x=((sunPos-SUN_A)+(t-sunT0))%SUN_LEN;if(x<0)x+=SUN_LEN;return SUN_A+x;}
-  var b=(bgPos+(t-bgT0))%songBuf.duration;if(b<0)b+=songBuf.duration;return b;
+  var pp=sunOn?sunPos+(t-sunT0):bgPos+(t-bgT0);
+  pp%=songBuf.duration;if(pp<0)pp+=songBuf.duration;return pp;
 }
 /* every switch waits for the next bar line, then crossfades — both layers land on the grid */
 function scheduleSwitch(toSun,fresh){
@@ -195,9 +195,7 @@ function scheduleSwitch(toSun,fresh){
      The coont (beat-in-bar) carries across the switch, aff the real beat map. */
   var k=bIdx(p)+1;
   while(bT(k)-p<CF/2+0.08&&k<BEATS.length-1)k++;
-  if(sunOn)while(k>=BEAT_ANCHOR+SUN_BEATS)k-=SUN_BEATS; /* the loop wraps */
   var swT=bT(k),d=swT-p;
-  if(sunOn&&d<0)d+=SUN_LEN;
   var at=t+d-CF/2;
   var c=((k-BEAT_ANCHOR)%4+4)%4;
   var inSrc=makeSrc(toSun),base,inB,inPos;
@@ -240,7 +238,7 @@ function finishSwitch(){
     if(bgSrc){try{bgSrc.stop();}catch(e){} bgPos=pend.outPos%songBuf.duration;}
     bgSrc=null;sunSrc=pend.src;sunPos=pend.inPos;sunT0=pend.at;sunOn=true;
   }else{
-    if(sunSrc){try{sunSrc.stop();}catch(e){} sunPos=SUN_A+((pend.outPos-SUN_A)%SUN_LEN);}
+    if(sunSrc){try{sunSrc.stop();}catch(e){} sunPos=pend.outPos%songBuf.duration;}
     sunSrc=null;bgSrc=pend.src;bgPos=pend.inPos;bgT0=pend.at;sunOn=false;
   }
   pend=null;
@@ -365,6 +363,7 @@ var balT=0,hx=108,tiltA=0,tiltV=0,balPX=null,brinkT=0;
 var balDrops=[],flightSpill=0,spillAcc=0; /* beer oot the mug, drop by drop */
 var surfSA=0,surfSV=0,prevHx2=108,prevVx2=0; /* the liquid: a damped spring wi' a temper */
 var spillFlash=0; /* >0 while beer's actively leavin' the gless */
+var windSfxT=0;   /* the wind in yer ears on the wey hame */
 var pendCorr=0,dudeOff=0,turbT=0.6;
 var swayPh=0,hicT=2,lagBuf=0; /* the drink catches up wi' ye */
 var gust={t:2.5,warn:0,dir:1,power:0};
@@ -870,6 +869,12 @@ function updCut(dt){
   }
 }
 function updBal(dt){
+  /* the wind in yer ears — heavier when ye're swingin' or a gust's comin' */
+  windSfxT-=dt;
+  if(windSfxT<=0){
+    windSfxT=0.16;
+    if(AC&&!muted)noiseBurst(AC.currentTime,0.3,0.016+Math.min(0.05,Math.abs(tiltV)*0.012+(gust.warn>0?0.03:0)),900+rnd(0,700));
+  }
   if(balFail){
     balFailT+=dt;
     if(balFailT>1.2){
