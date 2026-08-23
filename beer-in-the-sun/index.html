@@ -2057,8 +2057,8 @@ function drawMenu(){
   var kx=W/2+16+(nawT>0?Math.sin(menuT*40)*3:0);
   ctx.fillStyle='#ffd23f';ctx.fillRect(kx-2,313,5,11);
   if(nawT>0)text(nawMsg,W/2,334,8,'#ff9d6b');
-  text("fan tribute — wi' the blessin' o' GMCG",W/2,344,6,'rgba(255,255,255,0.65)');
-  text('stream BEER IN THE SUN everywhere',W/2,356,6,'rgba(255,255,255,0.65)');
+  text('Fan tribute - with blessings from GMCG',W/2,344,6,'rgba(255,255,255,0.65)');
+  text('♪ STREAM BEER IN THE SUN ♪',W/2,357,7,'#1ed760');
   text('♡  '+VER,W/2,368,7,'#7ec850');
 }
 function drawOver(){
@@ -2183,6 +2183,10 @@ cv.addEventListener('pointerdown',function(e){
       var L=['NAW!','NAW.','STILL NAW.',"IT'S AT THE RIGHT LEVEL.","PERSISTENT, AREN'T YE?",'NAW MEANS NAW.'];
       nawMsg=L[Math.min(volTries-1,L.length-1)];
       nawT=1.5;sfx('squawk');return;
+    }
+    if(p.y>349&&p.y<367){ /* stream the real thing */
+      try{window.open('https://open.spotify.com/track/4gxDGM8LNht9higommwH7h','_blank');}catch(e){}
+      return;
     }
     start();return;
   }
