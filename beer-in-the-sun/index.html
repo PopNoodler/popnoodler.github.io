@@ -1676,6 +1676,34 @@ function drawCutscene(){
 }
 /* ---------- THE WAY HAME: flying, pint on yer palm ---------- */
 function drawEdinburgh(hz){
+  /* faurest back: the Pentlands, saft an' pale, rollin' by slow */
+  var hph=balT*5;
+  ctx.fillStyle='#93a9bf';
+  ctx.beginPath();ctx.moveTo(-10,H);ctx.lineTo(-10,hz-8);
+  for(var px2=-10;px2<=W+10;px2+=8){
+    var hy=hz-10-11*Math.abs(Math.sin((px2+hph)*0.019))-5*Math.sin((px2+hph)*0.057);
+    ctx.lineTo(px2,hy);
+  }
+  ctx.lineTo(W+10,H);ctx.closePath();ctx.fill();
+  /* the toun spread alang their fit — grund at last */
+  var ccyc=W*3,coff=(balT*11)%ccyc;
+  ctx.fillStyle='#7d92aa';
+  ctx.fillRect(-10,hz-1,W+20,H-hz+2);
+  for(var ck=-1;ck<2;ck++){
+    var cb=ck*ccyc-coff;
+    for(var bi=0;bi<38;bi++){
+      var bx=cb+bi*17+((bi*7)%9);
+      var bh=3+((bi*13)%7);
+      ctx.fillRect(bx,hz-1-bh,9+((bi*5)%6),bh+2);
+      if(bi%9===4)ctx.fillRect(bx+3,hz-6-bh,1.5,5); /* a spire here an' there */
+    }
+  }
+  /* lit windaes doon in the toun */
+  ctx.fillStyle='rgba(255,223,138,0.4)';
+  for(var wk=-1;wk<2;wk++){
+    var wb=wk*ccyc-coff;
+    for(var wi=0;wi<26;wi++)ctx.fillRect(wb+wi*25+((wi*11)%13),hz+2+((wi*7)%8),1,1);
+  }
   /* slow parallax skyline: the Castle, Arthur's Seat, the Scott Monument, Calton Hill */
   var cyc=W*2.6,off=(balT*16)%cyc;
   ctx.fillStyle='#6f849c';
