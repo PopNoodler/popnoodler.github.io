@@ -886,7 +886,7 @@ function updBal(dt){
   /* pint physics: it tips — get under it */
   var R=drunk;
   /* body sway — the drink's daein' its ain steerin' */
-  tiltV+=Math.sin(balT*1.4+swayPh)*0.8*drunk*dt;
+  tiltV+=Math.sin(balT*1.4+swayPh)*(0.55+0.9*drunk)*dt;
   /* hiccups */
   hicT-=dt;
   if(drunk>0.15&&hicT<=0){
@@ -898,11 +898,11 @@ function updBal(dt){
   }
   /* ambient turbulence — it's aye daein' somethin' */
   turbT-=dt;
-  if(turbT<=0){turbT=rnd(0.5,0.9);tiltV+=rnd(-1,1)*lerp(0.4,0.95,R);}
+  if(turbT<=0){turbT=rnd(0.4,0.75);tiltV+=rnd(-1,1)*lerp(0.55,1.25,R);}
   /* pow curve: lively near level (yer instinct fires), flattens near the brink */
   var aa=Math.abs(tiltA);
-  tiltV+=(tiltA>0?1:tiltA<0?-1:0)*0.6*Math.pow(aa,0.55)*lerp(1.6,2.6,R)*dt;
-  tiltV*=Math.max(0,1-dt*0.6);
+  tiltV+=(tiltA>0?1:tiltA<0?-1:0)*0.6*Math.pow(aa,0.55)*lerp(2.1,3.3,R)*dt;
+  tiltV*=Math.max(0,1-dt*0.45);
   /* gusts, telegraphed */
   if(gust.warn>0){
     gust.warn-=dt;
@@ -910,9 +910,9 @@ function updBal(dt){
   }else{
     gust.t-=dt;
     if(gust.t<=0){
-      gust.warn=0.6;gust.dir=Math.random()<0.5?-1:1;
-      gust.power=lerp(0.77,2.4,R)*rnd(0.8,1.2);
-      gust.t=rnd(1.7,2.9);
+      gust.warn=0.5;gust.dir=Math.random()<0.5?-1:1;
+      gust.power=lerp(1.0,2.9,R)*rnd(0.8,1.2);
+      gust.t=rnd(1.4,2.4);
     }
   }
   tiltA+=tiltV*dt;
