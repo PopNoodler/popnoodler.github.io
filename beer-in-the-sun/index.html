@@ -149,9 +149,10 @@ var BAR=(60/130)*4;                 /* one bar at 130 BPM; the grid is anchored 
 var SUN_LEN=12*BAR;                 /* the section loops as 12 clean bars */
 var SUN_B=SUN_A+SUN_LEN;
 var BG_VOL=0.3,SUN_VOL=0.3,CF=0.6;  /* keep these EQUAL — the filter, no' the volume, is the difference */
+var STRUT_TAIL=5;                   /* the chorus lingers this lang efter walkin' it aff */
 var songBuf=null,bgSrc=null,sunSrc=null,bgGain=null,sunGain=null,bgFilt=null;
 var bgPos=0,sunPos=-1,bgT0=0,sunT0=0; /* sunPos -1 = first visit enters at SUN_A */
-var sunOn=false,sunHold=0,pend=null,airCued=false,songFailed=false; /* pend = a switch waiting for its bar line */
+var sunOn=false,sunHold=0,pend=null,strutCued=false,strutTail=0,songFailed=false; /* pend = a switch waiting for its bar line */
 function initSong(){
   if(!AC||bgGain)return;
   /* the background song sits ahint the clouds: low-passed and quiet */
@@ -229,19 +230,23 @@ function updSong(dt){
     bgGain.gain.setTargetAtTime(BG_VOL,t,0.5);
     return;
   }
-  var airNow=state==='PLAY'&&(scene==='BAL'||scene==='STRUT');
-  var wantSun=airNow||(state==='PLAY'&&scene==='GARDEN'&&!fetching&&inSunPatch());
-  if(!airNow)airCued=false;
+  var strutNow=state==='PLAY'&&scene==='STRUT';
+  if(strutNow)strutTail=STRUT_TAIL;
+  else if(scene!=='GARDEN')strutTail=0;
+  else if(strutTail>0)strutTail-=dt;
+  var wantSun=strutNow||(state==='PLAY'&&scene==='GARDEN'&&strutTail>0)
+    ||(state==='PLAY'&&scene==='GARDEN'&&!fetching&&inSunPatch());
+  if(!strutNow)strutCued=false;
   if(pend){
     if(t>pend.at+CF+0.05)finishSwitch();
     else if(wantSun!==pend.to&&t<pend.at-0.08)cancelSwitch();
     else return;
   }
-  if(airNow&&!sunOn&&!airCued&&!pend){
-    scheduleSwitch(true,true);airCued=true;return; /* flight hame: chorus fae the tap, on the bar */
+  if(strutNow&&!sunOn&&!strutCued&&!pend){
+    scheduleSwitch(true,true);strutCued=true;return; /* walk it aff tae the chorus, fae the tap */
   }
   /* sticky: quick tae bring the chorus in, gey reluctant tae let it go */
-  if(sunOn&&!wantSun&&!airNow&&scene==='GARDEN'&&patch.alpha>0.4&&dist(dude.x,dude.y,patch.x,patch.y)<patch.r+14)wantSun=true;
+  if(sunOn&&!wantSun&&!strutNow&&scene==='GARDEN'&&patch.alpha>0.4&&dist(dude.x,dude.y,patch.x,patch.y)<patch.r+14)wantSun=true;
   if(wantSun!==sunOn){
     sunHold+=dt;
     if(sunHold>(wantSun?0.15:(scene==='GARDEN'?3.5:1.0))){sunHold=0;scheduleSwitch(wantSun);}
