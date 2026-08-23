@@ -331,7 +331,7 @@ var pint={has:true,ml:568,watered:0};
 var stock=3,fetching=false;
 var patch={x:108,y:260,r:34,tx:108,ty:260,alpha:1,moveT:1.2};
 var rain={active:false,t:0,nextT:24,warned:false};
-var rainCnt=0,wasInSun=false; /* the leave-the-circle rain trigger */
+var rainCnt=0,wasInSun=false,rainWarnAt=0.4; /* the leave-the-circle rain trigger */
 var wateredSpoke=false;
 var guitarCd=0,bumpCd=0,bumpN=0;
 /* the lassies fae the reels — wan tae start, anither every time ye come hame */
@@ -627,12 +627,12 @@ function updRain(dt){
   if(inSun){rainCnt=0;wasInSun=true;}
   else if(state==='PLAY'&&scene==='GARDEN'&&tutDone){
     /* the leave-the-circle event — but rain only threatens a pint at risk */
-    if(wasInSun){wasInSun=false;rainCnt=(pint.has&&pint.ml>0)?0.0001:0;}
+    if(wasInSun){wasInSun=false;rainCnt=(pint.has&&pint.ml>0)?0.0001:0;rainWarnAt=0.4;}
     if(!(pint.has&&pint.ml>0))rainCnt=0;
     if(rainCnt>0&&!rain.active){
       rainCnt+=dt;
-      if(rainCnt>=0.4&&!rain.warned){rain.warned=true;sfx('thunder');flashWhite=0.2;calloutMsg("RAIN COMIN'!",'#6bc5ff');}
-      if(rainCnt>=1){rain.active=true;}
+      if(rainCnt>=rainWarnAt&&!rain.warned){rain.warned=true;sfx('thunder');flashWhite=0.2;calloutMsg("RAIN COMIN'!",'#6bc5ff');}
+      if(rainCnt>=rainWarnAt+0.6){rain.active=true;}
     }
   }
   if(rainOnScreen()){
@@ -1038,7 +1038,7 @@ function finishStrut(){
   scene='GARDEN';
   /* normal weather on returnin' — ony auld rain's blawn ower, an' the rain
      clock starts fresh: 1s grace, THEN thunder, since ye're ootside the circle */
-  rain.active=false;rain.warned=false;wasInSun=false;rainCnt=0.0001;
+  rain.active=false;rain.warned=false;wasInSun=false;rainCnt=0.0001;rainWarnAt=1.0;
   /* hame wi' a fu' pint, aye — nae hauf-measures in yer ain gairden */
   if(pint.has&&pint.ml<560)popup(dude.x,dude.y-56,"TAPPED AFF FU'",'#7ec850');
   pint.has=true;pint.ml=568;pint.watered=0;fetching=false;
