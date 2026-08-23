@@ -470,13 +470,12 @@ function inRain(){
 }
 
 /* ---------- movement (garden + street) ---------- */
+function maxSpStumble(){ /* briefly slower while he finds his feet, easin' back tae full */
+  return lerp(85,52,clamp(stumbleT/0.8,0,1));
+}
 function updMove(dt){
-  if(stumbleT>0){ /* doon — gie him a second */
-    stumbleT-=dt;
-    dude.vx=0;dude.vy=0;dude.speed=0;
-    return;
-  }
-  var maxSp=85;
+  if(stumbleT>0)stumbleT-=dt; /* a trip, no' a takeover — ye keep control */
+  var maxSp=stumbleT>0?maxSpStumble():85;
   var txv=0,tyv=0;
   if(dragging){
     var dx=dude.tx-dude.x,dy=dude.ty-dude.y,d=Math.hypot(dx,dy)||1;
@@ -493,12 +492,13 @@ function updMove(dt){
   dude.y=clamp(dude.y+dude.vy*dt,by1,by2);
   dude.speed=Math.hypot(dude.vx,dude.vy);
   if(Math.abs(dude.vx)>8)dude.face=dude.vx>0?1:-1;
-  /* the drink does its ain choreography */
+  /* the drink does its ain choreography — but never grabs the wheel */
   stumbleCd-=dt;
   var drk=drunkLvl();
-  if(tutDone&&stumbleCd<=0&&drk>0.25&&dude.speed>30&&Math.random()<dt*(drk-0.2)*2){
-    stumbleT=1.0;stumbleCd=rnd(8,15);
-    sfx('boot');shake=Math.max(shake,3);
+  if(tutDone&&stumbleCd<=0&&drk>0.35&&dude.speed>30&&Math.random()<dt*(drk-0.3)){
+    stumbleT=0.8;stumbleCd=rnd(14,24);
+    dude.vx+=rnd(-40,40);dude.vy+=rnd(-25,25); /* a wee veer aff course */
+    sfx('boot');shake=Math.max(shake,2);
     popup(dude.x,dude.y-30,'*STUMBLE*','#ffd23f');
     speak(["MAIR BEER'LL FIX IT.","THAT WIS THE GRUND'S FAULT.","WHA MOVED THE GAIRDEN?","STEADY... STEADY...","THAE SLABS ARE OOT TAE GET ME."][Math.floor(Math.random()*5)]);
     for(var sp2=0;sp2<6;sp2++)parts.push({x:dude.x+rnd(-8,8),y:dude.y+10,vx:rnd(-18,18),vy:-rnd(4,16),t:0.45,life:0.45,col:'#c9bfa8',sz:1});
