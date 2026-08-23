@@ -202,11 +202,17 @@ function scheduleSwitch(toSun,fresh){
   var c=((k-BEAT_ANCHOR)%4+4)%4;
   var inSrc=makeSrc(toSun),base,inB,inPos;
   if(toSun){
-    if(fresh||sunPos<0)base=BEAT_ANCHOR;
-    else{base=bIdx(sunPos);if(base<BEAT_ANCHOR||base>=BEAT_ANCHOR+SUN_BEATS)base=BEAT_ANCHOR;}
-    inB=base+(((c-((base-BEAT_ANCHOR)%4))%4)+4)%4;
-    if(inB>=BEAT_ANCHOR+SUN_BEATS)inB=BEAT_ANCHOR+((inB-BEAT_ANCHOR)%4);
-    inPos=bT(inB);
+    if(!sunOn&&swT>=SUN_A&&swT<SUN_B){
+      /* the chorus is ALREADY playin' on the main track — dinnae restart it,
+         just cairry the exact same spot across an' open the sky */
+      inPos=swT;
+    }else{
+      if(fresh||sunPos<0)base=BEAT_ANCHOR;
+      else{base=bIdx(sunPos);if(base<BEAT_ANCHOR||base>=BEAT_ANCHOR+SUN_BEATS)base=BEAT_ANCHOR;}
+      inB=base+(((c-((base-BEAT_ANCHOR)%4))%4)+4)%4;
+      if(inB>=BEAT_ANCHOR+SUN_BEATS)inB=BEAT_ANCHOR+((inB-BEAT_ANCHOR)%4);
+      inPos=bT(inB);
+    }
   }else{
     base=bIdx(bgPos);
     /* never come IN inside a chorus (or its pre-chorus) onywhere in the sang —
