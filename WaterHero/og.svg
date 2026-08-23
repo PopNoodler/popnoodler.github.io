@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a1f2e"/>
+      <stop offset="0.55" stop-color="#0c2a3f"/>
+      <stop offset="1" stop-color="#0a151f"/>
+    </linearGradient>
+    <linearGradient id="ttl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#bdf0ff"/>
+      <stop offset="0.6" stop-color="#2aa3ff"/>
+      <stop offset="1" stop-color="#1b6fd1"/>
+    </linearGradient>
+    <radialGradient id="fireglow" cx="0.5" cy="0.55" r="0.55">
+      <stop offset="0" stop-color="#ff9a3d" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#ff5722" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="drop" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0" stop-color="#bdf0ff"/>
+      <stop offset="1" stop-color="#1b6fd1"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- ground -->
+  <rect y="500" width="1200" height="130" fill="#0d2a22"/>
+  <!-- embers -->
+  <g fill="#ffce6b" opacity="0.7">
+    <circle cx="980" cy="120" r="4"/><circle cx="1060" cy="220" r="3"/><circle cx="900" cy="80" r="3"/>
+    <circle cx="1110" cy="160" r="4"/><circle cx="850" cy="180" r="2"/><circle cx="1015" cy="300" r="3"/>
+  </g>
+
+  <!-- big fire (right) -->
+  <g transform="translate(905,430)">
+    <circle cx="0" cy="-30" r="200" fill="url(#fireglow)"/>
+    <path d="M0,70 Q-150,-30 -45,-150 Q-15,-200 0,-235 Q15,-200 45,-150 Q150,-30 0,70 Z" fill="#ff5722"/>
+    <path d="M0,55 Q-95,-20 -28,-110 Q-10,-150 0,-175 Q10,-150 28,-110 Q95,-20 0,55 Z" fill="#ff9800"/>
+    <path d="M0,40 Q-50,-15 -15,-75 Q-5,-100 0,-118 Q5,-100 15,-75 Q50,-15 0,40 Z" fill="#ffeb3b"/>
+    <!-- angry eyes -->
+    <circle cx="-34" cy="-95" r="22" fill="#fff"/><circle cx="34" cy="-95" r="22" fill="#fff"/>
+    <circle cx="-30" cy="-92" r="11" fill="#222"/><circle cx="38" cy="-92" r="11" fill="#222"/>
+    <path d="M-58,-128 L-14,-104 M58,-128 L14,-104" stroke="#7a2e10" stroke-width="9" stroke-linecap="round"/>
+  </g>
+
+  <!-- water stream -->
+  <g fill="#9fe6ff">
+    <circle cx="430" cy="430" r="11" opacity="0.95"/><circle cx="500" cy="405" r="10" opacity="0.9"/>
+    <circle cx="575" cy="392" r="9" opacity="0.85"/><circle cx="650" cy="392" r="8" opacity="0.8"/>
+    <circle cx="720" cy="405" r="7" opacity="0.7"/><circle cx="785" cy="425" r="6" opacity="0.6"/>
+  </g>
+
+  <!-- firefighter hero (left) -->
+  <g transform="translate(360,440)">
+    <ellipse cx="0" cy="62" rx="58" ry="20" fill="#000" opacity="0.25"/>
+    <circle cx="0" cy="6" r="56" fill="#ffd24d"/>
+    <circle cx="-6" cy="-44" r="36" fill="#ffe0b3"/>
+    <circle cx="6" cy="-46" r="6" fill="#fff"/><circle cx="22" cy="-46" r="6" fill="#fff"/>
+    <circle cx="8" cy="-46" r="3" fill="#234"/><circle cx="24" cy="-46" r="3" fill="#234"/>
+    <path d="M-42,-50 A40 40 0 0 1 38,-50 Z" fill="#e23b2e"/>
+    <rect x="-42" y="-54" width="80" height="11" fill="#e23b2e"/>
+    <rect x="20" y="-8" width="74" height="16" fill="#2a7fff"/>
+    <rect x="86" y="-13" width="12" height="26" fill="#1b5fd1"/>
+    <rect x="100" y="-7" width="9" height="14" fill="#9fe6ff"/>
+  </g>
+
+  <!-- title -->
+  <text x="80" y="210" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="128" fill="url(#ttl)" letter-spacing="2">WATER</text>
+  <text x="80" y="330" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="128" fill="url(#ttl)" letter-spacing="2">HERO</text>
+  <text x="86" y="392" font-family="Arial, sans-serif" font-weight="800" font-size="40" fill="#eaf6ff" letter-spacing="6">FIREFIGHTER TYCOON</text>
+  <text x="86" y="448" font-family="Arial, sans-serif" font-weight="600" font-size="28" fill="#9fc6e0">Put out the whole solar system — free to play</text>
+</svg>

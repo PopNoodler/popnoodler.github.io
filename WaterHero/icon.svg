@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c3a57"/>
+      <stop offset="1" stop-color="#06151f"/>
+    </linearGradient>
+    <linearGradient id="drop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9fe6ff"/>
+      <stop offset="1" stop-color="#1b6fd1"/>
+    </linearGradient>
+    <radialGradient id="fire" cx="0.5" cy="0.65" r="0.6">
+      <stop offset="0" stop-color="#ffeb3b"/>
+      <stop offset="0.5" stop-color="#ff9800"/>
+      <stop offset="1" stop-color="#ff5722"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- flame -->
+  <path d="M205 392 C150 360 150 300 188 268 C182 300 205 312 214 296 C220 250 188 232 205 188 C240 222 296 252 296 318 C296 368 256 400 205 392 Z" fill="url(#fire)" opacity="0.95"/>
+  <!-- water drop -->
+  <path d="M330 110 C330 110 410 220 410 290 A80 80 0 1 1 250 290 C250 220 330 110 330 110 Z" fill="url(#drop)"/>
+  <ellipse cx="305" cy="300" rx="22" ry="34" fill="#dff6ff" opacity="0.55"/>
+</svg>

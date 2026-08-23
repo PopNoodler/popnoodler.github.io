@@ -1,0 +1,2833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Water Hero">
+<meta name="theme-color" content="#0a2a43">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Water Hero — Firefighter Tycoon</title>
+<meta name="description" content="Water Hero — a juicy firefighter tycoon. Spray fires, ride the truck out, and upgrade your HQ to put out the whole solar system. Play in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Water Hero — Firefighter Tycoon">
+<meta property="og:description" content="Spray fires, ride the truck out, and upgrade your HQ to save the whole solar system. Play in your browser 🚒🌍">
+<meta property="og:url" content="https://popnoodler.github.io/WaterHero/">
+<meta property="og:image" content="https://popnoodler.github.io/WaterHero/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Water Hero — Firefighter Tycoon">
+<meta name="twitter:description" content="Spray fires, ride the truck out, upgrade your HQ to save the solar system 🚒🌍">
+<meta name="twitter:image" content="https://popnoodler.github.io/WaterHero/og.png">
+<!-- CrazyGames portal SDK (v3): active only when hosted on CrazyGames; reports 'disabled' and is harmless elsewhere -->
+<script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body {
+    width:100%; height:100%; overflow:hidden; background:#06151f;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-user-select:none; user-select:none; touch-action:none; overscroll-behavior:none;
+  }
+  #game { display:block; width:100vw; height:100vh; touch-action:none; }
+  .overlay {
+    position:fixed; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    color:#eaf6ff; padding:24px; overflow-y:auto;
+    background:radial-gradient(120% 90% at 50% 30%, rgba(9,26,38,.88), rgba(3,11,18,.97));   /* strong scrim so the animated canvas behind only whispers through — keeps the vibe, keeps text readable */
+  }
+  .hidden { display:none !important; }
+  .title {
+    font-size:clamp(34px,11vw,72px); font-weight:900; letter-spacing:1px; line-height:1; margin-bottom:6px;
+    background:linear-gradient(180deg,#9fe6ff,#2aa3ff 60%,#1b6fd1);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    text-shadow:0 4px 18px rgba(0,140,255,.35);
+  }
+  .sub { font-size:clamp(13px,3.6vw,18px); opacity:.85; margin-bottom:20px; max-width:520px; }
+  .btn {
+    font-size:clamp(18px,5vw,24px); font-weight:800; color:#06283d;
+    background:linear-gradient(180deg,#7fe0ff,#28a2ff); border:none; border-radius:999px;
+    padding:15px 40px; cursor:pointer; margin:6px;
+    box-shadow:0 8px 26px rgba(0,150,255,.45), inset 0 2px 0 rgba(255,255,255,.6);
+    transition:transform .08s ease;
+  }
+  .btn:active { transform:scale(.95); }
+  .btn.ghost { background:linear-gradient(180deg,#27506e,#173a55); color:#cfeaff; box-shadow:0 6px 18px rgba(0,0,0,.4); }
+  .coinpill { font-size:clamp(16px,4.6vw,22px); font-weight:900; color:#ffd76b; margin:4px 0 14px; }
+  /* dopamine main menu */
+  #startScreen { background:linear-gradient(180deg, rgba(6,21,31,0.85) 0%, rgba(6,21,31,0.92) 46%, rgba(6,21,31,0.98) 100%); }   /* dopamine scene = very faint ambient glow behind the menu */
+  .menuStats { display:flex; gap:28px; margin-bottom:8px; }
+  .mstat { text-align:center; }
+  .mlabel { font-size:11px; font-weight:800; letter-spacing:1px; opacity:.8; }
+  .mval { font-size:clamp(22px,7.5vw,36px); font-weight:900; line-height:1.05; }
+  .mval.gold { color:#ffd76b; text-shadow:0 2px 12px rgba(255,180,40,.55); }
+  .playbig { font-size:clamp(22px,6.5vw,30px); padding:18px 54px; animation:ultpulse 1.5s infinite; }
+  .how { margin-top:18px; font-size:clamp(12px,3.4vw,15px); line-height:1.7; opacity:.82; max-width:460px; }
+  .how b { color:#8fe1ff; }
+  .stat { font-size:clamp(15px,4.2vw,20px); opacity:.9; margin:3px 0; }
+  .big { font-size:clamp(40px,13vw,80px); font-weight:900; color:#ffd76b; line-height:1; margin:6px 0 2px; }
+  .gameover-title { color:#ff7a6b; }
+  .small { font-size:12px; opacity:.6; margin-top:14px; }
+
+  /* HUD */
+  #hud { position:fixed; top:0; left:0; right:0; padding:14px 16px; padding-top:max(14px, env(safe-area-inset-top));
+    display:flex; justify-content:space-between; align-items:flex-start; color:#eaf6ff; pointer-events:none; font-weight:800; z-index:5;
+    text-shadow:0 2px 6px rgba(0,0,0,.6); }
+  .hud-left { font-size:clamp(16px,5vw,26px); }
+  .hud-coins { font-size:clamp(13px,3.8vw,18px); color:#ffd76b; }
+  .hud-right { text-align:right; font-size:clamp(12px,3.4vw,16px); margin-top:42px; }
+  .iconbtn { position:fixed; z-index:7; pointer-events:auto; width:38px; height:38px; border-radius:12px; border:none;
+    background:rgba(16,46,68,.72); color:#dff3ff; font-size:18px; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,.35); }
+  .iconbtn:active { transform:scale(.9); }
+  #muteBtn { top:max(12px,env(safe-area-inset-top)); right:58px; }
+  #pauseBtn { top:max(12px,env(safe-area-inset-top)); right:12px; }
+  #pauseScreen { z-index:30; }
+  .combo { color:#ffd76b; font-size:clamp(13px,3.8vw,20px); height:1.3em; font-weight:900; }
+  #bombBtn { position:fixed; top:max(10px,env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
+    z-index:6; pointer-events:auto; border:none; cursor:pointer; font-weight:900; font-size:15px; color:#06283d;
+    background:linear-gradient(180deg,#7fe0ff,#28a2ff); border-radius:999px; padding:9px 16px;
+    box-shadow:0 5px 16px rgba(0,150,255,.5), inset 0 2px 0 rgba(255,255,255,.6); }
+  #bombBtn:active { transform:translateX(-50%) scale(.92); }
+  #ultBtn { position:fixed; top:max(50px,calc(env(safe-area-inset-top) + 50px)); left:50%; transform:translateX(-50%);
+    z-index:6; pointer-events:auto; border:none; cursor:pointer; font-weight:900; font-size:14px; color:#06283d;
+    border-radius:999px; padding:9px 18px; min-width:120px; }
+  #ultBtn.ready { background:linear-gradient(180deg,#ffe08a,#ff9d3d); animation:ultpulse 1s infinite; }
+  #ultBtn.charging { background:rgba(16,46,68,.78); color:#9fc6e0; }
+  #ultBtn:active.ready { transform:translateX(-50%) scale(.92); }
+  @keyframes ultpulse { 0%,100%{ box-shadow:0 0 8px 2px rgba(255,180,40,.5);} 50%{ box-shadow:0 0 20px 7px rgba(255,180,40,.85);} }
+  #fanWrap { pointer-events:auto; }
+  .fanRow { display:flex; align-items:center; gap:6px; }
+  #fanSlider { flex:1; min-width:0; accent-color:#7fe0ff; cursor:pointer; height:14px; }
+  #fanPct { min-width:30px; text-align:right; color:#9fe6ff; font-weight:800; font-size:11px; }
+  #fanLbl .whint { opacity:.6; font-weight:600; font-size:10px; }
+  #extractBtn { position:fixed; top:max(92px,calc(env(safe-area-inset-top) + 92px)); left:50%; transform:translateX(-50%);
+    z-index:6; pointer-events:auto; border:none; cursor:pointer; font-weight:900; font-size:15px; color:#06283d;
+    background:linear-gradient(180deg,#9be86b,#46c24d); border-radius:999px; padding:10px 20px; animation:ultpulse 1s infinite; }
+  #extractBtn:active { transform:translateX(-50%) scale(.92); }
+  #dailyBtn.ready { background:linear-gradient(180deg,#ffe08a,#ffc24d); color:#06283d; animation:ultpulse 1.2s infinite; }
+  #starterBanner { width:min(97vw,960px); max-width:min(97vw,960px); margin:12px 0 2px; padding:11px 16px; border-radius:12px; cursor:pointer; text-align:center;
+    background:linear-gradient(180deg,#ffe08a,#ffc24d); color:#5a3a00; font-weight:800; font-size:13px; letter-spacing:.3px; box-shadow:0 4px 14px rgba(255,180,40,.45); }
+  #starterX { float:right; opacity:.6; font-weight:900; padding:0 4px; }
+  .bars { position:fixed; left:16px; bottom:max(16px,env(safe-area-inset-bottom)); z-index:5; pointer-events:none; width:min(46vw,230px); }
+  .barwrap { margin-top:8px; }
+  .barlabel { font-size:11px; font-weight:800; color:#dff3ff; opacity:.85; margin-bottom:3px; text-shadow:0 1px 3px rgba(0,0,0,.6); }
+  .bar { height:12px; border-radius:8px; background:rgba(255,255,255,.16); overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.4); }
+  .barfill { height:100%; width:100%; border-radius:8px; transition:width .12s linear; }
+  #waterFill { background:linear-gradient(90deg,#2aa3ff,#7fe0ff); }
+  @keyframes lowwater { 0%,100%{ filter:brightness(1); opacity:1; } 50%{ filter:brightness(1.7); opacity:.6; } }
+  #waterFill.low { background:linear-gradient(90deg,#ff8a3d,#ffd24d); animation:lowwater .55s infinite; }   /* running dry — release to refill */
+  #healthFill { background:linear-gradient(90deg,#ff5b5b,#ffb24d); }
+  #townFill { background:linear-gradient(90deg,#ff8a3d,#ffd98a); }
+
+  /* Unified panel cards + action buttons (restrained, premium, brand-consistent) */
+  .shopList { width:100%; max-width:min(94vw,640px); margin:6px 0 4px; max-height:58vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:8px 10px; align-content:start; }   /* 2 columns on desktop, 1 on phones */
+  .shopItem, .storeItem { display:flex; align-items:center; gap:11px; text-align:left;
+    background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.035));
+    border:1px solid rgba(255,255,255,.09); border-radius:14px; padding:12px 14px; margin:7px 0; }
+  .si-info { flex:1; min-width:0; }
+  .si-name { font-weight:800; font-size:15.5px; letter-spacing:.2px; }
+  .si-desc { font-size:12px; opacity:.7; margin-top:1px; }
+  .si-lvl { color:#8fe1ff; font-weight:800; }
+  .si-pips { color:#ffd76b; font-size:11px; letter-spacing:2px; margin-top:3px; }
+  .buyBtn, .priceBtn { border:none; border-radius:999px; font-weight:800; font-size:14px; padding:11px 16px; cursor:pointer;
+    color:#06283d; white-space:nowrap; background:linear-gradient(180deg,#7fe0ff,#2aa3ff); box-shadow:0 3px 10px rgba(0,140,255,.30); transition:transform .07s ease; }
+  .buyBtn:active, .priceBtn:active { transform:scale(.95); }
+  .buyBtn.cant, .priceBtn.cant { filter:grayscale(.6); opacity:.45; box-shadow:none; }
+  .buyBtn.maxed, .priceBtn.owned { background:rgba(255,255,255,.10); color:#bfe3ff; box-shadow:none; }
+
+  /* Level-up cards */
+  #levelup { background:radial-gradient(120% 90% at 50% 40%, rgba(20,90,140,.72), rgba(4,14,22,.96)); z-index:20; }
+  .lvlTitle { font-size:clamp(30px,9vw,56px); font-weight:900; color:#ffd76b; text-shadow:0 4px 18px rgba(255,180,40,.4); line-height:1; }
+  .cards { display:flex; flex-direction:column; gap:12px; width:100%; max-width:420px; margin-top:16px; }
+  .card { display:flex; align-items:center; gap:14px; text-align:left; cursor:pointer;
+    background:linear-gradient(180deg,rgba(60,140,200,.30),rgba(20,60,90,.30));
+    border:2px solid rgba(140,225,255,.4); border-radius:18px; padding:14px 16px; color:#eaf6ff;
+    box-shadow:0 6px 20px rgba(0,0,0,.35); transition:transform .07s ease; }
+  .card:active { transform:scale(.96); border-color:#9fe6ff; }
+  .c-icon { font-size:38px; line-height:1; width:42px; text-align:center; }
+  .c-name { font-weight:900; font-size:19px; }
+  .c-desc { font-size:13px; opacity:.82; }
+  .c-have { font-size:11px; color:#8fe1ff; font-weight:800; }
+
+  /* Ads + Store */
+  #adOverlay { z-index:40; background:rgba(2,8,14,.96); }
+  #idleScreen { z-index:35; }
+  .idleCard { background:linear-gradient(180deg,rgba(10,26,40,.94),rgba(7,18,30,.97)); border:1px solid rgba(255,255,255,.14);
+    border-radius:22px; padding:26px 24px 22px; width:min(90vw,420px); display:flex; flex-direction:column; align-items:center;
+    box-shadow:0 22px 60px rgba(0,0,0,.55); backdrop-filter:blur(3px); }
+  #introScreen { z-index:36; }
+  #planetScreen { z-index:37; background:radial-gradient(120% 90% at 50% 35%, rgba(40,100,150,.6), rgba(4,14,22,.96)); }
+  #settingsScreen { z-index:38; }
+  /* first-time guided tour (spotlight coach-marks) */
+  #tutorial { position:fixed; inset:0; z-index:60; pointer-events:none; }   /* lets the spotlit element stay tappable; only the card captures input */
+  #tutSpot { position:fixed; left:50%; top:50%; width:0; height:0; border-radius:16px; border:2px solid #7fe0ff;
+    box-shadow:0 0 0 9999px rgba(3,10,18,.84), 0 0 22px rgba(127,224,255,.55); pointer-events:none;
+    transition:left .3s cubic-bezier(.4,0,.2,1), top .3s cubic-bezier(.4,0,.2,1), width .3s cubic-bezier(.4,0,.2,1), height .3s cubic-bezier(.4,0,.2,1); }
+  #tutSpot.center { box-shadow:0 0 0 9999px rgba(3,10,18,.9); border-color:transparent; }
+  #tutCard { position:fixed; left:50%; transform:translateX(-50%); width:min(92vw,410px); box-sizing:border-box; pointer-events:auto;
+    background:linear-gradient(180deg,#0e3049,#0a2035); border:1px solid rgba(127,224,255,.35); border-radius:16px;
+    padding:15px 18px 16px; box-shadow:0 18px 50px rgba(0,0,0,.6); color:#eaf6ff; text-align:left; }
+  #tutHud { position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom) + 92px); transform:translateX(-50%); z-index:24;
+    background:linear-gradient(180deg,rgba(14,48,71,.96),rgba(10,32,53,.96)); color:#eaf6ff; font-weight:800; font-size:15px;
+    padding:11px 20px; border-radius:999px; border:1px solid rgba(127,224,255,.4); box-shadow:0 6px 22px rgba(0,0,0,.5);
+    pointer-events:none; white-space:nowrap; max-width:92vw; text-align:center; animation:tuthudpulse 1.5s ease-in-out infinite; }
+  @keyframes tuthudpulse { 0%,100%{ transform:translateX(-50%) scale(1); } 50%{ transform:translateX(-50%) scale(1.05); } }
+  #tutCard.mid { top:50% !important; bottom:auto !important; transform:translate(-50%,-50%); }
+  #tutStep { font-size:11px; letter-spacing:1.5px; color:#7fbfe0; font-weight:800; margin-bottom:4px; }
+  #tutTitle { font-size:19px; font-weight:900; color:#9fe6ff; margin-bottom:6px; line-height:1.15; }
+  #tutBody { font-size:14px; line-height:1.55; color:#dff0ff; }
+  #tutBody b { color:#fff; }
+  #tutBtns { display:flex; justify-content:space-between; align-items:center; margin-top:14px; gap:10px; }
+  #tutSkip { background:none; border:none; color:#8fb2c8; font-size:13px; cursor:pointer; padding:6px; }
+  #tutNext { background:linear-gradient(180deg,#7fe0ff,#28a2ff); color:#06283d; border:none; border-radius:999px;
+    padding:10px 22px; font-weight:800; font-size:15px; cursor:pointer; box-shadow:0 6px 18px rgba(0,150,255,.4); }
+  #tutNext:active { transform:scale(.95); }
+  #tutDots { display:flex; gap:5px; }
+  #tutDots i { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.25); }
+  #tutDots i.on { background:#7fe0ff; }
+  /* clean bottom icon-nav for the hub (declutters secondary actions) */
+  .hubnav { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; width:min(96vw,880px); margin-top:14px; padding:8px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.07); border-radius:16px; }
+  .navbtn { flex:1 1 18%; min-width:54px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:8px 2px; cursor:pointer; color:#dff3ff; display:flex; flex-direction:column; align-items:center; gap:3px; position:relative; }
+  .navbtn:active { transform:scale(.93); }
+  .navbtn .ic { font-size:21px; line-height:1; }
+  .navbtn .lb { font-size:9px; font-weight:800; letter-spacing:.4px; opacity:.78; }
+  .navbtn.alert::after { content:''; position:absolute; top:5px; right:7px; width:9px; height:9px; border-radius:50%; background:#ffd76b; box-shadow:0 0 6px #ffd76b; }
+  /* premium hub header / currency bar */
+  /* hub is taller than the viewport — align to top & scroll so the balance/planet aren't pushed off-screen by centering */
+  #hubScreen { justify-content:flex-start; padding-top:max(14px, calc(env(safe-area-inset-top) + 12px)); padding-bottom:24px; }
+  /* two-column hub: planet+deploy on the left, HQ grid on the right — uses screen width, no tall scroll box */
+  #hubScreen .hubHeader, #hubScreen .hubnav { width:min(97vw,960px); max-width:min(97vw,960px); }
+  .hubBody { display:flex; gap:18px; width:min(97vw,960px); align-items:flex-start; justify-content:center; margin:4px 0; }
+  .hubLeft { flex:0 0 auto; width:min(48vw,260px); display:flex; flex-direction:column; align-items:center; gap:10px; }
+  #hubScreen #deployBtn { padding:16px 14px; font-size:clamp(16px,2.6vw,19px); margin:2px 0 0; width:100%; max-width:250px; white-space:nowrap; letter-spacing:.5px; border-radius:16px; }
+  .hubRight { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; }
+  .hubSectionLabel { text-align:left; font-weight:800; font-size:13px; color:#cfe7ff; margin:0 0 6px; letter-spacing:.5px; }
+  #verTag { margin-top:10px; font-size:10px; letter-spacing:2px; opacity:.32; color:#bcd9ef; font-weight:700; user-select:none; }
+  #hubList { width:100%; max-width:100%; max-height:min(62vh,560px); margin:0; display:grid; grid-template-columns:repeat(auto-fill, minmax(248px,1fr)); gap:8px 10px; align-content:start; }
+  @media (max-width:700px){ .hubBody { flex-direction:column; align-items:center; gap:10px; } .hubLeft { width:min(92vw,340px); } .hubRight { width:min(94vw,460px); } #hubList { max-height:44vh; } }
+  .hubHeader { display:flex; justify-content:space-between; align-items:center; width:min(96vw,880px); padding:11px 16px;
+    background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04)); border:1px solid rgba(255,255,255,.10); border-radius:16px; }
+  .hh-left { text-align:left; } .hh-right { text-align:right; }
+  .hh-cash { font-size:clamp(20px,6.4vw,30px); font-weight:900; color:#ffd76b; line-height:1; text-shadow:0 2px 10px rgba(255,180,40,.4); }
+  .hh-rate { font-size:11px; font-weight:700; color:#9fe6ff; opacity:.9; margin-top:3px; }
+  .hh-planet { font-size:clamp(15px,4.6vw,20px); font-weight:900; color:#eaf6ff; line-height:1; }
+  .hh-fire { font-size:11px; font-weight:700; color:#ff9a6b; margin-top:4px; }
+  .hh-center { font-weight:900; letter-spacing:3px; font-size:clamp(15px,2.1vw,21px); color:#9fe6ff; opacity:.82; text-shadow:0 2px 8px rgba(0,0,0,.4); white-space:nowrap; }
+  @media (max-width:640px){ .hh-center { display:none; } }
+  #celebConfetti { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+  #celebConfetti span { position:absolute; top:-32px; font-size:22px; animation:confettiFall linear forwards; }
+  @keyframes confettiFall { to { transform:translateY(115vh) rotate(540deg); opacity:.2; } }
+  #adBox { width:min(86vw,360px); background:#0e2233; border:1px solid rgba(140,225,255,.25); border-radius:18px; padding:22px; text-align:center; }
+  .adlabel { font-size:11px; font-weight:800; letter-spacing:1px; color:#7fa8c4; margin-bottom:8px; }
+  .adlabel span{ opacity:.7; font-weight:600; }
+  #adFake { height:148px; border-radius:12px; margin:8px 0 14px; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,#1b3a52,#2a6f8a); color:#dff3ff; font-size:15px; font-weight:800; }
+  #adCount { font-size:13px; color:#bfe3ff; margin-bottom:12px; min-height:1.2em; }
+  .disclaimer{ font-size:11px; opacity:.6; margin-top:10px; max-width:430px; }
+  /* restrained, consistent header for browse-panels (not the big moment screens) */
+  .panelHead { font-size:clamp(18px,5.4vw,25px); font-weight:800; letter-spacing:4px; color:#dff3ff; text-transform:uppercase;
+    margin:0 0 12px; padding-bottom:9px; border-bottom:1px solid rgba(255,255,255,.13); width:min(94vw,640px); text-align:center; }
+  /* mission-summary results card */
+  .resultCard { width:min(88vw,400px); background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.035));
+    border:1px solid rgba(255,255,255,.10); border-radius:16px; padding:6px 18px; margin:8px 0 10px; }
+  .rcRow { display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.07); }
+  .rcRow:last-child { border-bottom:none; }
+  .rcRow span { font-size:13px; opacity:.82; font-weight:700; }
+  .rcRow b { font-size:18px; font-weight:900; }
+  .rcRow.rcBig b { font-size:27px; color:#ffd76b; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<button id="bombBtn" class="hidden">🌫️ SMOKE ×0</button>
+<button id="ultBtn" class="hidden">🌊 0%</button>
+<button id="extractBtn" class="hidden">🚒 EXTRACT</button>
+<button id="muteBtn" class="iconbtn hidden">🔊</button>
+<button id="pauseBtn" class="iconbtn hidden">⏸</button>
+<div id="tutHud" class="hidden"></div>
+
+<div id="hud" class="hidden">
+  <div class="hud-left">⭐ <span id="score">0</span>
+    <div class="hud-coins">🪙 <span id="coinsRun">0</span></div>
+    <div class="combo" id="combo"></div>
+  </div>
+  <div class="hud-right">Lv <span id="level">1</span><br>Wave <span id="wave">1</span><br>Best <span id="best">0</span></div>
+</div>
+
+<div class="bars hidden" id="bars">
+  <div class="barwrap"><div class="barlabel">💧 WATER</div><div class="bar"><div class="barfill" id="waterFill"></div></div></div>
+  <div class="barwrap" id="fanWrap"><div class="barlabel"><span id="fanLbl">🌀 NOZZLE</span></div><div class="fanRow"><input type="range" id="fanSlider" min="15" max="100" value="100"><span id="fanPct">100%</span></div></div>
+  <div class="barwrap"><div class="barlabel">❤️ HEALTH <span id="hpNum"></span></div><div class="bar"><div class="barfill" id="healthFill"></div></div></div>
+  <div class="barwrap"><div class="barlabel">🏙️ TOWN</div><div class="bar"><div class="barfill" id="townFill"></div></div></div>
+</div>
+
+<div class="overlay" id="startScreen">
+  <div class="menuStats">
+    <div class="mstat"><div class="mlabel">🪙 COINS</div><div class="mval gold" id="menuCoins">0</div></div>
+    <div class="mstat"><div class="mlabel">🏆 BEST</div><div class="mval" id="menuBest">0</div></div>
+  </div>
+  <div class="title">WATER<br>HERO</div>
+  <div class="sub" id="menuPlanet">Firefighter vs the Fire-pocalypse 🔥</div>
+  <button class="btn playbig" id="startBtn">▶ PLAY</button>
+  <button class="btn ghost" id="shopBtn">🛒 UPGRADES</button>
+  <div class="how"><span id="deskHelp"></span></div>
+</div>
+
+<div class="overlay hidden" id="shopScreen">
+  <div class="panelHead">UPGRADES</div>
+  <div class="coinpill">🪙 <span id="shopCoins">0</span></div>
+  <div class="sub" id="hosePower" style="font-size:13px;margin:2px 0 6px;color:#cfe7ff"></div>
+  <div class="shopList" id="shopList"></div>
+  <button class="btn" id="shopBack">BACK</button>
+</div>
+
+<div class="overlay hidden" id="gameOverScreen">
+  <div class="title gameover-title" id="goTitle">TOO HOT!</div>
+  <div class="resultCard">
+    <div class="rcRow rcBig"><span>⭐ SCORE</span><b id="finalScore">0</b></div>
+    <div class="rcRow"><span>🌊 Wave reached</span><b id="finalWave">1</b></div>
+    <div class="rcRow"><span>🪙 Cash earned</span><b style="color:#ffd76b" id="finalCoins">0</b></div>
+    <div class="rcRow"><span>🧯 Planet doused</span><b style="color:#7fe0ff"><span id="goDoused">0</span>%</b></div>
+  </div>
+  <div class="stat" id="newBest" style="color:#ffd76b; font-weight:900;"></div>
+  <button class="btn" id="reviveBtn" style="margin-top:10px;background:linear-gradient(180deg,#9be86b,#46c24d)">🚑 REVIVE</button>
+  <button class="btn" id="doubleBtn" style="background:linear-gradient(180deg,#ffe08a,#ffc24d)">📺 DOUBLE COINS</button>
+  <button class="btn" id="hqBtn">🏢 RETURN TO HQ</button>
+  <button class="btn ghost" id="redeployBtn">🚒 REDEPLOY</button>
+  <div class="small">Best: <span id="bestGO">0</span> &nbsp;•&nbsp; Bank: 🪙 <span id="bankGO">0</span></div>
+</div>
+
+<div class="overlay hidden" id="hubScreen">
+  <div class="hubHeader">
+    <div class="hh-left"><div class="hh-cash">🪙 <span id="hubCash">0</span></div><div class="hh-rate" id="hubRates">+0/s</div></div>
+    <div class="hh-center">🚒 WATER HERO</div>
+    <div class="hh-right"><div class="hh-planet" id="planetRow">Earth</div><div class="hh-fire" id="worldPct">100%</div></div>
+  </div>
+  <div class="hubBody">
+    <div class="hubLeft">
+      <canvas id="planetCanvas" style="margin:2px 0 6px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.5))"></canvas>
+      <div class="bar" style="width:100%;max-width:240px;height:14px"><div class="barfill" id="worldFill" style="background:linear-gradient(90deg,#ff5b5b,#ffb24d)"></div></div>
+      <button class="btn playbig" id="deployBtn" style="width:100%;max-width:240px">🚒 DEPLOY MISSION</button>
+    </div>
+    <div class="hubRight">
+      <div class="hubSectionLabel">🏗️ YOUR HQ</div>
+      <div class="shopList" id="hubList"></div>
+    </div>
+  </div>
+  <div id="starterBanner" class="hidden">🎁 STARTER PACK · 75,000🪙 + No Ads + Captain skin · $1.99 <span id="starterX">✕</span></div>
+  <div class="hubnav">
+    <button class="navbtn" id="navQuests"><span class="ic">📋</span><span class="lb">QUESTS</span></button>
+    <button class="navbtn" id="navGear"><span class="ic">🔧</span><span class="lb">GEAR</span></button>
+    <button class="navbtn" id="navMgr"><span class="ic">👔</span><span class="lb">CREW</span></button>
+    <button class="navbtn" id="navSkins"><span class="ic">🎨</span><span class="lb">SKINS</span></button>
+    <button class="navbtn" id="navGoals"><span class="ic">🏆</span><span class="lb">GOALS</span></button>
+    <button class="navbtn" id="navStore"><span class="ic">💎</span><span class="lb">STORE</span></button>
+    <button class="navbtn" id="navSet"><span class="ic">⚙️</span><span class="lb">OPTIONS</span></button>
+    <button class="navbtn" id="navReb"><span class="ic">🎖️</span><span class="lb">REBIRTH</span></button>
+  </div>
+  <div id="verTag">WATER HERO</div>
+</div>
+
+<div class="overlay hidden" id="questScreen">
+  <div class="panelHead">QUESTS</div>
+  <button class="btn ghost" id="dailyBtn" style="margin-bottom:6px">🎁 DAILY REWARD</button>
+  <div class="shopList" id="questList"></div>
+  <button class="btn" id="hubFreeBtn" style="background:linear-gradient(180deg,#ffe08a,#ffc24d);color:#06283d">📺 FREE CASH</button>
+  <button class="btn" id="questBack">BACK</button>
+</div>
+
+<div class="overlay hidden" id="mgrScreen">
+  <div class="panelHead">MANAGERS</div>
+  <div class="coinpill">🪙 <span id="mgrCoins">0</span></div>
+  <div class="sub" style="margin:0 0 6px;font-size:13px">Hire a manager to auto-upgrade that building from your idle cash 👔</div>
+  <div class="shopList" id="mgrList"></div>
+  <button class="btn" id="mgrBack">BACK</button>
+</div>
+
+<div class="overlay hidden" id="achScreen">
+  <div class="panelHead">GOALS</div>
+  <div class="coinpill"><span id="achCount">0/0</span> unlocked</div>
+  <div id="achStats" style="font-size:12px;line-height:1.9;color:#cfe7ff;max-width:min(94vw,640px);margin:0 0 8px;opacity:.92"></div>
+  <div class="shopList" id="achList"></div>
+  <button class="btn" id="achBack">BACK</button>
+</div>
+
+<div class="overlay hidden" id="skinScreen">
+  <div class="panelHead">SKINS</div>
+  <div class="coinpill">🪙 <span id="skinCoins">0</span></div>
+  <div class="shopList" id="skinList"></div>
+  <button class="btn" id="skinBack">BACK</button>
+</div>
+
+<div class="overlay hidden" id="storeScreen">
+  <div class="panelHead">STORE</div>
+  <div class="coinpill">🪙 <span id="storeCoins">0</span></div>
+  <div class="shopList" id="storeList"></div>
+  <div class="disclaimer">Purchases are <b>simulated</b> in this build. See MONETIZATION.md to connect real App Store / Google Play / web payments.</div>
+  <button class="btn" id="storeBack">BACK</button>
+</div>
+
+<div class="overlay hidden" id="planetScreen">
+  <div id="celebConfetti"></div>
+  <div class="title" id="planetSavedTitle" style="font-size:clamp(26px,8vw,46px)">🎉 PLANET SAVED!</div>
+  <canvas id="savedPlanetCanvas" style="margin:6px 0;filter:drop-shadow(0 6px 18px rgba(0,0,0,.55))"></canvas>
+  <div class="stat" id="planetSavedName">A world is safe!</div>
+  <div class="big" id="planetBonus">🪙 +0</div>
+  <div class="stat" id="planetNextMsg">Next stop…</div>
+  <button class="btn playbig" id="planetNextBtn">🚀 TRAVEL</button>
+</div>
+
+<div class="overlay hidden" id="introScreen">
+  <div class="idleCard">
+    <div class="title" style="font-size:clamp(24px,7vw,40px)">WELCOME, CHIEF!</div>
+    <div class="how" style="margin-top:12px;font-size:14px;line-height:1.95;text-align:left;max-width:360px">
+      🚒 <b>DEPLOY</b> to a firefighting mission<br>
+      💦 <b>Spray</b> the fires &amp; dodge the flames<br>
+      🚒 <b>EXTRACT</b> on the truck to bank your haul — or push your luck for more!<br>
+      🏗️ <b>UPGRADE</b> your HQ to put out the whole planet 🌍<br>
+      🪐 …then save the Moon, Mars &amp; beyond!
+    </div>
+    <button class="btn" id="introBtn" style="margin-top:18px">LET'S GO 🚒</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="idleScreen">
+  <div class="idleCard">
+    <div class="title" style="font-size:clamp(24px,7.5vw,42px)">WELCOME BACK!</div>
+    <div class="stat" id="idleTime">You were away…</div>
+    <div class="big" id="idleCash">🪙 0</div>
+    <div class="stat" style="opacity:.85">earned by your fleet while you were gone 🚒</div>
+    <button class="btn" id="idleCollect" style="margin-top:16px">COLLECT</button>
+    <button class="btn" id="idleCollect2" style="background:linear-gradient(180deg,#ffe08a,#ffc24d)">📺 COLLECT 2×</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="adOverlay">
+  <div id="adBox">
+    <div class="adlabel">SIMULATED AD <span>(placeholder — real ad network goes here)</span></div>
+    <div id="adFake">📺 Your ad here</div>
+    <div id="adCount"></div>
+    <button class="btn" id="adAction" disabled>…</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="pauseScreen">
+  <div class="title" style="font-size:clamp(30px,10vw,60px)">PAUSED</div>
+  <button class="btn" id="resumeBtn">RESUME</button>
+  <button class="btn ghost" id="pauseSetBtn">⚙️ SETTINGS</button>
+  <button class="btn ghost" id="quitBtn">🏢 QUIT TO HQ</button>
+</div>
+
+<div class="overlay hidden" id="settingsScreen">
+  <div class="panelHead">SETTINGS</div>
+  <div class="shopList" id="settingsList">
+    <div class="storeItem"><div class="si-info"><div class="si-name">🔊 Sound</div><div class="si-desc">music &amp; effects</div></div><button class="priceBtn" id="setSound">ON</button></div>
+    <div class="storeItem"><div class="si-info"><div class="si-name">📳 Haptics</div><div class="si-desc">vibration on hits (Android)</div></div><button class="priceBtn" id="setHaptics">ON</button></div>
+    <div class="storeItem"><div class="si-info"><div class="si-name">🔄 Reset Progress</div><div class="si-desc">wipe all saves — can't undo</div></div><button class="priceBtn" id="setReset" style="background:linear-gradient(180deg,#ff8a7a,#e0503e)">RESET</button></div>
+  </div>
+  <div class="storeItem"><div class="si-info"><div class="si-name">❓ How to Play</div><div class="si-desc">replay the new-player tutorial</div></div><button class="priceBtn" id="setTut">REPLAY</button></div>
+  <div class="disclaimer">🚒 Water Hero — made with Claude Code · github.com/PopNoodler/WaterHero</div>
+  <button class="btn" id="setBack">BACK</button>
+</div>
+
+<div id="tutorial" class="hidden">
+  <div id="tutSpot"></div>
+  <div id="tutCard">
+    <div id="tutStep">STEP 1</div>
+    <div id="tutTitle"></div>
+    <div id="tutBody"></div>
+    <div id="tutBtns">
+      <div id="tutDots"></div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <button id="tutSkip">Skip</button>
+        <button id="tutNext">Next ▶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="prestigeScreen">
+  <div class="panelHead">REBIRTH</div>
+  <div class="coinpill" style="margin:0 0 2px">🎖️ <span id="medalCount">0</span> medals</div>
+  <div class="sub" id="rebirthInfo" style="font-size:13px;max-width:420px;margin:2px 0 8px"></div>
+  <button class="btn" id="rebirthBtn" style="background:linear-gradient(180deg,#ffe08a,#ffc24d);margin-bottom:4px">🎖️ REBIRTH</button>
+  <div style="width:min(94vw,440px);text-align:left;font-weight:800;font-size:13px;color:#cfe7ff;margin:8px 0 0">PERMANENT BONUSES</div>
+  <div class="shopList" id="prestigeList"></div>
+  <button class="btn" id="rebBack">BACK</button>
+</div>
+
+<div class="overlay hidden" id="levelup">
+  <div class="lvlTitle">LEVEL <span id="lvlNum">2</span>!</div>
+  <div class="sub" style="margin:6px 0 0">Grab a power-up 💪</div>
+  <div class="cards" id="cards"></div>
+</div>
+
+<script>
+"use strict";
+(function(){
+// ── ONE-TIME SAVE WIPE: bump WIPE_TOKEN to force a fresh start for everyone on a deploy (runs once per token) ──
+try{ var WIPE_TOKEN='2026-07-01-fresh'; if(localStorage.getItem('sh_wipe')!==WIPE_TOKEN){ for(var _i=localStorage.length-1;_i>=0;_i--){ var _k=localStorage.key(_i); if(_k && (_k.indexOf('sh_')===0 || _k.indexOf('splashhero')===0)) localStorage.removeItem(_k); } localStorage.setItem('sh_wipe',WIPE_TOKEN); } }catch(e){}
+//=================================================================
+//  WATER HERO  —  arcade survival. Water gun vs spreading fire.
+//=================================================================
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const el = id => document.getElementById(id);
+
+let W=0, H=0, DPR=1;
+function resize(){
+  DPR = Math.min(window.devicePixelRatio||1, 2.5);
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = Math.floor(W*DPR); canvas.height = Math.floor(H*DPR);
+  canvas.style.width = W+'px'; canvas.style.height = H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize', resize); resize();
+
+const hasTouch = ('ontouchstart' in window) || navigator.maxTouchPoints>0;
+el('deskHelp').textContent = hasTouch ? 'Drag anywhere to move — you auto-fire at fires. Double-tap to dash.' : 'Desktop: WASD move · mouse aim · hold click to spray · Q smoke bomb · E tidal wave · Shift dash.';
+
+//---------------- Persistent progress ---------------------------
+let coins = parseInt(localStorage.getItem('splashhero_coins')||'0',10);
+let best  = parseInt(localStorage.getItem('splashhero_best')||'0',10);
+let ups   = {};
+try { ups = JSON.parse(localStorage.getItem('splashhero_up')||'{}') || {}; } catch(e){ ups = {}; }
+function saveProgress(){
+  localStorage.setItem('splashhero_coins', String(Math.floor(coins)));
+  localStorage.setItem('splashhero_up', JSON.stringify(ups));
+  localStorage.setItem('sh_tycoon', JSON.stringify(tycoon));
+  localStorage.setItem('sh_worldfire', String(worldFire));
+  localStorage.setItem('sh_planet', String(planet));
+  localStorage.setItem('sh_lastseen', String(lastSeen));
+}
+// INFINITE upgrades: small bonus per level, cost rises on a curve so you never become "maxed/OP"
+const UPGRADES = [
+  {key:'tank',  name:'💧 Bigger Tank',  desc:'+12% max water / lvl',       cost:l=>Math.floor(55*Math.pow(1.52,l))},
+  {key:'pump',  name:'🔫 Pump Pressure',desc:'+4% spray damage / lvl',     cost:l=>Math.floor(55*Math.pow(1.52,l))},
+  {key:'width', name:'💦 Multi-Jet',    desc:'+1 water jet / lvl',         cost:l=>Math.floor(55*Math.pow(1.52,l))},
+  {key:'fan',   name:'🌀 Wide Nozzle',  desc:'widens spray · 360°→2×',     cost:l=>Math.floor(55*Math.pow(1.52,l))},
+  {key:'boots', name:'👟 Speed Boots',  desc:'+1.8% move speed / lvl',     cost:l=>Math.floor(55*Math.pow(1.52,l))},
+  {key:'range', name:'🎯 Spray Range',  desc:'water travels farther · wraps',cost:l=>Math.floor(55*Math.pow(1.52,l))},
+  {key:'smokeR',name:'💨 Smoke Radius',  desc:'bigger smoke cloud / lvl',   cost:l=>Math.floor(55*Math.pow(1.52,l))},
+  {key:'bombs', name:'🌫️ Reserve Smoke',desc:'start each run +1 smoke bomb',cost:l=>Math.floor(150*Math.pow(1.85,l))},
+];
+const lvl = k => ups[k]||0;
+
+// ===== TYCOON META: hub, world-fire, idle income (idle SUPPLEMENTS; missions are the big earner) =====
+let worldFire = parseFloat(localStorage.getItem('sh_worldfire')||'100');   // % of the planet still ablaze
+let planet = parseInt(localStorage.getItem('sh_planet')||'0',10);
+let tycoon = {}; try{ tycoon=JSON.parse(localStorage.getItem('sh_tycoon')||'{}')||{}; }catch(e){ tycoon={}; }
+let lastSeen = parseInt(localStorage.getItem('sh_lastseen')||String(Date.now()),10);
+const PLANETS=[{name:'Earth',emoji:'🌍'},{name:'The Moon',emoji:'🌕'},{name:'Mars',emoji:'🔴'},{name:'Jupiter',emoji:'🪐'},{name:'The Sun',emoji:'☀️'}];
+const TYCOON=[
+  {key:'station',name:'🏢 Fire Station',  desc:'idle cash over time',           base:50,   mult:1.7,  income:l=>l*0.4, fire:l=>0},
+  {key:'truck',  name:'🚒 Truck Fleet',    desc:'more idle cash',               base:120,  mult:1.8,  income:l=>l*1.2, fire:l=>0},
+  {key:'crew',   name:'👩‍🚒 Crew Training', desc:'+22% MISSION rewards / level',  base:300,  mult:2.0,  income:l=>0,     fire:l=>0},
+  {key:'heli',   name:'🚁 Water Bomber',   desc:'slowly douses the world',      base:600,  mult:1.9,  income:l=>l*0.8, fire:l=>l*0.008},
+  {key:'sat',    name:'🛰️ Fire Satellite', desc:'big idle cash + suppression',  base:2500, mult:2.15, income:l=>l*3.5,   fire:l=>l*0.02},
+  {key:'lab',    name:'🔬 Research Lab',   desc:'+12% idle & +4% mission rewards/lvl', base:6000, mult:2.3, income:l=>0, fire:l=>0},
+];
+const tlvl=k=>tycoon[k]||0;
+function tycoonCost(u){ return Math.floor(u.base*Math.pow(u.mult,tlvl(u.key))); }
+function incomePerSec(){ let s=0; for(const u of TYCOON) s+=u.income(tlvl(u.key)); return s*(planet+1)*(1+tlvl('lab')*0.12)*cashMult(); }
+function fireDousePerSec(){ let s=0; for(const u of TYCOON) s+=u.fire(tlvl(u.key)); return s; }      // idle suppression (slow)
+function missionRewardMult(){ return 1 + tlvl('crew')*0.22 + tlvl('lab')*0.04; }
+// mission payout scales with how invested you are, so playing stays worthwhile as you grow
+function rewardMult(){ let t=0; for(const u of TYCOON) t+=tlvl(u.key); let g=0; for(const u of UPGRADES) g+=(u.key==='width'?lvl(u.key)*2.5:lvl(u.key));   // width has 2x the levels now (v138) → count it at half so payouts don't inflate
+  return (1 + t*0.55 + g*0.28 + planet*2.5 + rebirthLvl*4) * (1 + plvl('sale')*0.12); }   // Fire Sale prestige perk
+
+// ===== REBIRTH / PRESTIGE — the endless loop =====
+let medals = parseInt(localStorage.getItem('sh_medals')||'0',10);
+let rebirthLvl = parseInt(localStorage.getItem('sh_rebirth')||'0',10);
+let prestige = {}; try{ prestige=JSON.parse(localStorage.getItem('sh_prestige')||'{}')||{}; }catch(e){ prestige={}; }
+function savePrestige(){ localStorage.setItem('sh_medals',String(Math.floor(medals))); localStorage.setItem('sh_rebirth',String(rebirthLvl)); localStorage.setItem('sh_prestige',JSON.stringify(prestige)); }
+const PRESTIGE=[
+  {key:'pay',  name:'🎖️ Hazard Pay',    desc:'+20% all cash / level',     max:25, cost:l=>5+l*4},
+  {key:'hp',   name:'🎖️ Tough Skin',    desc:'+25 max health / level',    max:12, cost:l=>8+l*6},
+  {key:'hose', name:'🎖️ Power Hose',    desc:'+12% spray damage / level', max:15, cost:l=>6+l*5},
+  {key:'pump', name:'🎖️ Pressure Core', desc:'+15% water regen / level',  max:10, cost:l=>6+l*5},
+  {key:'medal',name:'🎖️ Decorated',     desc:'+15% medals earned / level',max:10, cost:l=>10+l*8},
+  {key:'sale', name:'🎖️ Fire Sale',     desc:'+12% MISSION rewards / level',max:15, cost:l=>8+l*6},
+];
+const plvl=k=>prestige[k]||0;
+function prestigeCost(u){ return u.cost(plvl(u.key)); }
+function diffMult(){ return (1 + rebirthLvl*0.25) * (1 + planet*0.16); }         // each PLANET +16% harder, each rebirth +25%
+// how strong the player is — drives DYNAMIC difficulty (more & tougher enemies as you power up)
+function powerLevel(){ return lvl('tank')*0.4 + lvl('pump')*0.8 + lvl('width')*2 + lvl('boots')*0.4 + tlvl('crew')*0.8 + tlvl('lab')*0.5 + rebirthLvl*3 + planet*1.5; }
+// DYNAMIC HP: derive the player's live DPS from their stats so enemy HP gives a consistent time-to-kill as they power up
+const TARGET_TTK = 0.508;                   // 0.65x global enemy-health tune
+const HP_TYPE = {normal:1, fast:0.85, runner:1, spitter:2.2, chaser:0.75, armored:4, golden:0.65};   // ×0.125s → small ~0.1s, armored ~0.5s
+// liveDPS = MEASURED peak single-fire (focused) damage rate, so a fire you aim at dies in ~TARGET_TTK even when your spray also splashes other fires
+let dpsPeak=0, dpsSprayT=0, liveDPS=0, dpsTimer=0;
+function modelDPS(){   // fallback estimate only for the very first fire, before any spray is measured
+  const jets = 1 + lvl('width') + mods.jets;
+  const dmgMult = 1 + lvl('pump')*0.04 + mods.power*0.18;
+  return Math.pow(jets,0.15) * (4 + (3.75+mods.dropR)*0.7) * dmgMult * 45;   // jets = coverage: focused DPS grows ~jets^0.15 (matches the live jn path), so the pre-measurement fallback doesn't over-scale opening enemy HP
+}
+function playerDPS(){ return Math.max(40, liveDPS>0 ? liveDPS : modelDPS()); }
+function tickDPS(dt){
+  if(hero.spraying) dpsSprayT += dt;
+  dpsTimer += dt;
+  if(dpsTimer >= 0.4){
+    if(dpsPeak>0 && dpsSprayT>0.05){ const m=dpsPeak/dpsSprayT; liveDPS = liveDPS>0 ? liveDPS*0.5 + m*0.5 : m; }
+    for(const f of fires) f.tookDmg=0;
+    dpsPeak=0; dpsSprayT=0; dpsTimer=0;
+  }
+}
+function fireHP(type, king){ const m = type==='boss' ? (king?22:14) : (HP_TYPE[type]||1);   // boss ~1.75s, king ~2.75s
+  const sdps = 300*Math.pow(Math.max(1,playerDPS())/300, 0.4);   // WEAK DPS coupling — as you upgrade, enemy HP barely follows, so you feel much stronger & kill faster
+  return sdps * TARGET_TTK * m * Math.pow(1.028, missionProgress*0.22 + (wave-1)*1.1); }   // rounds get harder over WAVES (power-independent), not by matching your DPS
+function cashMult(){ return (1 + rebirthLvl*0.5) * (1 + plvl('pay')*0.20); }    // each rebirth = +50% richer × Hazard Pay
+function baseHP(){ return 100 + plvl('hp')*25; }
+function rebirthReward(){ return Math.floor(planet * 5 * (rebirthLvl+1) * (1 + plvl('medal')*0.15)); }
+function canRebirth(){ return planet >= 2; }                                    // available after clearing Earth + Moon
+// tycoon managers (auto-buyers): hire one per building → it auto-upgrades that building from idle cash
+let managers={}; try{ managers=JSON.parse(localStorage.getItem('sh_managers')||'{}')||{}; }catch(e){ managers={}; }
+let mgrAccum=0;
+function saveManagers(){ localStorage.setItem('sh_managers',JSON.stringify(managers)); }
+function managerCost(u){ return u.base*20; }
+function autoBuy(maxBuys){
+  let bought=0;
+  for(let i=0;i<maxBuys;i++){ let did=false;
+    for(const u of TYCOON){ if(managers[u.key]==='on'){ const c=tycoonCost(u); if(coins>=c){ coins-=c; tycoon[u.key]=(tycoon[u.key]||0)+1; bought++; did=true; } } }
+    if(!did) break; }
+  if(bought) saveProgress();
+  return bought;
+}
+// monetization + mission-flow meta
+let runCoinsAtDeath=0, doubledThisRun=false, reviveCount=0, idlePending=0, lastWasSuccess=false;
+let missionProgress=0, missionQuota=20, truck=null, hubAccum=0;
+let eventCd=0, eventT=0, goldenT=0, flareT=0;   // EMBER STORM + GOLDEN fire + SOLAR FLARE (Sun) timers
+let gustT=0, gustDur=0, gustWind=0;             // MARS dust-storm: cooldown, active duration, current sideways wind
+// ===== DAILY QUESTS (retention) =====
+let quests=null; try{ quests=JSON.parse(localStorage.getItem('sh_quests')||'null'); }catch(e){ quests=null; }
+const QUESTS=[
+  {id:'fires',  text:'Extinguish {t} fires',      t:120, reward:300, track:'fires'},
+  {id:'arson',  text:'Soak {t} arsonists',        t:3,   reward:300, track:'arson'},
+  {id:'wave',   text:'Reach wave {t}',            t:6,   reward:250, track:'wave'},
+  {id:'cash',   text:'Earn {t} cash in missions', t:600, reward:300, track:'cash'},
+  {id:'ult',    text:'Unleash {t} Tidal Waves',   t:2,   reward:250, track:'ult'},
+  {id:'extract',text:'Extract by truck {t}×',     t:2,   reward:300, track:'extract'},
+  {id:'boss',   text:'Defeat {t} bosses',         t:1,   reward:400, track:'boss'},
+  {id:'pickup', text:'Grab {t} power-ups',        t:12,  reward:250, track:'pickup'},
+  {id:'storm',  text:'Survive {t} Ember Storms',  t:2,   reward:350, track:'storm'},
+];
+function saveQuests(){ localStorage.setItem('sh_quests', JSON.stringify(quests)); }
+function pickDaily(seed0){ const pool=QUESTS.map((q,i)=>i), out=[]; let seed=seed0+1;
+  for(let n=0;n<3 && pool.length;n++){ seed=(seed*9301+49297)%233280; out.push(pool.splice(seed%pool.length,1)[0]); } return out; }
+function ensureQuests(){ const day=todayStr();
+  if(!quests || quests.day!==day){ quests={ day, ids:pickDaily(Math.floor(Date.now()/86400000)), claimed:[0,0,0], prog:{} }; saveQuests(); } }
+function qprog(track,n){ if(quests){ quests.prog[track]=(quests.prog[track]||0)+n; } }
+function qwave(w){ if(quests && w>(quests.prog.wave||0)) quests.prog.wave=w; }
+// ===== COSMETIC HERO SKINS (no pay-to-win) =====
+const SKINS=[
+  {id:'classic', name:'Classic',        body:'#ffd24d', helmet:'#e23b2e', accent:'#fff2c4', emblem:'🔥', cost:0},
+  {id:'aqua',    name:'Aqua Squad',     body:'#5fd0ff', helmet:'#1b6fd1', accent:'#e2f6ff', emblem:'💧', cost:500},
+  {id:'forest',  name:'Forest Ranger',  body:'#9be86b', helmet:'#2f8f3a', accent:'#ecffd6', emblem:'🌲', cost:1500},
+  {id:'night',   name:'Night Ops',      body:'#6b7686', helmet:'#20242e', accent:'#9fd0ff', emblem:'🌙', masked:true, hat:'hood', flair:'stealth', cost:4000},
+  {id:'magma',   name:'Magma',          body:'#ff7a3d', helmet:'#b52c22', accent:'#ffd08a', emblem:'🌋', flair:'embers', cost:8000},
+  {id:'ninja',   name:'Sprinkler Ninja',body:'#39404a', helmet:'#12161c', accent:'#7fe0ff', emblem:'🥷', masked:true, hat:'hood', flair:'sparkle', cost:12000},
+  {id:'astro',   name:'Cosmic Cadet',   body:'#eef4ff', helmet:'#8fa6cc', accent:'#8fe1ff', emblem:'🚀', hat:'bubble', flair:'sparkle', cost:20000},
+  {id:'gold',    name:'Golden Legend',  body:'#ffd76b', helmet:'#caa12e', accent:'#fff4c0', emblem:'👑', flair:'aura', cost:0, premium:true},
+  {id:'captain', name:'Captain',        body:'#ff5b6b', helmet:'#ffd76b', accent:'#ffe3a6', emblem:'⭐', flair:'aura', cost:0, exclusive:true},
+];
+let skinSel = localStorage.getItem('sh_skin')||'classic';
+let skinsOwned={}; try{ skinsOwned=JSON.parse(localStorage.getItem('sh_skins')||'null')||{}; }catch(e){ skinsOwned={}; } skinsOwned.classic=1;
+function curSkin(){ return SKINS.find(s=>s.id===skinSel)||SKINS[0]; }
+function ownsSkin(id){ return id==='classic' || !!skinsOwned[id]; }
+function saveSkins(){ localStorage.setItem('sh_skins',JSON.stringify(skinsOwned)); localStorage.setItem('sh_skin',skinSel); }
+
+// ===== ACHIEVEMENTS (lifetime milestones) =====
+let stats={}; try{ stats=JSON.parse(localStorage.getItem('sh_stats')||'{}')||{}; }catch(e){ stats={}; }
+let achClaimed={}; try{ achClaimed=JSON.parse(localStorage.getItem('sh_ach')||'{}')||{}; }catch(e){ achClaimed={}; }
+let achSeen={}; try{ achSeen=JSON.parse(localStorage.getItem('sh_achseen')||'{}')||{}; }catch(e){ achSeen={}; }
+function saveStats(){ localStorage.setItem('sh_stats',JSON.stringify(stats)); }
+function saveAch(){ localStorage.setItem('sh_ach',JSON.stringify(achClaimed)); }
+function statAdd(k,n){ stats[k]=(stats[k]||0)+n; }
+function statMax(k,v){ if(v>(stats[k]||0)) stats[k]=v; }
+const ACHS=[
+  {id:'f1',icon:'🔥',name:'Spark Stopper', stat:'fires',t:100,  reward:200},
+  {id:'f2',icon:'🔥',name:'Blaze Buster',  stat:'fires',t:1000, reward:600},
+  {id:'f3',icon:'🔥',name:'Inferno Tamer', stat:'fires',t:10000,reward:3000},
+  {id:'b1',icon:'👑',name:'Boss Slayer',   stat:'boss', t:5,    reward:500},
+  {id:'b2',icon:'👑',name:'Bonfire Bane',  stat:'boss', t:25,   reward:2000},
+  {id:'a1',icon:'🧨',name:'Arson Auditor', stat:'arson',t:10,   reward:400},
+  {id:'a2',icon:'🧨',name:'Pyro Police',   stat:'arson',t:50,   reward:1500},
+  {id:'w1',icon:'🌊',name:'Wave Rider',    stat:'wave', t:10,   reward:400},
+  {id:'w2',icon:'🌊',name:'Storm Chaser',  stat:'wave', t:20,   reward:1200},
+  {id:'c1',icon:'🪙',name:'First Paycheck',stat:'cash', t:5000, reward:500},
+  {id:'c2',icon:'🪙',name:'Fat Stacks',    stat:'cash', t:50000,reward:2500},
+  {id:'p1',icon:'🌍',name:'World Saver',   stat:'planets',t:1,  reward:1000},
+  {id:'p2',icon:'🪐',name:'Cosmic Hero',   stat:'planets',t:4,  reward:5000},
+  {id:'g1',icon:'✨',name:'Treasure Hunter',stat:'golden',t:10,  reward:800},
+  {id:'g2',icon:'✨',name:'Golden Touch',   stat:'golden',t:50,  reward:4000},
+  {id:'f4',icon:'🔥',name:'Fire Legend',    stat:'fires', t:50000, reward:12000},
+  {id:'b3',icon:'👑',name:'Boss Legend',    stat:'boss',  t:100, reward:8000},
+  {id:'c3',icon:'💎',name:'Millionaire',    stat:'cash',  t:1000000, reward:20000},
+];
+function checkAch(){ let changed=false;
+  for(const a of ACHS){ if((stats[a.stat]||0)>=a.t && !achSeen[a.id]){ achSeen[a.id]=1; changed=true;
+    if(!achClaimed[a.id]) toast('🏆 ACHIEVEMENT!',a.name+' — claim it in 🏆 GOALS','#ffd76b'); } }
+  if(changed) localStorage.setItem('sh_achseen',JSON.stringify(achSeen));
+}
+
+//---------------- Audio -----------------------------------------
+let AC=null;
+let muted = localStorage.getItem('splashhero_muted')==='1';
+let cgMuted = false;   // CrazyGames player-UI mute — takes priority over the in-game toggle (SDK requirement)
+let hapticsOn = localStorage.getItem('sh_haptics')!=='off';
+function buzz(p){ if(hapticsOn && navigator.vibrate){ try{ navigator.vibrate(p); }catch(e){} } }   // haptics (no-op on iOS)
+function audio(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return AC; }
+function tone(freq,dur,type,vol,slideTo){
+  if(muted||cgMuted) return;
+  const ac=audio(); if(!ac) return;
+  const o=ac.createOscillator(), g=ac.createGain();
+  o.type=type||'sine'; o.frequency.value=freq;
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ac.currentTime+dur);
+  g.gain.value=vol||0.15; g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+dur);
+  o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime+dur);
+}
+function noiseBurst(dur,vol){
+  if(muted||cgMuted) return;
+  const ac=audio(); if(!ac) return;
+  const n=Math.floor(ac.sampleRate*dur), buf=ac.createBuffer(1,n,ac.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+  const src=ac.createBufferSource(); src.buffer=buf;
+  const g=ac.createGain(); g.gain.value=vol||0.08;
+  const f=ac.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1800;
+  src.connect(f); f.connect(g); g.connect(ac.destination); src.start();
+}
+let lastSpray=0;
+function sfxSpray(t){ if(t-lastSpray>0.05){ noiseBurst(0.06,0.05); lastSpray=t; } }
+function sfxSizzle(){ noiseBurst(0.18,0.10); tone(420,0.18,'sine',0.05,180); }
+function sfxCoin(){ tone(880,0.08,'square',0.10,1320); }
+function sfxPickup(){ tone(660,0.12,'triangle',0.18,1200); }
+function sfxBuy(){ tone(523,0.1,'triangle',0.16,784); setTimeout(()=>tone(784,0.12,'triangle',0.14,1046),90); }
+function sfxHurt(){ tone(160,0.25,'sawtooth',0.18,70); }
+function sfxWave(){ tone(330,0.15,'triangle',0.16,660); setTimeout(()=>tone(495,0.18,'triangle',0.14,990),120); }
+function sfxBoss(){ tone(110,0.5,'sawtooth',0.22,80); setTimeout(()=>tone(90,0.6,'sawtooth',0.18,60),150); }
+function sfxSpit(){ tone(300,0.12,'square',0.07,140); }
+function sfxCombo(c){ tone(440+c*28,0.1,'square',0.12, 660+c*28); }
+function sfxOver(){ tone(300,0.5,'sawtooth',0.2,60); }
+function sfxUlt(){ noiseBurst(0.5,0.14); tone(200,0.5,'sine',0.2,640); setTimeout(()=>tone(420,0.45,'sine',0.16,940),110); }
+
+// ---- procedural background music: ambient arpeggio + bass, shifts per zone ----
+let musicTimer=null, musicGain=null, mStep=0, mNext=0;
+const M_SCALE=[0,3,5,7,10];           // minor pentatonic
+const M_ROOTS=[57,50,52,55,48];       // Sleepy/Forest/Desert/City/Volcano roots (MIDI)
+const M_BPM  =[100,110,120,130,140];
+function midiFreq(m){ return 440*Math.pow(2,(m-69)/12); }
+function mNote(time,freq,dur,type,vol){
+  const ac=audio(); if(!ac||!musicGain) return;
+  const o=ac.createOscillator(), g=ac.createGain();
+  o.type=type; o.frequency.value=freq;
+  g.gain.setValueAtTime(0.0001,time); g.gain.linearRampToValueAtTime(vol,time+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,time+dur);
+  o.connect(g); g.connect(musicGain); o.start(time); o.stop(time+dur+0.05);
+}
+function musicTick(){
+  const ac=audio(); if(!ac||muted) return;
+  const zi=Math.min(M_ROOTS.length-1, zoneIndex);
+  const root=M_ROOTS[zi], spb=60/M_BPM[zi]/2;     // eighth-note step
+  while(mNext < ac.currentTime + 0.12){
+    const i=mStep%8;
+    const deg=M_SCALE[i%M_SCALE.length], oct=(i>=5?12:0);
+    mNote(mNext, midiFreq(root+12+deg+oct), spb*0.9, 'triangle', 0.035);   // arpeggio
+    if(i%4===0) mNote(mNext, midiFreq(root-12), spb*2*0.9, 'sine', 0.05);   // bass on downbeat
+    if(i===6)   mNote(mNext, midiFreq(root+24+deg), spb*0.7, 'triangle', 0.02); // sparkle
+    mNext+=spb; mStep++;
+  }
+}
+function startMusic(){
+  if(muted||cgMuted) return; const ac=audio(); if(!ac) return;
+  if(ac.state==='suspended') ac.resume();
+  if(!musicGain){ musicGain=ac.createGain(); musicGain.gain.value=0.9; musicGain.connect(ac.destination); }
+  if(!musicTimer){ mNext=ac.currentTime+0.1; mStep=0; musicTimer=setInterval(musicTick,40); }
+}
+function stopMusic(){ if(musicTimer){ clearInterval(musicTimer); musicTimer=null; } }
+
+//---------------- State -----------------------------------------
+const State={ MENU:0, PLAY:1, OVER:2, HUB:3 };
+let state=State.MENU;
+
+const hero={ x:0,y:0, r:20, speed:300, aimX:1, aimY:0, spraying:false, boost:0, dashT:0, dashCd:0, dashVX:0, dashVY:0, trail:[], shieldT:0, sprayPow:1, sprayT:0 };
+let fires=[], drops=[], steams=[], pickups=[], floats=[], toasts=[], coinFx=[], rings=[], shockwaves=[], decals=[], smokes=[];
+let enemies=[], molotovs=[], fireballs=[], arsTimer=0;
+let confetti=[], flashFx=0;   // juice: confetti particles + ultimate screen-flash
+let zoneIndex=0, storyCard=null, raincloud=null, vortex=null;
+const aimLock={ x:0, y:0, on:false };   // current spray target (for the lock-on reticle)
+let ult=0, tidalT=0;                      // ULTIMATE charge meter + tidal-wave animation timer
+let water=100, maxWater=100, health=100, maxHealth=100;
+let townHP=100, townLost=false;   // the town/objective burns if you let fires rage unchecked (separate from player HP)
+let score=0, wave=1, waveTimer=0, spawnTimer=0, gameTime=0;
+let fanFocus=1; try{ const _ff=parseFloat(localStorage.getItem('sh_fanfocus')); if(_ff>=0.15&&_ff<=1) fanFocus=_ff; }catch(e){}   // live nozzle-width concentrate (mousewheel / slider)
+let combo=0, comboTimer=0, comboRankIdx=-1;
+let runCoins=0, bombs=0, shake=0, hitStop=0, frenzyT=0, freezeT=0, dangerPulse=0, pressT=0;
+let bossAlive=false;
+// in-run roguelite leveling
+let xp=0, level=1, xpNext=3, picking=false;
+let mods={ jets:0, power:0, tank:0, speed:0, dropR:0, comboTime:0 };
+
+function baseMaxWater(){ return Math.round(380 * Math.pow(1.12, lvl('tank'))) + mods.tank*25; }   // +12%/lvl COMPOUNDING → scales toward tens of thousands at high lvls to keep up with fire-rate consumption
+function recalcSpeed(){ hero.speed = 300*(1+lvl('boots')*0.018)*(1+mods.speed*0.12); }
+
+const POWERS=[
+  {id:'jet',     icon:'💦', name:'Extra Jet',      desc:'+1 water stream',          get:()=>mods.jets,   apply:()=>mods.jets++},
+  {id:'pressure',icon:'🔫', name:'High Pressure',  desc:'+25% spray power & range', get:()=>mods.power,  apply:()=>mods.power++},
+  {id:'tank',    icon:'🛢️', name:'Bigger Tank',    desc:'+25 max water & refill',   get:()=>mods.tank,   apply:()=>{ mods.tank++; maxWater=baseMaxWater(); water=maxWater; }},
+  {id:'feet',    icon:'👟', name:'Quick Feet',     desc:'+12% move speed',          get:()=>mods.speed,  apply:()=>{ mods.speed++; recalcSpeed(); }},
+  {id:'drone',   icon:'🤖', name:'Sprinkler Drone',desc:'auto-sprays nearby fires', get:()=>hero.drones, apply:()=>hero.drones++},
+  {id:'drop',    icon:'💧', name:'Big Drops',      desc:'bigger water blobs',       get:()=>Math.round(mods.dropR/1.5), apply:()=>mods.dropR+=1.5},
+  {id:'magnet',  icon:'🧲', name:'Magnet',         desc:'pulls in power-ups',       get:()=>Math.round(hero.magnet/180), apply:()=>hero.magnet+=180},
+  {id:'combo',   icon:'⏱️', name:'Combo Master',   desc:'+combo time',              get:()=>Math.round(mods.comboTime/0.6), apply:()=>mods.comboTime+=0.6},
+  {id:'repair',  icon:'❤️', name:'First Aid',      desc:'+35 hero health',          get:()=>null, apply:()=>{ health=Math.min(maxHealth,health+35); }},
+  {id:'sbomb',   icon:'🌫️', name:'Spare Smoke',    desc:'+1 smoke bomb',            get:()=>null, apply:()=>{ bombs++; updateBombBtn(); }},
+];
+
+function openLevelUp(){
+  picking=true;
+  el('lvlNum').textContent=level;
+  const pool=[...POWERS], pick=[];
+  while(pick.length<3 && pool.length) pick.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+  const wrap=el('cards'); wrap.innerHTML='';
+  pick.forEach(p=>{
+    const have=p.get(); const haveTxt=(have!==null&&have>0)?('<span class="c-have">  Lv '+have+'</span>'):'';
+    const c=document.createElement('button'); c.className='card';
+    c.innerHTML='<div class="c-icon">'+p.icon+'</div><div><div class="c-name">'+p.name+haveTxt+'</div><div class="c-desc">'+p.desc+'</div></div>';
+    c.addEventListener('click',()=>{ p.apply(); sfxBuy(); closeLevelUp(); });
+    wrap.appendChild(c);
+  });
+  el('levelup').classList.remove('hidden');
+}
+function closeLevelUp(){ el('levelup').classList.add('hidden'); picking=false; if(xp>=xpNext) levelUp(); }
+function levelUp(){ level++; xp-=xpNext; xpNext=Math.ceil(xpNext*1.25)+2; updateHUD(); sfxWave(); buzz(20); openLevelUp(); }
+
+const RANKS=[
+  {min:3,  n:'HOT',       col:'#9fe6ff'},
+  {min:6,  n:'SIZZLING',  col:'#ffe66b'},
+  {min:10, n:'ON FIRE!',  col:'#ffc24d'},
+  {min:16, n:'BLAZING!!', col:'#ff8a3d'},
+  {min:24, n:'INFERNO!!!',col:'#ff4d4d'},
+];
+function rankFor(c){ let r=null; for(const x of RANKS) if(c>=x.min) r=x; return r; }
+const CALLOUTS=['SIZZLE!','TOASTY!','SOAKED!','SSSS!','GOTCHA!','PSSH!','COOLED!','SPLOOSH!','DOUSED!'];
+// first-encounter callouts that teach each enemy type once ever (boss/arsonist announce themselves)
+const ENEMY_INTRO={
+  fast:    ['💨 BLUE SPRINTER','fast & wiggly — quick to douse'],
+  runner:  ['🏃 RUNNER FIRE','it wanders — chase it down'],
+  spitter: ['🟣 SPITTER','it lobs fireballs — dodge or spray them!'],
+  chaser:  ['👁️ FIRE SPRITE','it HUNTS you & burns on contact!'],
+  armored: ['🛡️ ARMORED FIRE','tough shell — hold your spray on it'],
+};
+let seenEnemy={}; try{ seenEnemy=JSON.parse(localStorage.getItem('sh_seenenemy')||'{}')||{}; }catch(e){ seenEnemy={}; }
+let seenStory={}; try{ seenStory=JSON.parse(localStorage.getItem('sh_seenstory')||'{}')||{}; }catch(e){ seenStory={}; }   // planet intro shown once, not every deploy
+// interactive first-play tutorial state (phase: intro→move→spray→extract→buy→deploy→done). Teaches by DOING, woven into the first mission + first hub visit.
+let tut={ on:false, phase:'intro', moveAcc:0, fires:0, sel:'' };
+try{ tut.on = !localStorage.getItem('sh_tut_v1'); }catch(e){}
+
+// ===== THE JOURNEY: themed zones you travel through (4 waves each, last is endless) =====
+const WAVES_PER_ZONE=4;
+const ZONES=[
+  { name:'Earth · Sleepy Town', tag:'Where it all begins. A few campfires got out of hand…',
+    sky:['#0c3a57','#114a63','#0a3340'], deco:'town', accent:'#8fe1ff',
+    bias:{normal:0.72,fast:0.23,runner:0.05,spitter:0}, arsonist:0 },
+  { name:'The Moon', tag:'No air, low gravity — yet the fires still rage across the lunar dust!',
+    sky:['#05060f','#0a0c1a','#070812'], deco:'moon', accent:'#cfd6e6',
+    bias:{normal:0.55,fast:0.40,runner:0.05,spitter:0}, arsonist:0 },
+  { name:'Mars', tag:'The Red Planet is ablaze — dust storms whip flames across the canyons!',
+    sky:['#3a1810','#5a2a18','#2a1208'], deco:'mars', accent:'#ff8a5b',
+    bias:{normal:0.45,fast:0.25,runner:0.10,spitter:0.20}, arsonist:1 },
+  { name:'Jupiter', tag:'A gas giant of endless storms — firestorms swirl through the cloud bands!',
+    sky:['#5a3a1f','#7a4a28','#3a2614'], deco:'jupiter', accent:'#ffce9b',
+    bias:{normal:0.40,fast:0.24,runner:0.06,spitter:0.30}, arsonist:2 },
+  { name:'The Sun', tag:'The heart of the inferno. Quench the star itself — face the FIRE KING!',
+    sky:['#5a0f08','#8a2410','#3a0a04'], deco:'lava', accent:'#ff5b3d',
+    bias:{normal:0.34,fast:0.20,runner:0.10,spitter:0.36}, arsonist:1, boss:true },
+];
+const HAZARDS=['', '🌕 LOW GRAVITY', '🌪️ DUST STORMS', '🪐 STORM WINDS', '☀️ SOLAR FLARES'];   // per-planet, shown in the HUD
+function zoneFor(w){ return Math.min(ZONES.length-1, Math.floor((w-1)/WAVES_PER_ZONE)); }
+function showStory(z){ storyCard={ name:z.name, tag:z.tag, accent:z.accent, t:0, dur:3.6 }; sfxWave(); }
+
+function reset(){
+  mods={ jets:0, power:0, tank:0, speed:0, dropR:0, comboTime:0 };
+  hero.drones=0; hero.magnet=0; hero.droneT=0;
+  xp=0; level=1; xpNext=3; picking=false; el('levelup').classList.add('hidden');
+  maxWater=baseMaxWater(); recalcSpeed(); bombs=lvl('bombs');
+  hero.x=W/2; hero.y=H/2; hero.aimX=1; hero.aimY=0; hero.spraying=false; hero.boost=0;
+  hero.dashT=0; hero.dashCd=0; hero.trail.length=0; lastLeftTap=0; hero.shieldT=0; hero.sprayT=0;
+  fires=[]; drops=[]; steams=[]; pickups=[]; floats=[]; toasts=[]; coinFx=[]; rings=[]; shockwaves=[]; decals=[]; smokes=[];
+  enemies=[]; molotovs=[]; fireballs=[]; arsTimer=7; hero.scorch=0; confetti=[]; flashFx=0;
+  maxHealth=baseHP(); water=maxWater; health=maxHealth; townHP=100; townLost=false; score=0; wave=1;
+  waveTimer=0; spawnTimer=1.0; gameTime=0; combo=0; comboTimer=0; comboRankIdx=-1;
+  runCoins=0; shake=0; hitStop=0; frenzyT=0; freezeT=0; dangerPulse=0; pressT=0; hurtInvuln=0; noHurtT=0; bossAlive=false; hero.sprayPow=1;
+  dpsPeak=0; dpsSprayT=0; dpsTimer=0;   // keep liveDPS warm across missions, reset the sampling window
+  zoneIndex=Math.min(planet, ZONES.length-1); storyCard=null; raincloud=null; vortex=null; ult=0; tidalT=0;   // terrain follows the PLANET (consistent all mission)
+  missionProgress=0; truck=null; missionQuota=18+planet*6; reviveCount=0; eventCd=rand(20,30); eventT=0; goldenT=rand(25,45); flareT=rand(8,13); gustT=rand(6,10); gustDur=0; gustWind=0;
+  for(let i=0;i<3;i++) spawnFire();
+  spawnPickup();
+  updateBombBtn(); updateUltBtn();
+  if(!seenStory[planet] && !tut.on){   // show the planet intro & hazard hint only the FIRST time you visit it (but not mid-tutorial — keep the flow)
+    showStory(ZONES[zoneIndex]);
+    if(zoneIndex===1) toast('🌕 LOW GRAVITY','you float fast — but the fires drift too!','#cfd6e6');
+    else if(zoneIndex===3) toast('🪐 STORM WINDS','gales blow your spray sideways','#ffce9b');
+    seenStory[planet]=1; localStorage.setItem('sh_seenstory',JSON.stringify(seenStory));
+  }
+}
+
+//---------------- Spawning --------------------------------------
+function rand(a,b){ return a+Math.random()*(b-a); }
+function nearestFire(){
+  let best=null, bd=1e9;
+  for(const f of fires){ const d=(f.x-hero.x)**2+(f.y-hero.y)**2; if(d<bd){ bd=d; best=f; } }
+  return best;
+}
+// auto-aim locks onto whatever you're POINTING at (not just the nearest thing),
+// so you can deliberately hose the arsonist / shoot down fireballs.
+function aimTarget(){
+  let best=null, bs=-Infinity;
+  const diag=Math.max(W,H);
+  const consider=(x,y,bias)=>{
+    const dx=x-hero.x, dy=y-hero.y, dl=Math.hypot(dx,dy)||1;
+    const dot=hero.aimX*(dx/dl)+hero.aimY*(dy/dl);     // 1 = exactly where you aim
+    const score=dot - (dl/diag)*0.25 + bias;            // prefer aligned, lightly prefer closer
+    if(score>bs){ bs=score; best={x,y}; }
+  };
+  for(const f of fires) consider(f.x,f.y,0);
+  for(const e of enemies) consider(e.x,e.y,0.32);        // strong priority so the thug is easy to lock
+  for(const b of fireballs) consider(b.x,b.y,0.10);
+  return best;
+}
+function spawnArsonist(){
+  const left=Math.random()<0.5;
+  enemies.push({ x:left?40:W-40, y:rand(150,H-90), wet:0, hurt:0, legs:0,
+    throwCd:rand(0.9,1.7), wpX:rand(70,W-70), wpY:rand(150,H-90) });
+}
+function scorchHero(){
+  if(hero.dashT>0 || hero.shieldT>0) return;   // i-frames: dashing/shield blocks everything
+  if(hero.scorch>0.6) return;                 // brief immunity so you aren't chain-stunned
+  hero.scorch=1.4; shake=Math.max(shake,7);   // scorch slows you briefly; no longer drains water (that was emptying tanks in seconds)
+  flash('OUCH! 🔥',hero.x,hero.y-34,'#ff6b5b'); sfxHurt(); buzz([30,40,30]);
+}
+let hurtInvuln=0;   // brief i-frames after a discrete hit so you aren't multi-hit in one frame
+let noHurtT=0;      // time since last took damage — drives safe-time health regen
+function hurtPlayer(amount){
+  if(hero.dashT>0 || hero.shieldT>0 || hurtInvuln>0) return;   // dash & shield negate damage
+  health -= amount; hurtInvuln=0.5; shake=Math.max(shake,8); dangerPulse=1;
+  flash('-'+Math.round(amount),hero.x,hero.y-30,'#ff5b5b'); sfxHurt(); buzz([30,50]);
+}
+// a fire launches a fireball (or 3-way spread for the boss) at the hero — dodge or spray it!
+function doSpit(f){
+  const ox=f.x, oy=f.y-f.size*0.6;
+  const base=Math.atan2(hero.y-oy, hero.x-ox);
+  const speed=f.type==='spitter'?265:f.type==='boss'?240:230;
+  const count=f.type==='boss'?(f.king?5:3):1;
+  for(let i=0;i<count;i++){ const a=base+(count>1?(i-1)*0.30:0);
+    fireballs.push({ x:ox, y:oy, vx:Math.cos(a)*speed, vy:Math.sin(a)*speed, r:9, life:4.5 }); }
+  sfxSpit();
+}
+function spawnFire(opts){
+  opts=opts||{};
+  const margin=70;
+  let type=opts.type;
+  if(!type){
+    const b=ZONES[zoneIndex].bias, r=Math.random(); let acc=0; type='normal';
+    for(const k of ['spitter','runner','fast','normal']){ acc+=b[k]||0; if(r<acc){ type=k; break; } }
+    const rr=Math.random();
+    if(wave>=4 && rr<0.10) type='armored';              // tanky fire — needs sustained spray to douse
+    else if(wave>=3 && rr<0.24) type='chaser';          // homing fire sprite that hunts the player
+  }
+  const f={
+    x: opts.x!==undefined?opts.x:rand(margin,W-margin),
+    y: opts.y!==undefined?opts.y:rand(margin+70,H-margin-40),
+    type, flick:Math.random()*6, spreadCd:rand(2.5,4.5),
+    vx:0, vy:0, wob:Math.random()*6, legs:0, shootCd:rand(2.5,5), charge:0
+  };
+  if(type==='normal'){ f.size=rand(12,18); f.max=46; f.grow=rand(2.0,3.2)*(1+(wave-1)*0.11); f.resist=1; f.coin=2; }
+  else if(type==='fast'){ f.size=rand(10,14); f.max=34; f.grow=rand(3.4,4.6)*(1+(wave-1)*0.12); f.resist=0.8; f.coin=3; }
+  else if(type==='runner'){ f.size=rand(12,16); f.max=32; f.grow=rand(1.6,2.4); f.resist=1; f.coin=4;
+    const a=Math.random()*6.28; f.vx=Math.cos(a)*90; f.vy=Math.sin(a)*90; }
+  else if(type==='spitter'){ f.size=rand(14,18); f.max=40; f.grow=rand(1.4,2.0); f.resist=1.1; f.coin=6; }
+  else if(type==='chaser'){ f.size=rand(10,14); f.max=28; f.grow=rand(1.4,2.2); f.resist=0.85; f.coin=4; f.spd=rand(95,130)*(1+(wave-1)*0.04); }
+  else if(type==='armored'){ f.size=rand(26,34); f.max=58; f.grow=rand(0.9,1.5); f.resist=3.2; f.coin=9; }
+  else if(type==='golden'){ f.size=rand(12,16); f.max=24; f.grow=0; f.resist=0.7; f.coin=Math.floor(60+planet*20+rebirthLvl*15); f.spd=rand(120,160); f.life=8; }
+  else if(type==='boss'){ f.king=!!opts.king;
+    f.size=f.king?92:70; f.max=f.king?132:96; f.grow=f.king?3.0:2.6; f.resist=f.king?4.6:3.4;
+    f.coin=f.king?72:38; f.spawnCd=f.king?1.8:2.5; f.x=W/2; f.y=H*0.32; bossAlive=true; }
+  if(opts.size!==undefined) f.size=opts.size;
+  if(state===State.PLAY && ENEMY_INTRO[type] && !seenEnemy[type]){ seenEnemy[type]=1; localStorage.setItem('sh_seenenemy',JSON.stringify(seenEnemy)); const m=ENEMY_INTRO[type]; toast(m[0],m[1],'#ffd76b'); buzz(15); }   // teach each enemy once
+  f.grow *= diffMult();                 // fires grow faster each rebirth
+  // each fire has a fixed HEALTH pool you spray down (does NOT grow — the bar only depletes)
+  f.hpMax = fireHP(type, f.king);   // auto-scaled to the player's live DPS → consistent time-to-kill
+  f.hp = f.hpMax;
+  fires.push(f);
+}
+function spawnPickup(forceType){
+  const pool=['water','water','water','water','water','speed','bomb','freeze','frenzy','rain','shield','pressure','vortex'];
+  const t=forceType || pool[Math.floor(Math.random()*pool.length)];
+  pickups.push({ x:rand(50,W-50), y:rand(120,H-70), r:18, type:t, life:12, bob:Math.random()*6 });
+}
+
+//---------------- Input -----------------------------------------
+const move={ active:false,id:null,baseX:0,baseY:0,dx:0,dy:0 };
+const aim ={ active:false,id:null,x:0,y:0 };
+const keys={};
+let aimPos={x:0,y:0}, desktopAim=false;   // desktop: hero continuously faces the mouse cursor (not just while spraying)
+let lastLeftTap=0;
+function doDash(){
+  if(state!==State.PLAY || paused || picking || hero.dashCd>0) return;
+  let dx=0,dy=0;
+  if(move.active){ dx=move.dx; dy=move.dy; }
+  if(keys['a']||keys['arrowleft']) dx=-1; if(keys['d']||keys['arrowright']) dx=1;
+  if(keys['w']||keys['arrowup']) dy=-1; if(keys['s']||keys['arrowdown']) dy=1;
+  if(dx===0&&dy===0){ dx=hero.aimX; dy=hero.aimY; }            // no input → dash where you're aiming
+  const l=Math.hypot(dx,dy)||1;
+  hero.dashVX=dx/l*1100; hero.dashVY=dy/l*1100; hero.dashT=(zoneIndex===1?0.22:0.16); hero.dashCd=1.1;   // 🌕 longer floaty dash on the Moon
+  flash('💨',hero.x,hero.y-22,'#cfeefc'); tone(620,0.12,'sine',0.12,1020);
+}
+function startMove(id,x,y){ move.active=true; move.id=id; move.baseX=x; move.baseY=y; move.dx=0; move.dy=0; }
+function startAim(id,x,y){ aim.active=true; aim.id=id; aim.x=x; aim.y=y; }
+function onDown(id,x,y){
+  if(state!==State.PLAY || picking || paused) return;
+  if(id==='mouse'){ startAim(id,x,y); return; }     // desktop: mouse always sprays
+  // TOUCH: the hose auto-fires at the nearest fire, so the WHOLE screen drives movement. Double-tap anywhere to DASH.
+  const now=performance.now();
+  if(now-lastLeftTap<300){ doDash(); lastLeftTap=0; }
+  else lastLeftTap=now;
+  if(!move.active) startMove(id,x,y);
+}
+function onMove(id,x,y){
+  if(move.active && move.id===id){
+    let dx=x-move.baseX, dy=y-move.baseY; const len=Math.hypot(dx,dy), cap=60;
+    if(len>cap){ dx=dx/len*cap; dy=dy/len*cap; move.baseX=x-dx; move.baseY=y-dy; }
+    move.dx=dx/cap; move.dy=dy/cap;
+  }
+  if(aim.active && aim.id===id){ aim.x=x; aim.y=y; }
+}
+function onUp(id){
+  if(move.active && move.id===id){ move.active=false; move.id=null; move.dx=0; move.dy=0; }
+  if(aim.active && aim.id===id){ aim.active=false; aim.id=null; }
+}
+canvas.addEventListener('touchstart',e=>{ e.preventDefault(); audio(); desktopAim=false; for(const t of e.changedTouches) onDown(t.identifier,t.clientX,t.clientY); },{passive:false});
+canvas.addEventListener('touchmove', e=>{ e.preventDefault(); for(const t of e.changedTouches) onMove(t.identifier,t.clientX,t.clientY); },{passive:false});
+canvas.addEventListener('touchend',  e=>{ e.preventDefault(); for(const t of e.changedTouches) onUp(t.identifier); },{passive:false});
+canvas.addEventListener('touchcancel',e=>{ for(const t of e.changedTouches) onUp(t.identifier); },{passive:false});
+canvas.addEventListener('mousedown', e=>{ audio(); onDown('mouse',e.clientX,e.clientY); });
+window.addEventListener('mousemove', e=>{ aimPos.x=e.clientX; aimPos.y=e.clientY; desktopAim=true; onMove('mouse',e.clientX,e.clientY); });
+window.addEventListener('mouseup',   ()=> onUp('mouse'));
+// live nozzle-width: mousewheel over the canvas + the on-screen slider both drive fanFocus (0.15 tight … 1 = full stat width)
+function setFanFocus(v){ fanFocus=Math.max(0.15,Math.min(1,v)); try{ localStorage.setItem('sh_fanfocus',fanFocus); }catch(e){}
+  const sl=el('fanSlider'), p=el('fanPct'), pc=Math.round(fanFocus*100); if(sl&&+sl.value!==pc) sl.value=pc; if(p) p.textContent=pc+'%'; }
+canvas.addEventListener('wheel', e=>{ if(state!==State.PLAY) return; e.preventDefault(); setFanFocus(fanFocus + (e.deltaY<0?0.08:-0.08)); }, {passive:false});   // scroll up = wider, down = tighter
+el('fanSlider').addEventListener('input', e=>setFanFocus(parseInt(e.target.value,10)/100));
+el('fanLbl').innerHTML = hasTouch ? '🌀 NOZZLE' : '🌀 NOZZLE <span class="whint">🖱️ scroll</span>';
+setFanFocus(fanFocus);   // sync slider/readout to the saved value on load
+window.addEventListener('keydown', e=>{ keys[e.key.toLowerCase()]=true; if(e.repeat) return; const k=e.key.toLowerCase();
+  if(e.key===' '||k==='q') useBomb();                 // Q / Space → smoke bomb
+  if(e.key==='Enter'||k==='e') useUlt();              // E / Enter → tidal wave (ultimate)
+  if(k==='p'||e.key==='Escape') togglePause();
+  if(k==='m') toggleMute();
+  if(e.key==='Shift') doDash(); });
+window.addEventListener('keyup',   e=>{ keys[e.key.toLowerCase()]=false; });
+
+//---------------- Bombs -----------------------------------------
+function useBomb(){
+  if(state!==State.PLAY || bombs<=0) return;
+  bombs--; updateBombBtn();
+  toast('🌫️ SMOKE SCREEN!','fire dies in the cloud · 10s', '#b9c6d6'); shake=5; sfxSizzle(); buzz(30);
+  // drops a lingering smoke cloud at your feet that suffocates any fire inside it for ~10s (see update/render)
+  const sr = 155 + lvl('smokeR')*22;   // Smoke Radius stat
+  smokes.push({x:hero.x, y:hero.y, r:sr, t:10});
+  decals.push({x:hero.x, y:hero.y, r:sr, t:0, life:2.6});
+}
+el('bombBtn').addEventListener('click', useBomb);
+function updateBombBtn(){
+  const b=el('bombBtn');
+  b.textContent='🌫️ SMOKE ×'+bombs+(hasTouch?'':' [Q]');
+  b.classList.toggle('hidden', state!==State.PLAY || bombs<=0);
+}
+// ===== ULTIMATE: Tidal Wave — charge by extinguishing, unleash to wash the screen =====
+function useUlt(){
+  if(state!==State.PLAY || ult<100) return;
+  ult=0; qprog('ult',1); tidalT=0.7; flashFx=0.6; spawnConfetti(hero.x,hero.y,26); buzz(50); shake=12; hitStop=0.1; water=maxWater; hero.scorch=0;
+  fireballs=[]; molotovs=[];
+  for(const e of enemies) e.wet=1;                 // soak every arsonist
+  for(const f of [...fires]) extinguish(f, true);  // wash away every fire
+  fires=[];
+  toast('🌊 TIDAL WAVE!!!','everything washed away!','#7fe0ff'); sfxUlt();
+  updateUltBtn();
+}
+el('ultBtn').addEventListener('click', useUlt);
+
+// ---- pause / mute / quit controls ----
+let paused=false;
+function showPlayButtons(b){ el('muteBtn').classList.toggle('hidden',!b); el('pauseBtn').classList.toggle('hidden',!b); }
+function togglePause(){
+  if(state!==State.PLAY) return;
+  paused=!paused;
+  el('pauseScreen').classList.toggle('hidden',!paused);
+  el('pauseBtn').textContent = paused?'▶':'⏸';
+  if(paused){ stopMusic(); cgPlay(false); } else { if(!muted&&!cgMuted) startMusic(); cgPlay(true); }
+}
+function toggleMute(){
+  muted=!muted; localStorage.setItem('splashhero_muted', muted?'1':'0');
+  el('muteBtn').textContent = muted?'🔇':'🔊';
+  if(muted) stopMusic(); else if(state===State.PLAY && !paused && !cgMuted) startMusic();
+}
+// CrazyGames player-UI mute → silence the whole game; it overrides the in-game toggle (never un-mutes what CG muted)
+function applyCgMute(m){ cgMuted=!!m; if(cgMuted) stopMusic(); else if(state===State.PLAY && !paused && !muted) startMusic(); }
+function toggleHaptics(){ hapticsOn=!hapticsOn; localStorage.setItem('sh_haptics', hapticsOn?'on':'off'); if(hapticsOn) buzz(20); renderSettings(); }
+function openSettings(){ renderSettings(); el('settingsScreen').classList.remove('hidden'); }
+function renderSettings(){
+  el('setSound').textContent=muted?'OFF':'ON'; el('setSound').classList.toggle('owned',!muted);
+  el('setHaptics').textContent=hapticsOn?'ON':'OFF'; el('setHaptics').classList.toggle('owned',hapticsOn);
+}
+function confirmReset(){
+  if(confirm('Reset ALL progress (coins, upgrades, planets, achievements)? This cannot be undone.')){
+    for(const k of Object.keys(localStorage)){ if(k.indexOf('sh_')===0 || k.indexOf('splashhero_')===0) localStorage.removeItem(k); }
+    location.reload();
+  }
+}
+function quitToMenu(){    // "Quit to HQ" — bank what you earned and return to the tycoon hub
+  paused=false; el('pauseScreen').classList.add('hidden');
+  coins+=runCoins; runCoins=0; if(score>best){ best=score; localStorage.setItem('splashhero_best',String(best)); }
+  truck=null; eventT=0;
+  goHub();
+}
+el('muteBtn').addEventListener('click', toggleMute);
+el('pauseBtn').addEventListener('click', togglePause);
+el('resumeBtn').addEventListener('click', togglePause);
+el('quitBtn').addEventListener('click', quitToMenu);
+el('muteBtn').textContent = muted?'🔇':'🔊';
+
+function updateUltBtn(){
+  const b=el('ultBtn');
+  if(state!==State.PLAY){ b.classList.add('hidden'); return; }
+  b.classList.remove('hidden');
+  const ready=ult>=100;
+  b.textContent = (ready ? '🌊 UNLEASH!' : '🌊 '+Math.floor(ult)+'%')+(hasTouch?'':' [E]');
+  if(ready!==b._ready){ b._ready=ready; b.classList.toggle('ready',ready); b.classList.toggle('charging',!ready); }
+}
+
+//---------------- Update ----------------------------------------
+function update(dt){
+  gameTime+=dt;
+  tickDPS(dt);             // measure the player's real DPS so enemy HP → accurate time-to-kill
+  const hpBefore=health;   // for safe-time health regen
+  if(frenzyT>0) frenzyT-=dt;
+  if(freezeT>0) freezeT-=dt;
+  if(tidalT>0) tidalT-=dt;
+  if(pressT>0) pressT-=dt;
+  if(hurtInvuln>0) hurtInvuln-=dt;
+  const slow = freezeT>0 ? 0.22 : 1;
+
+  // waves
+  waveTimer+=dt;
+  if(waveTimer>26){
+    waveTimer=0; wave++;
+    qwave(wave); statMax('wave',wave);
+    if(wave%5===0 && !bossAlive){                          // background no longer changes mid-mission (tied to planet)
+      const king=!!ZONES[zoneIndex].boss;
+      spawnFire({type:'boss',king}); sfxBoss();
+      toast(king?'👑 THE FIRE KING':'🔥 BONFIRE BOSS', king?'final showdown!':'wave '+wave, king?'#ff5b3d':'#ff7a3d');
+    } else { sfxWave(); toast('WAVE '+wave,'','#8fe1ff'); }
+  }
+  spawnTimer-=dt;
+  const pw=powerLevel();   // DYNAMIC difficulty: spawn rate & count scale with wave AND your power
+  const spawnEvery=Math.max(0.14, (1.9-(wave-1)*0.085 - pw*0.008) * (eventT>0?0.45:1));   // spawns ramp UP each wave — volume is the difficulty (gentle climb, high endpoint)
+  const fireCap=Math.min(94, Math.round((10 + wave*3.8 + pw*0.35) * 0.7 * (1+planet*0.12) * (eventT>0?1.2:1)));   // rounds get harder via MORE enemies over waves
+  if(spawnTimer<=0 && fires.length<fireCap){ spawnTimer=spawnEvery; spawnFire();
+    if(fires.length<fireCap && Math.random()<0.22+pw*0.005) spawnFire();    // extra spawns
+    if(fires.length<fireCap && Math.random()<0.09+pw*0.003) spawnFire(); }
+  if(Math.random()<dt*0.32 && pickups.length<6) spawnPickup();
+  // safety net: when water dips, make sure a 💧 pickup is available
+  if(water < maxWater*0.5 && !pickups.some(p=>p.type==='water') && Math.random()<dt*1.6) spawnPickup('water');
+  // roaming arsonists — heavier in Ember City / Volcano (zone.arsonist)
+  arsTimer-=dt;
+  const zArs=ZONES[zoneIndex].arsonist||0;
+  const maxArs = (wave>=2?1:0) + Math.floor(wave/5) + zArs + rebirthLvl + planet + Math.floor(pw*0.08);
+  if(arsTimer<=0 && wave>=2 && enemies.length<maxArs){
+    arsTimer=rand(7,11)/(1+zArs*0.5); spawnArsonist();
+    toast('🧨 ARSONIST!','soak him before he torches everything!','#ff7a3d'); sfxBoss();
+  }
+  // ✨ GOLDEN FIRE — rare bonus that flees; douse it for a big coin payout
+  goldenT-=dt;
+  if(goldenT<=0 && !fires.some(f=>f.type==='golden')){
+    goldenT=rand(35,60); spawnFire({type:'golden'});
+    toast('✨ GOLDEN FIRE!','chase it down for big coins!','#ffd76b'); buzz(20);
+  }
+  // ☀️ SOLAR FLARE — Sun only: a burst of fireballs rains from above; dodge them
+  if(zoneIndex===4){
+    flareT-=dt;
+    if(flareT<=0){ flareT=rand(11,16);
+      toast('☀️ SOLAR FLARE!','dodge the falling fire!','#ffd23f'); shake=Math.max(shake,7); sfxBoss(); buzz([40,60,40]);
+      const count=6+rebirthLvl*2;
+      for(let i=0;i<count;i++){ const fx=rand(40,W-40); fireballs.push({ x:fx, y:104, vx:rand(-50,50), vy:rand(170,240), r:9, life:5 }); }
+    }
+  }
+  // 🌪️ MARS DUST STORM — periodic gusts that blow your spray sideways; aim into the wind
+  if(zoneIndex===2){
+    if(gustDur>0){ gustDur-=dt; if(gustDur<=0) gustWind=0; }
+    else { gustT-=dt; if(gustT<=0){ gustT=rand(8,13); gustDur=rand(2.5,4); gustWind=(Math.random()<0.5?-1:1)*rand(80,120);
+      toast('🌪️ DUST STORM!','your spray drifts — aim into the wind!','#ffce6b'); buzz(20); } }
+  } else if(zoneIndex===3){ gustWind=Math.sin(gameTime*0.5)*60; }   // 🪐 JUPITER: steady oscillating storm wind
+  else if(gustWind!==0){ gustWind=0; gustDur=0; }
+  // EMBER STORM mini-event — a timed surge for a bonus
+  if(eventT>0){ eventT-=dt;
+    if(eventT<=0){ const bonus=80*(planet+1); runCoins+=bonus; ult=Math.min(100,ult+25); qprog('storm',1);
+      toast('✅ STORM CLEARED!','+'+bonus+' 🪙 · ultimate charged','#9be86b'); flash('+'+bonus,hero.x,hero.y-30,'#9be86b'); sfxWave(); }
+  } else { eventCd-=dt;
+    if(eventCd<=0){ eventCd=rand(28,42); eventT=10;
+      toast('🌪️ EMBER STORM!','survive the surge for a bonus!','#ff7a3d'); shake=8; sfxBoss(); buzz(25);
+      for(let i=0;i<6;i++){ if(fires.length<32){ const a=Math.random()*6.28, d=rand(60,160);
+        spawnFire({x:Math.max(40,Math.min(W-40,hero.x+Math.cos(a)*d)), y:Math.max(110,Math.min(H-40,hero.y+Math.sin(a)*d))}); } }
+    }
+  }
+
+  // hero move
+  let mx=0,my=0;
+  if(move.active){ mx=move.dx; my=move.dy; }
+  if(keys['a']||keys['arrowleft']) mx=-1;
+  if(keys['d']||keys['arrowright']) mx=1;
+  if(keys['w']||keys['arrowup']) my=-1;
+  if(keys['s']||keys['arrowdown']) my=1;
+  const ml=Math.hypot(mx,my); if(ml>1){ mx/=ml; my/=ml; }
+  if(hero.scorch>0){ hero.scorch-=dt; }   // burning: just briefly slowed (no water leak)
+  const spd=hero.speed*(hero.boost>0?1.6:1)*(hero.scorch>0?0.6:1)*(zoneIndex===1?1.32:1);   // 🌕 Moon low-gravity = floatier/faster
+  hero.x=Math.max(hero.r, Math.min(W-hero.r, hero.x+mx*spd*dt));
+  hero.y=Math.max(hero.r+50, Math.min(H-hero.r, hero.y+my*spd*dt));
+  if(tut.on && tut.phase==='move'){ tut.moveAcc += (Math.abs(mx)+Math.abs(my)); if(tut.moveAcc>45) tutPhase('spray'); }   // teach movement by doing
+  if(hero.boost>0) hero.boost-=dt;
+  if(hero.shieldT>0) hero.shieldT-=dt;
+  // dash: fast burst + invincibility frames + afterimage trail
+  if(hero.dashCd>0) hero.dashCd-=dt;
+  if(hero.dashT>0){ hero.dashT-=dt;
+    hero.x=Math.max(hero.r, Math.min(W-hero.r, hero.x+hero.dashVX*dt));
+    hero.y=Math.max(hero.r+50, Math.min(H-hero.r, hero.y+hero.dashVY*dt));
+    hero.trail.push({x:hero.x,y:hero.y,life:0.3});
+  }
+  for(let i=hero.trail.length-1;i>=0;i--){ hero.trail[i].life-=dt; if(hero.trail[i].life<=0) hero.trail.splice(i,1); }
+
+  // aim + auto-assist
+  const aimActive=aim.active;
+  if(desktopAim){ let ax=aimPos.x-hero.x, ay=aimPos.y-hero.y; const al=Math.hypot(ax,ay)||1; hero.aimX=ax/al; hero.aimY=ay/al; }   // desktop: always face the mouse
+  else if(aimActive){ let ax=aim.x-hero.x, ay=aim.y-hero.y; const al=Math.hypot(ax,ay)||1; hero.aimX=ax/al; hero.aimY=ay/al; }
+  const frenzy=frenzyT>0;
+  const autoFire = hasTouch && !desktopAim;                          // mobile: auto-fire (freeing the whole screen for movement)
+  const nf = (aimActive||autoFire) ? aimTarget() : null;             // nearest fire/thug/fireball, or null when the field is clear
+  hero.spraying = aimActive || (autoFire && !!nf);   // spray NEVER fully cuts out — empty water just means short range (see press below); on mobile it only fires when there's a target so it doesn't drain the tank into empty space
+  aimLock.on=false;
+  if(hero.spraying && nf){
+    const dx=nf.x-hero.x, dy=nf.y-hero.y, dl=Math.hypot(dx,dy)||1, tax=dx/dl, tay=dy/dl;
+    const dot=hero.aimX*tax+hero.aimY*tay; const assist=dot>0.25?0.55:0.18;
+    hero.aimX+=(tax-hero.aimX)*assist; hero.aimY+=(tay-hero.aimY)*assist;
+    const l=Math.hypot(hero.aimX,hero.aimY)||1; hero.aimX/=l; hero.aimY/=l;
+    aimLock.x=nf.x; aimLock.y=nf.y; aimLock.on=true;
+  }
+
+  // spray — water level scales WIDTH (jets/spread) & DISTANCE (range). Upgrades: Wide Nozzle=width, Pump=distance. Power-ups: 💪 Pressure / 🌈 Frenzy = full power.
+  const fullPower = frenzy || pressT>0;
+  if(hero.spraying){
+    // water is consumed PER SPRAY-BURST below (scales with fire rate & √jets) — upgrade fire rate → need more water too
+    sfxSpray(gameTime);
+    const wf = fullPower ? 1 : Math.max(0, Math.min(1, water/maxWater));
+    const press = 0.5 + 0.5*wf;                                     // range scale: empty water = half range (still reaches nearby fires); full = long
+    hero.sprayPow = press;
+    const gunX=hero.x+hero.aimX*hero.r*1.3, gunY=hero.y+hero.aimY*hero.r*1.3-6;
+    const pumpL=lvl('pump')*0.4+mods.power;
+    const jets = Math.max(1, Math.round((1 + lvl('width') + mods.jets + (frenzy?3:0)) * (0.45+0.55*wf)));  // jet count from the Multi-Jet stat (+1 / lvl); the fan angle is separate (Wide Nozzle)
+    const spread = (0.05 + lvl('fan')*0.14 + mods.jets*0.12) * (0.6+0.4*wf) * fanFocus;   // Wide Nozzle (fan) stat = max width; fanFocus (mousewheel/slider) concentrates it live for focus fire
+    // FIRE RATE ramps up with power (few projectiles early → current density later) and is time-gated (fps-independent)
+    const ramp = Math.min(1, mods.power*0.09 + mods.jets*0.09 + lvl('pump')*0.02 + lvl('width')*0.05 + powerLevel()*0.008 + (fullPower?1:0));
+    const emitEvery = 0.052 - 0.036*ramp;                          // ~19 drops/s early → ~62/s later
+    hero.sprayT -= dt;
+    if(hero.sprayT<=0){
+      hero.sprayT = emitEvery;
+      const rate = emitEvery/0.016;                                // fewer drops hit proportionally harder → DPS stays ~constant across the ramp
+      const fan = 2*spread, overlap = fan>6.2832 ? Math.min(16, Math.pow(2, Math.floor(fan/6.2832))) : 1;   // past 360° the fan wraps onto itself → 2× damage per full overlap
+      const rangeMul = 1 + lvl('range')*0.16;                        // Spray Range stat (infinite): how far/long the water travels — short by default
+      const jn = 1/Math.pow(jets, 0.85);                             // jets are mostly COVERAGE, not raw damage: per-drop dmg /jets^0.85 → focused DPS grows only ~jets^0.15 (no big spike per jet)
+      for(let i=0;i<jets;i++){
+        const a=Math.atan2(hero.aimY,hero.aimX)+rand(-spread,spread);
+        const v=rand(780,960)*(1+pumpL*0.045)*press;
+        const life=0.34*rangeMul*(1+pumpL*0.04)*press;
+        drops.push({ x:gunX,y:gunY, vx:Math.cos(a)*v, vy:Math.sin(a)*v, life:life, r:rand(2.5,5)+mods.dropR, rate:rate, jn:jn, om:overlap, wrap:(v*life>W*0.8),   // long-range water wraps around the screen and keeps dousing
+          hue: frenzy ? (gameTime*400+i*40)%360 : -1 });
+      }
+      if(overlap>1 && Math.random()<0.15) flash('🌀 '+overlap+'×',hero.x,hero.y-30,'#9fd0ff');   // celebrate the 360° overlap
+      if(!fullPower) water = Math.max(0, water - 1.1*Math.sqrt(jets));   // per-burst cost: ~21 water/s fresh (18s tank) → scales up with fire rate & jets
+    }
+  } else if(!aimActive && water<maxWater){ water+=22*(1+plvl('pump')*0.15)*dt; if(water>maxWater) water=maxWater; }   // refill only when NOT holding spray (else empty tank oscillates → infinite spray)
+
+  // sprinkler drones — auto-spray nearest fire (constant action, no downtime)
+  if(hero.drones>0){
+    hero.droneT-=dt;
+    if(hero.droneT<=0){
+      hero.droneT=0.45;
+      const nf=nearestFire();
+      if(nf) for(let k=0;k<hero.drones;k++){
+        const ang=gameTime*2 + k*(6.283/hero.drones);
+        const ox=hero.x+Math.cos(ang)*44, oy=hero.y+Math.sin(ang)*44;
+        let dx=nf.x-ox, dy=nf.y-oy; const dl=Math.hypot(dx,dy)||1;
+        drops.push({ x:ox,y:oy, vx:dx/dl*840, vy:dy/dl*840, life:0.75, r:4+mods.dropR, hue:165 });
+      }
+    }
+  }
+
+  // drops
+  const dmgMult=(1 + lvl('pump')*0.04 + mods.power*0.18)*(frenzyT>0?2:1)*(1+plvl('hose')*0.12);
+  for(let i=drops.length-1;i>=0;i--){
+    const d=drops[i]; d.x+=d.vx*dt; d.y+=d.vy*dt; d.vy+=240*dt; if(gustWind) d.x+=gustWind*dt; d.life-=dt;
+    if(d.wrap){ if(d.x<0)d.x+=W; else if(d.x>W)d.x-=W; if(d.y<0)d.y+=H; else if(d.y>H)d.y-=H; }   // long-range water wraps around the screen edges
+    let hit=false;
+    for(const f of fires){
+      if((d.x-f.x)**2+(d.y-f.y)**2 < (f.size+d.r)**2){
+        const base=(4 + d.r*0.7) * dmgMult * (d.rate||1) * (d.jn||1), dmg=base*(d.om||1); f.hp -= dmg; f.tookDmg=(f.tookDmg||0)+base; if(f.tookDmg>dpsPeak) dpsPeak=f.tookDmg;   // jn = jet coverage-normalization; 360° overlap (om) doubles damage but dpsPeak (auto-scales enemy HP) tracks BASE only → overlap is a true bonus
+        steams.push({x:d.x,y:d.y,r:rand(4,9),life:0.5,vy:rand(-30,-60)});
+        hit=true; break;
+      }
+    }
+    if(!hit){ for(let j=fireballs.length-1;j>=0;j--){ const b=fireballs[j];   // spray cancels fireballs
+      if((d.x-b.x)**2+(d.y-b.y)**2 < (b.r+d.r)**2){ steams.push({x:b.x,y:b.y,r:8,life:0.4,vy:-40}); fireballs.splice(j,1); hit=true; break; } } }
+    if(!hit){ for(const e of enemies){                                        // spray soaks the arsonist
+      if((d.x-e.x)**2+(d.y-e.y)**2 < (20+d.r)**2){ e.wet=Math.min(1, e.wet + 0.0067*dmgMult); e.hurt=0.12; e.soak=true;
+        steams.push({x:d.x,y:d.y,r:5,life:0.4,vy:-40}); hit=true; break; } } }
+    if(hit||d.life<=0||d.x<-20||d.x>W+20||d.y>H+20) drops.splice(i,1);
+  }
+
+  // fires
+  let burnSum=0;   // accumulate fire-contact damage, then cap per frame (no 1-shot by overlapping fires)
+  let townBurn=0;  // fires left to grow big scorch the TOWN
+  for(let i=fires.length-1;i>=0;i--){
+    const f=fires[i]; f.flick+=dt*10; f.wob+=dt*4;
+    f.size += f.grow*dt*slow;
+    if(f.size>f.max) f.size=f.max;
+    if(f.type!=='golden') townBurn += Math.max(0, f.size-30)*0.03;   // big neglected fires burn the town (eased for higher fire counts)
+    // GROUPED fires feed off each other — they regenerate HP when packed together, so spread/AoE them
+    if(f.hp < f.hpMax && f.type!=='golden' && f.type!=='boss'){
+      let near=0; for(let j=fires.length-1;j>=0;j--){ const g=fires[j]; if(g!==f){ const gx=g.x-f.x, gy=g.y-f.y; if(gx*gx+gy*gy < 9000){ if(++near>=5) break; } } }
+      if(near>0) f.hp = Math.min(f.hpMax, f.hp + near*f.hpMax*0.010*dt*slow);
+    }
+    if(zoneIndex===1 && f.type!=='boss'){ f.x += Math.sin(f.wob*0.6)*9*dt*slow; f.y += Math.cos(f.wob*0.5+f.x*0.01)*6*dt*slow;   // 🌕 low-gravity drift (freeze slows it too)
+      f.x=Math.max(30,Math.min(W-30,f.x)); f.y=Math.max(108,Math.min(H-30,f.y)); }
+    if(f.type==='runner'){
+      f.legs+=dt*12;
+      f.x+=f.vx*dt*slow; f.y+=f.vy*dt*slow;
+      if(f.x<40||f.x>W-40) f.vx*=-1;
+      if(f.y<110||f.y>H-40) f.vy*=-1;
+      f.x=Math.max(40,Math.min(W-40,f.x)); f.y=Math.max(110,Math.min(H-40,f.y));
+    } else if(f.type==='fast'){ f.x+=Math.sin(f.wob)*18*dt*60*0.016; }
+    else if(f.type==='chaser'){ let dx=hero.x-f.x, dy=hero.y-f.y; const dl=Math.hypot(dx,dy)||1, sp=(f.spd||110)*slow;
+      f.x=Math.max(40,Math.min(W-40, f.x+dx/dl*sp*dt)); f.y=Math.max(110,Math.min(H-40, f.y+dy/dl*sp*dt)); f.legs+=dt*16; }
+    else if(f.type==='golden'){ let dx=f.x-hero.x, dy=f.y-hero.y; const dl=Math.hypot(dx,dy)||1, sp=f.spd*slow;   // flees the player
+      f.x=Math.max(40,Math.min(W-40, f.x+dx/dl*sp*dt)); f.y=Math.max(110,Math.min(H-40, f.y+dy/dl*sp*dt)); f.legs+=dt*18;
+      f.life-=dt; if(f.life<=0){ flash('got away!',f.x,f.y-12,'#ffd76b'); fires.splice(i,1); continue; } }
+    // --- spitting: any big fire can lob a fireball you must dodge; spitters & boss do it often ---
+    const canSpit = (f.type==='boss' || f.type==='spitter' || f.size>f.max*0.6) && f.type!=='chaser' && f.type!=='armored' && f.type!=='golden';
+    if(canSpit){
+      if(f.charge>0){ f.charge-=dt; if(f.charge<=0) doSpit(f); }                 // release after wind-up
+      else { f.shootCd-=dt*slow;
+        if(f.shootCd<=0){
+          f.shootCd = f.type==='spitter'?rand(1.8,2.8):f.type==='boss'?rand(3.2,4.8):rand(5,9);
+          if(fireballs.length<12) f.charge=0.45;                                 // soft cap so it never bullet-hells
+        } }
+    }
+    // spreading (normal only)
+    if(f.type==='normal'){
+      f.spreadCd-=dt*slow;
+      if(f.spreadCd<=0 && f.size>f.max*0.7 && fires.length<28){
+        f.spreadCd=rand(3,5);
+        const a=Math.random()*6.28, dist=rand(55,95);
+        const nx=f.x+Math.cos(a)*dist, ny=f.y+Math.sin(a)*dist;
+        if(nx>40&&nx<W-40&&ny>110&&ny<H-40) spawnFire({type:'normal',x:nx,y:ny,size:14});
+      }
+    }
+    // boss spawns minions
+    if(f.type==='boss'){
+      f.spawnCd-=dt*slow;
+      if(f.spawnCd<=0 && fires.length<28){ f.spawnCd=rand(2.5,3.8);
+        const a=Math.random()*6.28; spawnFire({type:'fast',x:f.x+Math.cos(a)*70,y:f.y+Math.sin(a)*70,size:12}); }
+    }
+    // standing in / touching a fire burns the player
+    if(hero.dashT<=0 && hero.shieldT<=0){
+      const rr=hero.r + f.size*0.95 + 8;           // heat radius — near a flame burns you (fair, not a huge aura)
+      if((f.x-hero.x)**2+(f.y-hero.y)**2 < rr*rr){
+        burnSum += 14 + f.size*0.3;                // bigger fire = more burn (capped after the loop)
+        dangerPulse=Math.min(1,dangerPulse+dt*2.5);
+        if(Math.random()<dt*3) shake=Math.min(shake+1.5,7);
+      }
+    }
+    // extinguished
+    const out = f.hp<=0;
+    if(out){ extinguish(f,false); fires.splice(i,1); }
+  }
+  if(burnSum>0) health -= Math.min(burnSum, 34)*dt;   // capped: full-engulf burn ~3s to die, not instant
+  if(townBurn>0) townHP -= townBurn*dt; else if(townHP<100) townHP += 3*dt;   // town recovers when fires are kept small
+  townHP=Math.max(0,Math.min(100,townHP));
+  if(townHP<=0 && state===State.PLAY){ townLost=true; gameOver(); }
+  dangerPulse=Math.max(0,dangerPulse-dt*0.8);
+
+  // --- arsonists: run around, flee the hero, lob molotovs ---
+  for(let i=enemies.length-1;i>=0;i--){
+    const e=enemies[i]; e.legs+=dt*10; if(e.hurt>0) e.hurt-=dt;
+    // HOSE BEAM: if you're spraying toward him, soak continuously (ignores fires in the way)
+    if(hero.spraying){
+      const sx=e.x-hero.x, sy=e.y-hero.y, sl=Math.hypot(sx,sy)||1;
+      const dot=(hero.aimX*sx + hero.aimY*sy)/sl;          // 1 = aimed right at him
+      if(sl<480 && dot>0.9){
+        e.wet=Math.min(1, e.wet + 0.1*dt*(1+(lvl('pump')+mods.power)*0.12));   // 6x tankier thug
+        e.hurt=0.15; e.soak=true;
+        if(Math.random()<dt*30) steams.push({x:e.x+rand(-8,8),y:e.y-rand(0,14),r:rand(4,8),life:0.3,vy:-30});
+      }
+    }
+    let dx,dy; const hd=Math.hypot(hero.x-e.x,hero.y-e.y);
+    if(hd < hero.r+17 && hero.dashT<=0 && hero.shieldT<=0){ health-=28*dt; dangerPulse=Math.min(1,dangerPulse+dt*2.5); }   // touching an arsonist HURTS
+    if(hd<200){ dx=e.x-hero.x; dy=e.y-hero.y; }                 // flee when hero closes in
+    else { dx=e.wpX-e.x; dy=e.wpY-e.y; if(Math.hypot(dx,dy)<30){ e.wpX=rand(70,W-70); e.wpY=rand(150,H-90); } }
+    const dl=Math.hypot(dx,dy)||1, esp=158*slow*(e.hurt>0?0.5:1);  // faster; staggers while being soaked
+    e.x=Math.max(30,Math.min(W-30, e.x+dx/dl*esp*dt));
+    e.y=Math.max(130,Math.min(H-40, e.y+dy/dl*esp*dt));
+    if(!e.soak) e.wet=Math.max(0, e.wet-0.05*dt);               // only dries off when you're NOT soaking him
+    e.throwCd-=dt*slow;
+    if(e.throwCd<=0){ e.throwCd=rand(1.4,2.4);
+      const tx=Math.max(40,Math.min(W-40,hero.x+rand(-90,90))), ty=Math.max(120,Math.min(H-40,hero.y+rand(-90,90)));
+      molotovs.push({ sx:e.x, sy:e.y, x:e.x, y:e.y, tx, ty, t:0, dur:rand(0.85,1.05), spin:0 }); }
+    if(e.wet>=0.99){                                             // fully soaked = defeated
+      runCoins+=25; score+=40; xp+=5; sfxCoin(); qprog('arson',1); statAdd('arson',1);
+      for(let c=0;c<6;c++) coinFx.push({x:e.x,y:e.y,tx:54,ty:64,t:0});
+      for(let s=0;s<12;s++) steams.push({x:e.x+rand(-12,12),y:e.y+rand(-12,12),r:rand(8,16),life:0.8,vy:rand(-50,-90)});
+      toast('💦 SOAKED!','arsonist down · +25 🪙','#7fe0ff'); shake=7; buzz(25); spawnConfetti(e.x,e.y,12);
+      enemies.splice(i,1); continue;
+    }
+    e.soak=false;                                                // reset per-frame soak flag
+  }
+  // --- molotovs: arc through the air, explode into fire on landing ---
+  for(let i=molotovs.length-1;i>=0;i--){
+    const m=molotovs[i]; m.t+=dt/m.dur; m.spin+=dt*14;
+    m.x=m.sx+(m.tx-m.sx)*m.t; m.y=m.sy+(m.ty-m.sy)*m.t;
+    if(m.t>=1){
+      shake=Math.max(shake,7); sfxSizzle(); flash('FWOOM! 🔥',m.tx,m.ty-12,'#ff7a3d');
+      const n=3+Math.floor(Math.random()*2);
+      for(let k=0;k<n;k++){ const a=Math.random()*6.28, dd=rand(0,42);
+        const nx=Math.max(40,Math.min(W-40,m.tx+Math.cos(a)*dd)), ny=Math.max(110,Math.min(H-40,m.ty+Math.sin(a)*dd));
+        if(fires.length<30) spawnFire({type:'normal',x:nx,y:ny,size:16}); }
+      if(Math.hypot(hero.x-m.tx,hero.y-m.ty)<62){ scorchHero(); hurtPlayer(16); }
+      molotovs.splice(i,1);
+    }
+  }
+  // --- fireballs: fly straight, scorch the hero on contact ---
+  for(let i=fireballs.length-1;i>=0;i--){
+    const b=fireballs[i]; b.x+=b.vx*dt*slow; b.y+=b.vy*dt*slow; b.life-=dt;
+    if(Math.hypot(hero.x-b.x,hero.y-b.y) < hero.r+b.r){
+      if(hero.dashT>0){ /* dashed through */ }
+      else { if(hero.shieldT>0) steams.push({x:b.x,y:b.y,r:8,life:0.4,vy:-40}); else { scorchHero(); hurtPlayer(12); } fireballs.splice(i,1); continue; }
+    }
+    if(b.life<=0||b.x<-30||b.x>W+30||b.y<-30||b.y>H+30) fireballs.splice(i,1);
+  }
+
+  // --- rain cloud: drifts across and douses any fire beneath it ---
+  if(raincloud){
+    const rc=raincloud; rc.t-=dt; rc.x+=rc.vx*dt;
+    if(rc.x<60){ rc.x=60; rc.vx=Math.abs(rc.vx); } if(rc.x>W-60){ rc.x=W-60; rc.vx=-Math.abs(rc.vx); }
+    for(const f of fires){ if(Math.abs(f.x-rc.x)<95 && f.y>rc.y){ f.hp -= playerDPS()*2.5*dt; steams.push({x:f.x+rand(-12,12),y:f.y-rand(0,10),r:rand(4,8),life:0.4,vy:-30}); } }
+    if(rc.t<=0) raincloud=null;
+  }
+  // 🌀 VORTEX — pulls fires toward its center and douses them fast
+  if(vortex){ const v=vortex; v.t-=dt; v.a+=dt*7;
+    for(const f of fires){ const dx=v.x-f.x, dy=v.y-f.y, d2=dx*dx+dy*dy; if(d2 < v.r*v.r){ const d=Math.sqrt(d2)||1;
+      f.x += (dx/d)*120*dt; f.y += (dy/d)*120*dt; f.hp -= playerDPS()*3.2*dt;
+      if(Math.random()<dt*8) steams.push({x:f.x,y:f.y,r:rand(4,8),life:0.4,vy:-30}); } }
+    if(v.t<=0) vortex=null;
+  }
+  // 🌫️ SMOKE SCREENS — lingering clouds that suffocate any fire inside for ~10s (zones off the area)
+  for(let i=smokes.length-1;i>=0;i--){ const s=smokes[i]; s.t-=dt; const rr=s.r*s.r;
+    for(const f of fires){ const dx=f.x-s.x, dy=f.y-s.y; if(dx*dx+dy*dy<rr){ f.hp -= playerDPS()*2.4*dt;
+      if(Math.random()<dt*6) steams.push({x:f.x+rand(-10,10),y:f.y-rand(0,8),r:rand(4,8),life:0.4,vy:-24}); } }
+    if(s.t<=0) smokes.splice(i,1);
+  }
+  // story card timer
+  if(storyCard){ storyCard.t+=dt; if(storyCard.t>=storyCard.dur) storyCard=null; }
+  // confetti + ultimate flash
+  if(flashFx>0) flashFx-=dt*2;
+  for(let i=confetti.length-1;i>=0;i--){ const c=confetti[i]; c.x+=c.vx*dt; c.y+=c.vy*dt; c.vy+=520*dt; c.life-=dt; c.rot+=c.spin*dt; if(c.life<=0) confetti.splice(i,1); }
+
+  // fire truck drives in & PARKS — you choose when to EXTRACT (push your luck for more)
+  if(truck && !truck.parked){ truck.x += 250*dt;
+    for(const f of fires){ if(Math.abs(f.x-truck.x)<55 && Math.abs(f.y-truck.y)<60) f.hp -= playerDPS()*4*dt; }
+    if(truck.x >= W*0.5){ truck.x=W*0.5; truck.parked=true; el('extractBtn').classList.remove('hidden');
+      toast('🚒 EXTRACT READY!','tap EXTRACT to bank it — or push your luck!','#9be86b'); }
+  }
+
+  if(comboTimer>0){ comboTimer-=dt; if(comboTimer<=0){ combo=0; comboRankIdx=-1; } }
+
+  // steam
+  for(let i=steams.length-1;i>=0;i--){ const s=steams[i]; s.life-=dt; s.r+=24*dt; s.y+=s.vy*dt; s.vy*=0.96; if(s.life<=0) steams.splice(i,1); }
+  for(let i=rings.length-1;i>=0;i--){ const r=rings[i]; r.life-=dt; r.r+=(r.max-r.r)*Math.min(1,dt*9); if(r.life<=0) rings.splice(i,1); }
+  // splash-bomb shockwaves: expand from the hero and douse fires / clear projectiles within the ring, then fade
+  for(let i=shockwaves.length-1;i>=0;i--){ const sw=shockwaves[i]; sw.r += 640*dt; const rr=sw.r*sw.r;
+    for(let j=fires.length-1;j>=0;j--){ const f=fires[j], dx=f.x-sw.x, dy=f.y-sw.y; if(dx*dx+dy*dy<rr){ extinguish(f,true); fires.splice(j,1); } }
+    for(let j=fireballs.length-1;j>=0;j--){ const b=fireballs[j], dx=b.x-sw.x, dy=b.y-sw.y; if(dx*dx+dy*dy<rr){ steams.push({x:b.x,y:b.y,r:8,life:0.4,vy:-40}); fireballs.splice(j,1); } }
+    for(const e of enemies){ const dx=e.x-sw.x, dy=e.y-sw.y; if(dx*dx+dy*dy<rr){ e.wet=Math.min(1,e.wet+0.6*dt*8); e.soak=true; } }
+    if(sw.r>=sw.maxR) shockwaves.splice(i,1);
+  }
+  for(let i=decals.length-1;i>=0;i--){ if((decals[i].t+=dt)>=decals[i].life) decals.splice(i,1); }
+  // pickups
+  for(let i=pickups.length-1;i>=0;i--){ const p=pickups[i]; p.life-=dt; p.bob+=dt*3;
+    if(p.life<=0){ pickups.splice(i,1); continue; }
+    if(hero.magnet>0){ const dx=hero.x-p.x, dy=hero.y-p.y, d=Math.hypot(dx,dy)||1;
+      if(d<hero.magnet){ const pull=Math.min(1,dt*6); p.x+=dx*pull; p.y+=dy*pull; } }
+    if((p.x-hero.x)**2+(p.y-hero.y)**2 < (p.r+hero.r)**2){ collect(p); pickups.splice(i,1); } }
+  // floats
+  for(let i=floats.length-1;i>=0;i--){ const fl=floats[i]; fl.life-=dt; fl.y-=30*dt; if(fl.life<=0) floats.splice(i,1); }
+  // toasts
+  for(let i=toasts.length-1;i>=0;i--){ toasts[i].life-=dt; if(toasts[i].life<=0) toasts.splice(i,1); }
+  // coin fx (fly to counter)
+  for(let i=coinFx.length-1;i>=0;i--){ const c=coinFx[i]; c.t+=dt*2.6;
+    if(c.t>=1){ coinFx.splice(i,1); continue; }
+    c.x+=(c.tx-c.x)*Math.min(1,dt*7); c.y+=(c.ty-c.y)*Math.min(1,dt*7); }
+
+  if(shake>0){ shake-=dt*12; if(shake<0) shake=0; }
+  // gentle health regen once you've avoided damage for ~3s (recover between fights; can't tank)
+  if(health < hpBefore-0.01) noHurtT=0; else { noHurtT+=dt; if(noHurtT>3 && health<maxHealth) health=Math.min(maxHealth, health+6*dt); }
+  health=Math.min(maxHealth,health);
+  if(health<=0){ health=0; if(state===State.PLAY) gameOver(); }
+  if(!picking && xp>=xpNext) levelUp();
+  updateHUD();
+}
+
+function extinguish(f, fromBomb){
+  combo++; comboTimer=1.7+mods.comboTime;
+  water = Math.min(maxWater, water + (f.type==='boss'?8:f.type==='golden'?3:1));   // small water refund on douse
+  if(!fromBomb && Math.random()<0.09) pickups.push({x:f.x, y:Math.max(120,Math.min(H-70,f.y)), r:18, type:'water', life:12, bob:Math.random()*6});   // fires sometimes drop a 💧
+  xp += f.type==='boss'?6:(f.coin||1);
+  ult = Math.min(100, ult + (f.type==='boss'?40:f.type==='runner'?6:f.type==='fast'?5:4));
+  if(state===State.PLAY){ missionProgress++; qprog('fires',1); statAdd('fires',1); if(f.type==='boss'){ qprog('boss',1); statAdd('boss',1); } if(!truck && missionProgress>=missionQuota) spawnTruck();
+    if(tut.on && tut.phase==='spray'){ tut.fires++; if(tut.fires>=6) tutPhase('extract'); } }   // put out a few fires, then we call in the truck
+  const rk=rankFor(combo), idx=rk?RANKS.indexOf(rk):-1;
+  if(idx>comboRankIdx){ comboRankIdx=idx; if(rk){ toast(rk.n, combo+' COMBO', rk.col); sfxCombo(combo); shake=Math.max(shake,4); spawnConfetti(f.x,f.y-10,10); buzz(15); } }
+  const mult=1+Math.floor(combo/3);
+  const pts=(f.type==='boss'?20:f.type==='runner'?3:f.type==='fast'?2:1)*mult;
+  score+=pts;
+  // coins
+  const got=f.coin||1;
+  runCoins+=got;
+  for(let c=0;c<Math.min(got,6);c++) coinFx.push({x:f.x+rand(-10,10),y:f.y+rand(-10,10),tx:54,ty:64,t:0});
+  sfxCoin();
+  if(!fromBomb){ flash(CALLOUTS[Math.floor(Math.random()*CALLOUTS.length)], f.x, f.y-12, f.type==='boss'?'#ffd76b':'#9fe6ff'); sfxSizzle(); }
+  const puffs=f.type==='boss'?16:9;
+  for(let s=0;s<puffs;s++) steams.push({x:f.x+rand(-12,12),y:f.y+rand(-8,8),r:rand(6,14),life:0.7,vy:rand(-40,-90)});
+  rings.push({x:f.x,y:f.y,r:Math.max(10,f.size*0.5),max:f.size*1.9+22,life:0.4});   // satisfying douse burst
+  if(!fromBomb) shake=Math.max(shake, Math.min(5, f.size*0.09));
+  if(f.type==='boss'){ bossAlive=false; shake=15; hitStop=0.18; flashFx=Math.max(flashFx,0.55); sfxBoss(); buzz([40,60,40]); spawnConfetti(f.x,f.y,f.king?46:32);
+    rings.push({x:f.x,y:f.y,r:24,max:f.king?320:240,life:0.55}); shockwaves.push({x:f.x,y:f.y,r:20,maxR:f.king?300:230});   // epic burst + douse-wave
+    if(f.king){ toast('👑 FIRE KING DEFEATED!','you saved the world! 🎉 +45 🪙','#ffd76b'); for(let q=0;q<30;q++) coinFx.push({x:f.x+rand(-30,30),y:f.y+rand(-20,20),tx:54,ty:64,t:0}); }
+    else toast('💦 BOSS DOWN!','+'+got+' coins','#ffd76b'); }
+  if(f.type==='golden'){ toast('💰 JACKPOT!','+'+got+' 🪙','#ffd76b'); spawnConfetti(f.x,f.y,18); buzz(40); shake=Math.max(shake,7); statAdd('golden',1); }
+}
+
+function collect(p){
+  sfxPickup(); qprog('pickup',1);
+  if(p.type==='water'){ water=maxWater; flash('WATER FULL!',hero.x,hero.y-30,'#7fe0ff'); }
+  else if(p.type==='speed'){ hero.boost=5; toast('⚡ SPEED BOOST!','','#ffe66b'); }
+  else if(p.type==='bomb'){ bombs++; updateBombBtn(); toast('🌫️ +1 SMOKE','tap top button','#b9c6d6'); }
+  else if(p.type==='freeze'){ freezeT=4.5; toast('❄️ FREEZE!','fires chilled','#bfeaff'); }
+  else if(p.type==='frenzy'){ frenzyT=5; toast('🌈 FRENZY!','unlimited water!','#ff8af0'); shake=6; }
+  else if(p.type==='rain'){ raincloud={ x:p.x, y:Math.min(p.y,H*0.5), vx:(Math.random()<0.5?-1:1)*rand(40,70), t:7 }; toast('⛈️ RAIN CLOUD!','it douses fires below it!','#bfe3ff'); }
+  else if(p.type==='shield'){ hero.shieldT=6; toast('🛡️ SHIELD!','immune to fire for 6s','#bfe3ff'); buzz(20); }
+  else if(p.type==='pressure'){ pressT=6; toast('💪 HIGH PRESSURE!','full-power wide spray for 6s','#bfe3ff'); buzz(20); }
+  else if(p.type==='vortex'){ vortex={ x:p.x, y:p.y, t:4.5, r:135, a:0 }; toast('🌀 VORTEX!','sucks fires in & douses them!','#9fd0ff'); buzz(20); }
+}
+function flash(text,x,y,color){ floats.push({text,x,y,color,life:0.9}); }
+function spawnConfetti(x,y,n){ for(let i=0;i<n;i++){ const a=Math.random()*6.28, sp=rand(120,360);
+  confetti.push({x,y,vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-rand(80,220), life:rand(0.8,1.5), col:'hsl('+Math.floor(Math.random()*360)+',90%,62%)', s:rand(3,6), rot:Math.random()*6, spin:rand(-9,9)}); } }
+function toast(text,sub,color){ toasts.push({text,sub,color,life:1.6}); }
+
+//---------------- Render ----------------------------------------
+function draw(){
+  ctx.save();
+  if(shake>0) ctx.translate(rand(-shake,shake), rand(-shake,shake));
+
+  drawWorld();
+  // bomb decals — a wet mark left on the ground that fades
+  for(const d of decals){ const a=Math.max(0,1-d.t/d.life)*0.45;
+    const g=ctx.createRadialGradient(d.x,d.y,d.r*0.2,d.x,d.y,d.r); g.addColorStop(0,'rgba(70,140,175,'+a+')'); g.addColorStop(1,'rgba(40,90,120,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,7); ctx.fill(); }
+
+  // dust-storm streaks blowing across (Mars)
+  if(gustWind){ const dir=Math.sign(gustWind); ctx.strokeStyle='rgba(220,160,90,0.28)'; ctx.lineWidth=2;
+    for(let i=0;i<26;i++){ const dy=20+(i*137%(H-40)), dx=(i*89 + gameTime*Math.abs(gustWind)*2.2)%(W+60)-30;
+      ctx.beginPath(); ctx.moveTo(dx,dy); ctx.lineTo(dx+dir*16,dy); ctx.stroke(); } }
+
+  // freeze tint
+  if(freezeT>0){ ctx.fillStyle='rgba(150,210,255,'+(0.10+0.05*Math.sin(gameTime*8))+')'; ctx.fillRect(0,0,W,H); }
+
+  for(const p of pickups){
+    const by=p.y+Math.sin(p.bob)*4, fade=p.life<2?p.life/2:1;
+    ctx.globalAlpha=fade;
+    ctx.beginPath(); ctx.arc(p.x,by,p.r+4,0,7); ctx.fillStyle='rgba(255,255,255,.15)'; ctx.fill();
+    ctx.font='26px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(p.type==='water'?'💧':p.type==='speed'?'⚡':p.type==='bomb'?'🌫️':p.type==='freeze'?'❄️':p.type==='rain'?'⛈️':p.type==='shield'?'🛡️':p.type==='pressure'?'💪':p.type==='vortex'?'🌀':'🌈', p.x, by+1);
+    ctx.globalAlpha=1;
+  }
+
+  for(const f of fires) drawFire(f);
+  for(const e of enemies) drawArsonist(e);
+  for(const m of molotovs) drawMolotov(m);
+  for(const b of fireballs) drawFireball(b);
+
+  for(const d of drops){
+    ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,7);
+    ctx.fillStyle = d.hue>=0 ? 'hsl('+d.hue+',100%,70%)' : 'rgba(150,225,255,0.9)'; ctx.fill();
+  }
+  for(const s of steams){ ctx.globalAlpha=Math.max(0,s.life*0.8); ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,7); ctx.fillStyle='rgba(235,245,255,0.8)'; ctx.fill(); }
+  for(const r of rings){ ctx.globalAlpha=Math.max(0,r.life*1.7); ctx.strokeStyle='rgba(180,235,255,0.9)'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(r.x,r.y,r.r,0,7); ctx.stroke(); }
+  ctx.globalAlpha=1;
+  for(const sw of shockwaves){ const a=Math.max(0,1-sw.r/sw.maxR);   // expanding splash-bomb ring
+    ctx.strokeStyle='rgba(140,225,255,'+(0.45+0.45*a)+')'; ctx.lineWidth=6*a+3; ctx.beginPath(); ctx.arc(sw.x,sw.y,sw.r,0,7); ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,'+(0.35*a)+')'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(sw.x,sw.y,sw.r*0.82,0,7); ctx.stroke(); }
+  ctx.globalAlpha=1;
+  ctx.globalAlpha=1;
+
+  for(const s of smokes){ const fade=Math.max(0, Math.min(1, Math.min((10-s.t)/0.35, s.t/2)));   // fade in fast, fade out over last 2s
+    ctx.save(); ctx.translate(s.x,s.y);
+    ctx.strokeStyle='rgba(150,165,180,'+(0.4*fade)+')'; ctx.lineWidth=2; ctx.setLineDash([9,7]); ctx.beginPath(); ctx.arc(0,0,s.r,0,7); ctx.stroke(); ctx.setLineDash([]);
+    for(let k=0;k<15;k++){ const a=gameTime*0.6+k*(6.283/15), rad=s.r*(0.32+0.55*((k*7%10)/10)); const px=Math.cos(a)*rad, py=Math.sin(a)*rad*0.72, pr=14+8*Math.sin(gameTime*1.5+k*1.7);
+      ctx.globalAlpha=0.17*fade; ctx.fillStyle=k%2?'#c3ccd6':'#98a4b1'; ctx.beginPath(); ctx.arc(px,py,pr,0,7); ctx.fill(); }
+    ctx.globalAlpha=1; ctx.restore();
+  }
+  if(raincloud) drawRainCloud();
+  if(vortex){ const v=vortex, a=Math.min(1, v.t<1?v.t:1);   // swirling whirlpool
+    ctx.save(); ctx.translate(v.x,v.y); ctx.globalAlpha=a;
+    for(let i=0;i<3;i++){ ctx.strokeStyle='rgba(120,200,255,'+(0.5-i*0.12)+')'; ctx.lineWidth=3;
+      ctx.beginPath(); for(let k=0;k<28;k++){ const ang=v.a*(1+i*0.3)+k*0.5, rr=v.r*(0.15+k/40); const px=Math.cos(ang)*rr, py=Math.sin(ang)*rr*0.9; k?ctx.lineTo(px,py):ctx.moveTo(px,py); } ctx.stroke(); }
+    ctx.globalAlpha=1; ctx.restore(); }
+
+  // dash afterimage trail
+  for(const t of hero.trail){ ctx.globalAlpha=Math.max(0,t.life/0.3)*0.45; ctx.fillStyle='#9fe6ff';
+    ctx.beginPath(); ctx.arc(t.x,t.y,hero.r*0.75,0,7); ctx.fill(); }
+  ctx.globalAlpha=1;
+
+  // lock-on reticle on your current spray target
+  if(hero.spraying && aimLock.on){
+    const rx=aimLock.x, ry=aimLock.y, s=15+Math.sin(gameTime*12)*2;
+    ctx.strokeStyle='rgba(150,225,255,0.9)'; ctx.lineWidth=2.5;
+    for(const sx of [-1,1]) for(const sy of [-1,1]){
+      ctx.beginPath();
+      ctx.moveTo(rx+sx*s, ry+sy*s-sy*7); ctx.lineTo(rx+sx*s, ry+sy*s); ctx.lineTo(rx+sx*s-sx*7, ry+sy*s);
+      ctx.stroke();
+    }
+  }
+
+  drawHero();
+
+  // sprinkler drones orbiting the hero
+  for(let k=0;k<hero.drones;k++){
+    const ang=gameTime*2 + k*(6.283/Math.max(1,hero.drones));
+    const ox=hero.x+Math.cos(ang)*44, oy=hero.y+Math.sin(ang)*44;
+    ctx.beginPath(); ctx.arc(ox,oy,7,0,7); ctx.fillStyle='#cfeefc'; ctx.fill();
+    ctx.lineWidth=2; ctx.strokeStyle='#2aa3ff'; ctx.stroke();
+    ctx.fillStyle='#2aa3ff'; ctx.beginPath(); ctx.arc(ox,oy,2.5,0,7); ctx.fill();
+  }
+
+  if(truck) drawTruck(truck);
+
+  // coin fx
+  ctx.font='16px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(const c of coinFx){ ctx.globalAlpha=Math.max(0,1-c.t); ctx.fillText('🪙',c.x,c.y); }
+  ctx.globalAlpha=1;
+
+  // floats
+  for(const fl of floats){ ctx.globalAlpha=Math.max(0,fl.life); ctx.font='900 20px -apple-system,sans-serif'; ctx.fillStyle=fl.color; ctx.fillText(fl.text,fl.x,fl.y); }
+  ctx.globalAlpha=1;
+
+  // confetti
+  for(const c of confetti){ ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.rot); ctx.globalAlpha=Math.min(1,c.life); ctx.fillStyle=c.col; ctx.fillRect(-c.s/2,-c.s/2,c.s,c.s*0.6); ctx.restore(); }
+  ctx.globalAlpha=1;
+
+  // TIDAL WAVE sweep
+  if(tidalT>0){
+    const p=1-tidalT/0.7, wx=p*(W+260)-130;
+    ctx.save();
+    const grd=ctx.createLinearGradient(wx-180,0,wx,0);
+    grd.addColorStop(0,'rgba(120,220,255,0)'); grd.addColorStop(0.7,'rgba(70,170,255,0.55)'); grd.addColorStop(1,'rgba(150,235,255,0.85)');
+    ctx.fillStyle=grd; ctx.fillRect(wx-180,0,180,H);
+    ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.fillRect(wx-8,0,10,H);
+    for(let i=0;i<26;i++){ const fy=(i*53)%H; ctx.beginPath();
+      ctx.arc(wx-14+Math.sin(i*1.7+gameTime*12)*22, fy, 6+(i%3)*5, 0, 7); ctx.fillStyle='rgba(235,250,255,0.55)'; ctx.fill(); }
+    ctx.restore();
+  }
+
+  // control hints
+  if(hasTouch && gameTime<7){
+    const a=gameTime<5?0.5:0.5*(7-gameTime)/2;
+    ctx.globalAlpha=a; ctx.fillStyle='#eaf6ff'; ctx.font='800 16px -apple-system,sans-serif'; ctx.textBaseline='bottom';
+    ctx.textAlign='center'; ctx.fillText('DRAG ANYWHERE TO MOVE — YOU AUTO-FIRE 💦',W/2,H-90);
+    ctx.textAlign='center'; ctx.fillText('DOUBLE-TAP TO DASH 💨',W/2,H-66);
+    ctx.globalAlpha=1;
+  }
+
+  // toasts (center)
+  for(let i=0;i<toasts.length;i++){
+    const t=toasts[i], k=Math.min(1,t.life), pop=t.life>1.4?(1.6-t.life)/0.2:1;
+    ctx.globalAlpha=k; ctx.textAlign='center'; ctx.textBaseline='middle';
+    const y=H*0.30 + i*46, sc=0.8+0.2*pop;
+    ctx.save(); ctx.translate(W/2,y); ctx.scale(sc,sc);
+    ctx.font='900 34px -apple-system,sans-serif'; ctx.fillStyle=t.color;
+    ctx.shadowColor='rgba(0,0,0,.5)'; ctx.shadowBlur=8; ctx.fillText(t.text,0,0); ctx.shadowBlur=0;
+    if(t.sub){ ctx.font='800 15px -apple-system,sans-serif'; ctx.fillStyle='#eaf6ff'; ctx.fillText(t.sub,0,26); }
+    ctx.restore();
+  }
+  ctx.globalAlpha=1;
+
+  // joystick
+  if(move.active){
+    ctx.beginPath(); ctx.arc(move.baseX,move.baseY,60,0,7); ctx.fillStyle='rgba(255,255,255,0.08)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(move.baseX+move.dx*60,move.baseY+move.dy*60,26,0,7); ctx.fillStyle='rgba(255,255,255,0.22)'; ctx.fill();
+  }
+
+  // desktop aiming reticle — shows where the hose is pointed (brightens while spraying)
+  if(desktopAim){
+    const rx=aimPos.x, ry=aimPos.y, on=hero.spraying, col=on?'rgba(150,225,255,0.95)':'rgba(180,235,255,0.5)';
+    ctx.strokeStyle=col; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(rx,ry,on?13:11,0,7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(rx-17,ry); ctx.lineTo(rx-6,ry); ctx.moveTo(rx+6,ry); ctx.lineTo(rx+17,ry);
+    ctx.moveTo(rx,ry-17); ctx.lineTo(rx,ry-6); ctx.moveTo(rx,ry+6); ctx.lineTo(rx,ry+17); ctx.stroke();
+    ctx.fillStyle=col; ctx.beginPath(); ctx.arc(rx,ry,1.8,0,7); ctx.fill();
+  }
+
+  ctx.restore();
+
+  // XP bar across the very top
+  const xpW=W-24, xpFrac=Math.max(0,Math.min(1,xp/xpNext));
+  ctx.fillStyle='rgba(255,255,255,0.14)'; ctx.fillRect(12,4,xpW,5);
+  ctx.fillStyle='#ffd76b'; ctx.fillRect(12,4,xpW*xpFrac,5);
+
+  // danger vignette (drawn unshaken)
+  const lowHP = health < maxHealth*0.3;   // relative — works with Tough Skin (maxHealth can be 300+)
+  const dv=Math.max(dangerPulse, lowHP?(0.4+0.25*Math.sin(gameTime*9)):0);
+  if(dv>0.02){ const rg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.3,W/2,H/2,Math.max(W,H)*0.7);
+    rg.addColorStop(0,'rgba(255,40,20,0)'); rg.addColorStop(1,'rgba(255,30,10,'+Math.min(0.55,dv)+')');
+    ctx.fillStyle=rg; ctx.fillRect(0,0,W,H); }
+  if(health < maxHealth*0.25){   // explicit warning so you know to retreat/heal/extract
+    const a=0.55+0.45*Math.sin(gameTime*9);
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='900 19px -apple-system,sans-serif';
+    ctx.fillStyle='rgba(255,90,70,'+a+')'; ctx.shadowColor='rgba(0,0,0,.55)'; ctx.shadowBlur=6;
+    ctx.fillText('⚠️ LOW HEALTH', W/2, H-(hasTouch?150:60)); ctx.shadowBlur=0;
+  }
+  // frenzy rainbow border
+  if(frenzyT>0){ ctx.lineWidth=8; ctx.strokeStyle='hsl('+((gameTime*300)%360)+',100%,65%)'; ctx.strokeRect(4,4,W-8,H-8); }
+
+  // ultimate screen-flash
+  if(flashFx>0){ ctx.fillStyle='rgba(180,235,255,'+Math.min(0.6,flashFx)+')'; ctx.fillRect(0,0,W,H); }
+
+  // EMBER STORM banner + countdown
+  if(eventT>0){
+    const a=0.55+0.45*Math.sin(gameTime*8);
+    ctx.fillStyle='rgba(255,60,20,'+(0.14*a)+')'; ctx.fillRect(0,0,W,72);
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font='900 20px -apple-system,sans-serif'; ctx.fillStyle='rgba(255,150,70,'+a+')';
+    ctx.shadowColor='rgba(0,0,0,.55)'; ctx.shadowBlur=6;
+    ctx.fillText('🌪️ EMBER STORM · '+Math.ceil(eventT)+'s', W/2, Math.round(H*0.14));
+    ctx.shadowBlur=0;
+  }
+
+  drawJourney();
+  if(storyCard) drawStoryCard();
+}
+
+function drawJourney(){
+  const pl=PLANETS[Math.min(planet,PLANETS.length-1)], n=PLANETS.length, gap=18, x0=W/2-(n-1)*gap/2, y=H-(hasTouch?118:34);
+  ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+  ctx.globalAlpha=0.92; ctx.fillStyle='#9fe6ff'; ctx.font='800 12px -apple-system,sans-serif';
+  ctx.fillText(pl.emoji+' '+pl.name.toUpperCase()+(rebirthLvl>0?'  ·  ♻️'+rebirthLvl:''), W/2, y-9);
+  for(let i=0;i<n;i++){ ctx.beginPath(); ctx.arc(x0+i*gap,y,4,0,7);
+    ctx.fillStyle = i<planet?'#7fe0ff' : i===planet?'#fff' : 'rgba(255,255,255,0.22)'; ctx.fill(); }
+  // active planet hazard label (brightens when a gust/flare is firing)
+  const hz=HAZARDS[Math.min(zoneIndex,4)];
+  if(hz){ const hot=(zoneIndex===2&&gustDur>0)||(zoneIndex===4&&flareT>10.5);
+    ctx.globalAlpha=hot?(0.65+0.35*Math.sin(gameTime*9)):0.55; ctx.fillStyle=ZONES[zoneIndex].accent||'#ffce6b';
+    ctx.font='800 10px -apple-system,sans-serif'; ctx.fillText(hz, W/2, y-23); }
+  ctx.globalAlpha=1;
+}
+function drawStoryCard(){
+  const sc=storyCard, dur=sc.dur, k=sc.t;
+  let a=1; if(k<0.4) a=k/0.4; else if(k>dur-0.7) a=Math.max(0,(dur-k)/0.7);
+  const pw=Math.min(W-36,440), ph=118, px=W/2-pw/2, py=H*0.30;
+  ctx.globalAlpha=a*0.86; ctx.fillStyle='rgba(6,16,26,1)';
+  if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(px,py,pw,ph,18); ctx.fill(); } else ctx.fillRect(px,py,pw,ph);
+  ctx.globalAlpha=a;
+  ctx.strokeStyle=sc.accent||'#8fe1ff'; ctx.lineWidth=2;
+  if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(px,py,pw,ph,18); ctx.stroke(); }
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle='#cfe7ff'; ctx.font='800 13px -apple-system,sans-serif'; ctx.fillText('★  NOW ENTERING  ★', W/2, py+24);
+  ctx.fillStyle=sc.accent||'#8fe1ff'; ctx.font='900 30px -apple-system,sans-serif'; ctx.fillText(sc.name, W/2, py+54);
+  ctx.fillStyle='#eaf6ff'; ctx.font='600 14px -apple-system,sans-serif'; wrapText(sc.tag, W/2, py+86, pw-44, 18);
+  ctx.globalAlpha=1;
+}
+function wrapText(t,cx,y,maxW,lh){
+  const words=t.split(' '); let line='', yy=y;
+  for(const w of words){ const test=line?line+' '+w:w;
+    if(ctx.measureText(test).width>maxW && line){ ctx.fillText(line,cx,yy); line=w; yy+=lh; } else line=test; }
+  ctx.fillText(line,cx,yy);
+}
+
+function drawWorld(){
+  const z=ZONES[zoneIndex];
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,z.sky[0]); g.addColorStop(0.55,z.sky[1]); g.addColorStop(1,z.sky[2]);
+  ctx.fillStyle=g; ctx.fillRect(-10,-10,W+20,H+20);
+  ctx.fillStyle='rgba(255,255,255,0.03)';
+  for(let i=0;i<40;i++){ ctx.fillRect((i*97%W),120+(i*53%(H-140)),3,3); }
+  drawDeco(z.deco);
+}
+function drawDeco(kind){
+  if(kind==='town'){ drawTown(); return; }
+  ctx.save();
+  if(kind==='moon'){
+    ctx.fillStyle='rgba(255,255,255,0.75)'; for(let i=0;i<26;i++){ ctx.fillRect((i*89%W),16+(i*61%64),2,2); }   // starfield
+    ctx.fillStyle='rgba(120,170,230,0.45)'; ctx.beginPath(); ctx.arc(W-66,46,24,0,7); ctx.fill();                 // distant Earth
+    ctx.fillStyle='rgba(120,200,150,0.40)'; ctx.beginPath(); ctx.arc(W-74,42,8,0,7); ctx.fill();
+    ctx.fillStyle='#3a3d47'; let x=-10,i=0;                                                                        // cratered lunar ridge
+    while(x<W+20){ const h=20+((i*47)%18), w=80+((i*37)%50); ctx.fillRect(x,98-h,w,h+14); x+=w+((i*19)%24); i++; }
+    ctx.fillStyle='#2b2e36'; for(let c=0;c<8;c++){ const cx=24+(c*131%(W-40)); ctx.beginPath(); ctx.arc(cx,94,4+(c*7%7),0,7); ctx.fill(); }
+  } else if(kind==='mars'){
+    ctx.fillStyle='#6a2a18'; let x=-10,i=0;                                                                        // red rock mesas
+    while(x<W+20){ const h=26+((i*47)%32), w=84+((i*37)%50); ctx.fillRect(x,98-h,w,h+16); x+=w+((i*19)%26); i++; }
+    ctx.fillStyle='#803722'; for(let r=0;r<6;r++){ const rx=20+(r*151%(W-50)); ctx.fillRect(rx,90,30+(r*9%22),7); }
+    ctx.fillStyle='#451a0e'; for(let b=0;b<8;b++){ const bx=(b*113%W); ctx.beginPath(); ctx.arc(bx,101,5+(b*5%6),0,7); ctx.fill(); }
+  } else if(kind==='jupiter'){
+    const bands=['rgba(216,180,135,0.5)','rgba(154,106,62,0.5)','rgba(232,207,166,0.45)','rgba(168,122,74,0.5)'];  // swirling cloud bands
+    for(let b=0;b<7;b++){ ctx.fillStyle=bands[b%bands.length]; const by=22+b*15;
+      ctx.beginPath(); ctx.moveTo(-10,by);
+      for(let xx=-10;xx<=W+20;xx+=24) ctx.lineTo(xx, by+Math.sin(xx*0.018+gameTime*0.4+b)*4);
+      for(let xx=W+20;xx>=-10;xx-=24) ctx.lineTo(xx, by+11+Math.sin(xx*0.018+gameTime*0.4+b)*4);
+      ctx.closePath(); ctx.fill(); }
+    ctx.fillStyle='rgba(200,70,40,0.5)'; ctx.beginPath(); ctx.ellipse(W*0.68,68,30,15,0,0,7); ctx.fill();           // Great Red Spot
+  } else if(kind==='lava'){
+    ctx.fillStyle='#1a0606'; ctx.fillRect(-10,60,W+20,48);
+    ctx.strokeStyle='rgba(255,90,30,0.55)'; ctx.lineWidth=3;
+    for(let i=0;i<6;i++){ const lx=i*(W/6)+20; ctx.beginPath(); ctx.moveTo(lx,70); ctx.lineTo(lx+18,86); ctx.lineTo(lx+6,102); ctx.stroke(); }
+    for(let i=0;i<8;i++){ const bx=(i*101%W), by=74+(i*29%26)+Math.sin(gameTime*3+i)*3;
+      ctx.fillStyle='rgba(255,120,30,'+(0.4+0.3*Math.sin(gameTime*4+i))+')'; ctx.beginPath(); ctx.arc(bx,by,4,0,7); ctx.fill(); }
+  }
+  ctx.restore();
+}
+function drawRainCloud(){
+  const rc=raincloud, a=Math.min(1, rc.t<1?rc.t:1);
+  ctx.globalAlpha=a;
+  ctx.fillStyle='#5b6b80';
+  for(const o of [[-24,2,20],[0,-6,24],[24,2,20],[0,8,18]]){ ctx.beginPath(); ctx.arc(rc.x+o[0],rc.y+o[1],o[2],0,7); ctx.fill(); }
+  ctx.strokeStyle='rgba(150,210,255,0.7)'; ctx.lineWidth=2;
+  for(let i=0;i<12;i++){ const rx=rc.x-40+((i*9+gameTime*240)%80), ry=rc.y+20+((i*17+gameTime*320)%80);
+    ctx.beginPath(); ctx.moveTo(rx,ry); ctx.lineTo(rx-2,ry+8); ctx.stroke(); }
+  ctx.globalAlpha=1;
+}
+function drawTown(){
+  ctx.save();
+  const colors=['#15324a','#173a55','#12405e']; let x=-10,i=0;
+  while(x<W+20){ const w=40+((i*37)%40), h=34+((i*53)%36);
+    ctx.fillStyle=colors[i%3]; ctx.fillRect(x,60+(70-h),w,h+30);
+    ctx.fillStyle='rgba(255,220,120,0.18)';
+    for(let wy=70-h+8; wy<78; wy+=14) for(let wx=x+6; wx<x+w-8; wx+=14) ctx.fillRect(wx,wy,6,7);
+    x+=w+10+((i*13)%10); i++; }
+  ctx.restore();
+}
+
+function drawFire(f){
+  const s=f.size*(0.6+0.4*Math.max(0,Math.min(1,f.hp/f.hpMax))), flick=Math.sin(f.flick)*0.12+1;   // weakens visually as HP drops
+  ctx.save(); ctx.translate(f.x,f.y);
+  // runner legs
+  if(f.type==='runner'||f.type==='chaser'||f.type==='golden'){ ctx.strokeStyle='#7a2e10'; ctx.lineWidth=3; ctx.lineCap='round';
+    const sw=Math.sin(f.legs)*5;
+    ctx.beginPath(); ctx.moveTo(-s*0.3,s*0.5); ctx.lineTo(-s*0.3+sw,s*0.9);
+    ctx.moveTo(s*0.3,s*0.5); ctx.lineTo(s*0.3-sw,s*0.9); ctx.stroke(); }
+  // glow
+  const col0 = f.type==='fast'?'rgba(80,160,255,0.35)':f.type==='spitter'?'rgba(170,70,255,0.38)':f.type==='chaser'?'rgba(255,60,120,0.42)':f.type==='armored'?'rgba(150,150,170,0.4)':f.type==='golden'?'rgba(255,210,80,0.55)':'rgba(255,160,40,0.35)';
+  const gl=ctx.createRadialGradient(0,0,2,0,0,s*2.2);
+  gl.addColorStop(0,col0); gl.addColorStop(1,'rgba(255,80,0,0)');
+  ctx.fillStyle=gl; ctx.beginPath(); ctx.arc(0,0,s*2.2,0,7); ctx.fill();
+  const pal = f.type==='fast' ? ['#2979ff','#42c5ff','#bdf0ff']
+            : f.type==='spitter' ? ['#7b2ff7','#b15cff','#e6c2ff']
+            : f.type==='chaser' ? ['#ff2d6f','#ff7a3d','#ffd24d']
+            : f.type==='armored' ? ['#b03a10','#e06a2a','#ffb24d']
+            : f.type==='golden' ? ['#ffb300','#ffd54a','#fff3b0']
+            : ['#ff5722','#ff9800','#ffeb3b'];
+  function flame(scale,col){ ctx.fillStyle=col; ctx.beginPath();
+    const h=s*1.9*scale*flick, w=s*1.1*scale;
+    ctx.moveTo(0,s*0.6);
+    ctx.quadraticCurveTo(-w,-s*0.2,-w*0.3,-h*0.55);
+    ctx.quadraticCurveTo(-w*0.1,-h*0.85,0,-h);
+    ctx.quadraticCurveTo(w*0.1,-h*0.85,w*0.3,-h*0.55);
+    ctx.quadraticCurveTo(w,-s*0.2,0,s*0.6); ctx.fill(); }
+  flame(1.0,pal[0]); flame(0.7,pal[1]); flame(0.4,pal[2]);
+  // face
+  drawFaceFire(f,s);
+  // armored fire: a steel band with rivets so it reads as "needs sustained spray"
+  if(f.type==='armored'){ ctx.strokeStyle='#7a808c'; ctx.lineWidth=Math.max(3,s*0.16); ctx.lineCap='round';
+    ctx.beginPath(); ctx.arc(0,s*0.15,s*0.9,0.12*Math.PI,0.88*Math.PI); ctx.stroke();
+    ctx.fillStyle='#b8bec8'; for(let k=0;k<4;k++){ const a=(0.2+k*0.2)*Math.PI; ctx.beginPath(); ctx.arc(Math.cos(a)*s*0.9, s*0.15+Math.sin(a)*s*0.9, Math.max(2,s*0.06),0,7); ctx.fill(); } }
+  // golden fire: orbiting sparkles + a depleting "catch me!" timer ring (turns red & flashes when escaping)
+  if(f.type==='golden'){ for(let k=0;k<5;k++){ const a=gameTime*4+k*1.257; ctx.fillStyle='rgba(255,250,205,'+(0.45+0.5*Math.sin(gameTime*8+k))+')';
+      ctx.beginPath(); ctx.arc(Math.cos(a)*s*1.5, Math.sin(a)*s*1.5-s*0.3, 2.6,0,7); ctx.fill(); }
+    const lf=Math.max(0,Math.min(1,(f.life||8)/8));
+    ctx.strokeStyle = f.life<3 ? ('rgba(255,90,60,'+(0.6+0.4*Math.sin(gameTime*14))+')') : 'rgba(255,235,150,0.85)';
+    ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,-s*0.2, s*1.8, -Math.PI/2, -Math.PI/2 + lf*6.283); ctx.stroke(); }
+  // spit telegraph — flashing aim line + bright core so you can dodge in time
+  if(f.charge>0){
+    const dx=hero.x-f.x, dy=hero.y-f.y, dl=Math.hypot(dx,dy)||1, oy=-s*0.4;
+    ctx.strokeStyle='rgba(255,70,30,'+(0.35+0.45*Math.sin(gameTime*30))+')'; ctx.lineWidth=2.5; ctx.setLineDash([5,5]);
+    ctx.beginPath(); ctx.moveTo(0,oy); ctx.lineTo(dx/dl*70, oy+dy/dl*70); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(0,oy, 4+(1-f.charge/0.45)*6, 0,7); ctx.fill();
+  }
+  // boss health bar — real HP so it actually depletes as you soak it (was size-based, barely moved)
+  if(f.type==='boss'){ const w=110,hp=Math.max(0,f.hp/f.hpMax);
+    ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(-w/2,-s*1.9-16,w,8);
+    ctx.fillStyle = hp>0.5?'#ff8a4d':hp>0.25?'#ff5b5b':'#ff2d55'; ctx.fillRect(-w/2,-s*1.9-16,w*hp,8);
+    ctx.strokeStyle='rgba(255,255,255,.3)'; ctx.lineWidth=1; ctx.strokeRect(-w/2,-s*1.9-16,w,8); }
+  // health bar for big / tough fires so you can see your dousing progress
+  else if(f.hp < f.hpMax-0.5 && f.type!=='golden'){   // depleting HEALTH bar — shows once you start dousing it
+    const hp=Math.max(0,f.hp/f.hpMax), w=Math.min(72, Math.max(30, f.size*1.6)), by=-s*1.9-12;
+    ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(-w/2,by,w,5);
+    ctx.fillStyle = f.type==='armored'?'#9fb0c0':(hp>0.5?'#ffd24d':hp>0.25?'#ff8a4d':'#ff5b5b'); ctx.fillRect(-w/2,by,w*hp,5);
+    ctx.strokeStyle='rgba(255,255,255,.25)'; ctx.lineWidth=1; ctx.strokeRect(-w/2,by,w,5); }
+  ctx.restore();
+}
+function drawFaceFire(f,s){
+  const ex=s*0.32, ey=-s*0.25, er=s*0.20;
+  // look toward hero
+  let lx=hero.x-f.x, ly=hero.y-f.y; const ll=Math.hypot(lx,ly)||1; lx/=ll; ly/=ll;
+  const low=f.size<f.max*0.45;
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(-ex,ey,er,0,7); ctx.arc(ex,ey,er,0,7); ctx.fill();
+  ctx.fillStyle='#222';
+  ctx.beginPath(); ctx.arc(-ex+lx*er*0.4,ey+ly*er*0.4,er*0.5,0,7); ctx.arc(ex+lx*er*0.4,ey+ly*er*0.4,er*0.5,0,7); ctx.fill();
+  // angry brows (not when low/scared)
+  if(!low){ ctx.strokeStyle='#7a2e10'; ctx.lineWidth=Math.max(2,s*0.08); ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(-ex-er,ey-er*1.1); ctx.lineTo(-ex+er*0.5,ey-er*0.4);
+    ctx.moveTo(ex+er,ey-er*1.1); ctx.lineTo(ex-er*0.5,ey-er*0.4); ctx.stroke(); }
+  // mouth
+  ctx.fillStyle='#3a1405';
+  if(low){ ctx.beginPath(); ctx.arc(0,s*0.05,s*0.13,0,7); ctx.fill(); }   // scared "o"
+  else { ctx.beginPath(); ctx.moveTo(-s*0.18,s*0.12); ctx.quadraticCurveTo(0,-s*0.02,s*0.18,s*0.12); ctx.quadraticCurveTo(0,s*0.22,-s*0.18,s*0.12); ctx.fill(); }
+}
+
+function drawHero(){
+  const x=hero.x,y=hero.y,r=hero.r, ang=Math.atan2(hero.aimY,hero.aimX);
+  const sk=curSkin();
+  const accent=sk.accent||'#fff2c4', emblem=sk.emblem||'', flair=sk.flair||'', skinTone=sk.skin||'#ffe0b3', masked=!!sk.masked;
+  const moving = move.active || keys['w']||keys['a']||keys['s']||keys['d']||keys['arrowup']||keys['arrowdown']||keys['arrowleft']||keys['arrowright'];
+  const bob = moving ? Math.sin(gameTime*14)*1.3 : Math.sin(gameTime*3)*0.7;   // walk bounce / idle breathe
+  const blink = (gameTime % 3.4) < 0.11;
+  ctx.save(); ctx.translate(x,y);
+  ctx.fillStyle='rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.ellipse(0,r*0.9,r*0.9,r*0.4,0,0,7); ctx.fill();
+  if(hero.boost>0){ ctx.strokeStyle='rgba(255,230,107,0.7)'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,0,r+6,0,7); ctx.stroke(); }
+  if(hero.dashT>0){ ctx.strokeStyle='rgba(180,240,255,0.9)'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,0,r+4,0,7); ctx.stroke(); }   // i-frame glow
+  else if(hero.dashCd>0){ ctx.strokeStyle='rgba(159,230,255,0.55)'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(0,0,r+9,-Math.PI/2,-Math.PI/2+(1-hero.dashCd/1.1)*Math.PI*2); ctx.stroke(); }
+  if(hero.shieldT>0){ const sa=0.3+0.15*Math.sin(gameTime*8); ctx.globalAlpha=sa; ctx.fillStyle='rgba(150,210,255,0.4)'; ctx.beginPath(); ctx.arc(0,0,r+11,0,7); ctx.fill(); ctx.globalAlpha=Math.min(1,sa+0.4); ctx.strokeStyle='#bfe3ff'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(0,0,r+11,0,7); ctx.stroke(); ctx.globalAlpha=1; }   // shield bubble
+  if(hurtInvuln>0){ ctx.globalAlpha=Math.min(0.55,hurtInvuln*1.1); ctx.fillStyle='#ff3b3b'; ctx.beginPath(); ctx.arc(0,0,r+2,0,7); ctx.fill(); ctx.globalAlpha=1; }   // damage flash
+  if(health < maxHealth){   // floating health bar above the hero
+    const bw=46, bh=5, by=-r-18, hp=Math.max(0,health/maxHealth);
+    ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(-bw/2,by,bw,bh);
+    ctx.fillStyle = hp>0.5?'#6be86b':hp>0.25?'#ffce4a':'#ff5b5b'; ctx.fillRect(-bw/2,by,bw*hp,bh);
+    ctx.strokeStyle='rgba(255,255,255,.3)'; ctx.lineWidth=1; ctx.strokeRect(-bw/2,by,bw,bh);
+  }
+  // ---- character group (subtle walk-bounce / idle-breathe for life) ----
+  ctx.save(); ctx.translate(0, bob);
+  // flair BEHIND the body
+  if(flair==='aura'){ const ga=0.16+0.12*Math.sin(gameTime*4); ctx.globalAlpha=ga; ctx.fillStyle=accent; ctx.beginPath(); ctx.arc(0,0,r*1.28,0,7); ctx.fill(); ctx.globalAlpha=1; }
+  else if(flair==='embers'){ for(let k=0;k<4;k++){ const a=gameTime*3+k*1.6, up=((gameTime*34+k*22)%44); ctx.globalAlpha=Math.max(0,0.55-up/44); ctx.fillStyle=k%2?'#ffb24d':'#ff6a3d'; ctx.beginPath(); ctx.arc(Math.cos(a)*r*0.7, r*0.4-up*0.9, 2.3, 0,7); ctx.fill(); } ctx.globalAlpha=1; }
+  // body + outline + reflective safety stripe (accent)
+  ctx.fillStyle=sk.body; ctx.beginPath(); ctx.arc(0,2,r*0.85,0,7); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.16)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,2,r*0.85,0,7); ctx.stroke();
+  ctx.strokeStyle=accent; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,3,r*0.62,0.55,Math.PI-0.55); ctx.stroke();
+  // face
+  ctx.fillStyle=skinTone; ctx.beginPath(); ctx.arc(0,-r*0.7,r*0.55,0,7); ctx.fill();
+  const eyY=-r*0.72, ex=hero.aimX*2, ey=hero.aimY*2;
+  // eyes (blink) — pupils track your aim, with a lively glint
+  if(blink){ ctx.strokeStyle='#243244'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(-9,eyY); ctx.lineTo(-3,eyY); ctx.moveTo(3,eyY); ctx.lineTo(9,eyY); ctx.stroke(); }
+  else { ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(-6,eyY,4.6,0,7); ctx.arc(6,eyY,4.6,0,7); ctx.fill();
+    ctx.fillStyle='#243244'; ctx.beginPath(); ctx.arc(-6+ex,eyY+ey,2.5,0,7); ctx.arc(6+ex,eyY+ey,2.5,0,7); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.9)'; ctx.beginPath(); ctx.arc(-7+ex,eyY-1.4+ey,1,0,7); ctx.arc(5+ex,eyY-1.4+ey,1,0,7); ctx.fill(); }
+  // eyebrows convey mood
+  ctx.strokeStyle='#5a3d2b'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.beginPath();
+  if(hero.spraying){ ctx.moveTo(-10,eyY-6); ctx.lineTo(-3,eyY-3.5); ctx.moveTo(10,eyY-6); ctx.lineTo(3,eyY-3.5); }        // determined
+  else if(hero.scorch>0){ ctx.moveTo(-10,eyY-3.5); ctx.lineTo(-3,eyY-6); ctx.moveTo(10,eyY-3.5); ctx.lineTo(3,eyY-6); }   // worried
+  else { ctx.moveTo(-10.5,eyY-6.5); ctx.lineTo(-3,eyY-6.5); ctx.moveTo(3,eyY-6.5); ctx.lineTo(10.5,eyY-6.5); }            // calm
+  ctx.stroke();
+  // mouth conveys mood
+  const mY=-r*0.5;
+  if(hero.spraying){ ctx.fillStyle='#7a2b2b'; ctx.beginPath(); ctx.ellipse(0,mY,3.4,4.2,0,0,7); ctx.fill(); }               // battle shout
+  else if(hero.scorch>0){ ctx.strokeStyle='#7a3b2b'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,mY+3.5,3.4,Math.PI,0); ctx.stroke(); }   // ow, frown
+  else { ctx.strokeStyle='#7a3b2b'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,mY-1,4,0.15,Math.PI-0.15); ctx.stroke(); }   // grin
+  if(masked){ ctx.fillStyle=sk.helmet; ctx.fillRect(-r*0.55,eyY-3.5,r*1.1,7.5); }   // ninja/stealth mask across the eyes
+  drawHelmet(sk, r, accent, emblem);
+  // hose points where you aim
+  ctx.rotate(ang);
+  ctx.fillStyle='#2a7fff'; ctx.fillRect(r*0.3,-6,r*1.1,12);
+  ctx.fillStyle='#1b5fd1'; ctx.fillRect(r*1.0,-9,8,18);
+  ctx.fillStyle='#9fe6ff'; ctx.fillRect(r*1.35,-5,6,10);
+  if(hero.spraying){ const sp=hero.sprayPow||1, fl=r*1.4+r*5.1*sp, hw=4+20*sp;   // cone length+width reflect spray power
+    ctx.fillStyle = frenzyT>0?'hsla('+((gameTime*300)%360)+',100%,70%,0.25)':'rgba(150,225,255,0.14)';
+    ctx.beginPath(); ctx.moveTo(r*1.4,-4); ctx.lineTo(r*1.4,4); ctx.lineTo(fl,hw); ctx.lineTo(fl,-hw); ctx.closePath(); ctx.fill(); }
+  ctx.fillStyle='#7fe0ff'; ctx.fillRect(-r*0.55,-8,10,16);   // air tank on the back
+  ctx.restore();   // end character/bob group
+  // flair FRONT: twinkling sparkles orbit the hero
+  if(flair==='sparkle'){ ctx.font='10px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    for(let k=0;k<3;k++){ const a=gameTime*2.4+k*2.1, rad=r*1.15+Math.sin(gameTime*3+k)*3, tw=0.35+0.5*Math.sin(gameTime*7+k*2);
+      ctx.globalAlpha=Math.max(0,tw); ctx.fillStyle='#eaffff'; ctx.fillText('✦', Math.cos(a)*rad, Math.sin(a)*rad-4+bob); }
+    ctx.globalAlpha=1; }
+  ctx.restore();
+  // on-fire effect when scorched
+  if(hero.scorch>0){ ctx.save(); ctx.translate(x,y);
+    for(let k=0;k<6;k++){ const a=gameTime*12+k*1.05;
+      ctx.fillStyle=k%2?'#ff9800':'#ff5722';
+      ctx.beginPath(); ctx.arc(Math.cos(a)*r*0.8, -r*0.5-(k%3)*4+Math.sin(a*2)*3, 4, 0, 7); ctx.fill(); }
+    ctx.restore(); }
+}
+// headgear — skins pick a style via sk.hat ('fireman' default | 'hood' | 'bubble'); the emblem rides on it
+function drawHelmet(sk, r, accent, emblem){
+  const hat=sk.hat||'fireman';
+  if(hat==='hood'){                                   // stealthy cloth hood (ninja / night ops)
+    ctx.fillStyle=sk.helmet;
+    ctx.beginPath(); ctx.arc(0,-r*0.72, r*0.63, Math.PI*1.06, -0.06); ctx.fill();   // cloth over the top, wrapping past the sides
+    ctx.fillStyle=accent; ctx.fillRect(-r*0.5,-r*0.9,r*1.0,2.5);                     // headband
+    if(emblem){ ctx.font=(r*0.3|0)+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(emblem,0,-r*1.04); }
+    return;
+  }
+  if(hat==='bubble'){                                 // astronaut glass bubble
+    ctx.fillStyle='rgba(185,222,255,0.13)'; ctx.beginPath(); ctx.arc(0,-r*0.72, r*0.72, 0, 7); ctx.fill();
+    ctx.strokeStyle=accent; ctx.lineWidth=3.5; ctx.beginPath(); ctx.arc(0,-r*0.72, r*0.72, 0, 7); ctx.stroke();
+    ctx.strokeStyle=sk.helmet; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,-r*0.72, r*0.72, 0.5, Math.PI-0.5); ctx.stroke();   // collar ring
+    ctx.fillStyle='rgba(255,255,255,.32)'; ctx.beginPath(); ctx.arc(-r*0.3,-r*0.98, r*0.13, 0, 7); ctx.fill();                // glass glint
+    if(emblem){ ctx.font=(r*0.26|0)+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(emblem, 0, -r*1.18); }
+    return;
+  }
+  // ---- FIREMAN HELMET (default) ----
+  const yb=-r*0.82;   // helmet base sits on the forehead
+  ctx.fillStyle=sk.helmet;
+  ctx.beginPath(); ctx.ellipse(0, yb, r*0.98, r*0.17, 0, 0, 7); ctx.fill();          // wide curved brim
+  ctx.beginPath(); ctx.arc(0, yb, r*0.6, Math.PI, 0); ctx.fill();                    // rounded dome
+  ctx.beginPath(); ctx.ellipse(0, yb-r*0.5, r*0.13, r*0.2, 0, 0, 7); ctx.fill();     // top crest / comb
+  ctx.strokeStyle='rgba(0,0,0,.14)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(0, yb, r*0.6, Math.PI, 0); ctx.stroke();
+  ctx.strokeStyle=accent; ctx.lineWidth=2.5; ctx.beginPath(); ctx.ellipse(0, yb, r*0.98, r*0.17, 0, 0.12, Math.PI-0.12); ctx.stroke();   // brim trim
+  // iconic front shield badge (carries the skin emblem)
+  const sy=yb-r*0.18;
+  ctx.fillStyle=accent;
+  ctx.beginPath(); ctx.moveTo(-r*0.17,sy-r*0.15); ctx.lineTo(r*0.17,sy-r*0.15); ctx.lineTo(r*0.15,sy+r*0.05); ctx.lineTo(0,sy+r*0.2); ctx.lineTo(-r*0.15,sy+r*0.05); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.3)'; ctx.lineWidth=1.2; ctx.stroke();
+  if(emblem){ ctx.font=(r*0.22|0)+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(emblem, 0, sy); }
+  ctx.fillStyle='rgba(255,255,255,.4)'; ctx.beginPath(); ctx.arc(-r*0.3, yb-r*0.34, r*0.1, 0, 7); ctx.fill();   // shine
+}
+
+function drawArsonist(e){
+  ctx.save(); ctx.translate(e.x,e.y);
+  ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(0,22,14,5,0,0,7); ctx.fill();
+  const sw=Math.sin(e.legs)*4;
+  ctx.strokeStyle='#1c1c28'; ctx.lineWidth=4; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-4,8); ctx.lineTo(-4+sw,20); ctx.moveTo(4,8); ctx.lineTo(4-sw,20); ctx.stroke();
+  // body (dark hoodie, reddens when soaked-hit)
+  ctx.fillStyle = e.hurt>0 ? '#7a5040' : '#39294d';
+  ctx.fillRect(-9,-7,18,16);
+  // head + hood
+  ctx.fillStyle='#ffd9b0'; ctx.beginPath(); ctx.arc(0,-13,7,0,7); ctx.fill();
+  ctx.fillStyle='#39294d'; ctx.beginPath(); ctx.arc(0,-15,8,Math.PI,0); ctx.fill();
+  ctx.fillStyle='#222'; ctx.fillRect(-4,-14,3,2); ctx.fillRect(2,-14,3,2);   // angry eyes
+  // raised arm + molotov
+  ctx.strokeStyle='#ffd9b0'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(7,-3); ctx.lineTo(14,-12); ctx.stroke();
+  ctx.fillStyle='#3aa55a'; ctx.fillRect(12,-19,5,8);
+  ctx.fillStyle='#ffedd0'; ctx.fillRect(13,-22,3,4);
+  ctx.fillStyle='#ff8a3d'; ctx.beginPath(); ctx.arc(14.5,-23,3,0,7); ctx.fill();
+  // wet meter (always visible so you can see your progress soaking him)
+  ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(-13,-31,26,5);
+  ctx.fillStyle='#7fe0ff'; ctx.fillRect(-13,-31,26*Math.min(1,e.wet),5);
+  ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=1; ctx.strokeRect(-13,-31,26,5);
+  ctx.restore();
+}
+function drawMolotov(m){
+  const arc=Math.sin(m.t*Math.PI)*130;
+  ctx.fillStyle='rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(m.x,m.y,Math.max(2,8-arc*0.04),3,0,0,7); ctx.fill();
+  ctx.save(); ctx.translate(m.x,m.y-arc); ctx.rotate(m.spin);
+  ctx.fillStyle='#3aa55a'; ctx.fillRect(-4,-7,8,14);
+  ctx.fillStyle='#ffedd0'; ctx.fillRect(-2,-11,4,5);
+  ctx.restore();
+  ctx.fillStyle='rgba(255,140,40,.95)'; ctx.beginPath(); ctx.arc(m.x,m.y-arc-10,4,0,7); ctx.fill();
+}
+function drawFireball(b){
+  const gl=ctx.createRadialGradient(b.x,b.y,1,b.x,b.y,b.r*2);
+  gl.addColorStop(0,'rgba(255,235,140,1)'); gl.addColorStop(0.5,'rgba(255,120,30,0.9)'); gl.addColorStop(1,'rgba(255,60,0,0)');
+  ctx.fillStyle=gl; ctx.beginPath(); ctx.arc(b.x,b.y,b.r*2,0,7); ctx.fill();
+  ctx.fillStyle='#ffe88a'; ctx.beginPath(); ctx.arc(b.x,b.y,b.r*0.6,0,7); ctx.fill();
+}
+
+//---------------- HUD -------------------------------------------
+function updateHUD(){
+  el('score').textContent=score;
+  el('coinsRun').textContent=fmtNum(runCoins);
+  el('level').textContent=level;
+  el('wave').textContent=wave;
+  el('best').textContent=best;
+  el('waterFill').style.width=(water/maxWater*100)+'%';
+  el('waterFill').classList.toggle('low', water>0 && water < maxWater*0.28);   // pulse orange when running dry
+  el('healthFill').style.width=(health/maxHealth*100)+'%';
+  el('hpNum').textContent=Math.max(0,Math.ceil(health))+'/'+maxHealth;
+  el('townFill').style.width=townHP+'%';
+  if(truck && truck.parked){ const bank=Math.floor((runCoins*missionRewardMult() + missionProgress*6*(planet+1))*cashMult()*rewardMult());
+    el('extractBtn').textContent='🚒 EXTRACT · bank 🪙 '+fmtNum(bank); }   // show what you'll cash out (vs risk it for more)
+  const rk=rankFor(combo);
+  el('combo').textContent = rk ? (rk.n+' ×'+(1+Math.floor(combo/3))) : '';
+  updateUltBtn();
+}
+
+//---------------- Shop ------------------------------------------
+// current stat → next-level stat for a gear upgrade (shown on each shop row)
+function gearStatLine(key,l){
+  const b=v=>'<b>'+v+'</b>', g=v=>'<b style="color:#9be86b">'+v+'</b>';
+  if(key==='tank')  return '💧 '+b(Math.round(380*Math.pow(1.12,l)))+' → '+g(Math.round(380*Math.pow(1.12,l+1)))+' max water';
+  if(key==='pump')  return '🔫 +'+b(Math.round(l*4)+'%')+' → +'+g(Math.round((l+1)*4)+'%')+' damage';
+  if(key==='width') return '💦 '+b(1+l)+' → '+g(2+l)+(2+l===1?' jet':' jets');
+  if(key==='fan'){ const d0=Math.round(2*(0.05+l*0.14)*57.2958), d1=Math.round(2*(0.05+(l+1)*0.14)*57.2958);
+    return '🌀 '+b(d0+'°')+' → '+g(d1+'°')+(d1>=360?' <span style="color:#9fd0ff">360°→2×!</span>':' fan'); }
+  if(key==='boots') return '👟 +'+b((l*1.8).toFixed(1)+'%')+' → +'+g(((l+1)*1.8).toFixed(1)+'%')+' speed';
+  if(key==='range'){ const r0=Math.round(295.8*(1+l*0.16)), r1=Math.round(295.8*(1+(l+1)*0.16));
+    return '🎯 '+b(r0>W?'wraps':(r0+'px'))+' → '+g(r1>W?'wraps 🔁':(r1+'px'))+' reach'; }
+  if(key==='smokeR')return '💨 '+b((155+l*22)+'px')+' → '+g((155+(l+1)*22)+'px')+' radius';
+  if(key==='bombs') return '🌫️ start with '+b(l)+' → '+g(l+1)+' smoke';
+  return '';
+}
+function renderShop(){
+  el('shopCoins').textContent=fmtNum(coins);
+  const jets=Math.max(1,Math.round(1+lvl('width'))), dmg=(1+lvl('pump')*0.04), tank=baseMaxWater();
+  const ramp=Math.min(1, lvl('pump')*0.02 + lvl('width')*0.05 + powerLevel()*0.008);   // fire-rate ramp (no in-run power-ups)
+  const wps=1.1*Math.sqrt(jets)/(0.052-0.036*ramp), sustain=Math.round(tank/wps);       // water/s & seconds of continuous spray
+  const fan=2*(0.05+lvl('fan')*0.14), fanDeg=Math.round(fan*57.2958), ovl=fan>6.2832?Math.min(16,Math.pow(2,Math.floor(fan/6.2832))):1;   // spray fan angle & 360° overlap bonus
+  const fanTxt = ovl>1 ? ('<b style="color:#9fd0ff">360°+ · '+ovl+'× overlap!</b>') : ('<b>'+fanDeg+'°</b> fan');
+  const reach=Math.round(870*0.34*(1+lvl('range')*0.16)), reachTxt = reach>W ? '<b style="color:#9fd0ff">wraps 🔁</b>' : ('<b>'+reach+'px</b> reach');
+  el('hosePower').innerHTML='🔫 Hose: <b>'+jets+(jets===1?' jet':' jets')+'</b> · '+fanTxt+' · '+reachTxt+' · <b>'+dmg.toFixed(2)+'×</b> dmg';
+  const wrap=el('shopList'); wrap.innerHTML='';
+  UPGRADES.forEach(u=>{
+    const l=lvl(u.key), cost=u.cost(l);
+    const row=document.createElement('div'); row.className='shopItem';
+    row.innerHTML='<div class="si-info"><div class="si-name">'+u.name+' <span class="si-lvl" style="color:#8fe1ff">Lv '+l+'</span></div>'+
+      '<div class="si-desc">'+gearStatLine(u.key,l)+'</div></div>';
+    const btn=document.createElement('button'); btn.className='buyBtn';
+    btn.textContent='🪙 '+fmtNum(cost);
+    if(coins<cost){ btn.disabled=true; btn.classList.add('cant'); }
+    btn.addEventListener('click',()=>{ if(coins>=cost){ coins-=cost; ups[u.key]=l+1; saveProgress(); sfxBuy(); renderShop(); refreshMenus(); if(tut.on && tut.phase==='gearBuy') tutAfterGear(); } });
+    row.appendChild(btn); wrap.appendChild(row);
+  });
+}
+function openShop(){ renderShop(); show('shopScreen'); if(tut.on && tut.phase==='gearOpen') tutGearBuy(); }
+
+//---------------- Flow ------------------------------------------
+//---------------- Monetization — REAL Google H5 Games Ads, with simulator fallback ----------------
+// ► GO LIVE: put your AdSense publisher id in adsensePubId ("ca-pub-…"), add ads.txt, get H5 Games
+//   Ads approved. Until then a clearly-labeled simulated ad runs. Full steps in MONETIZATION.md.
+const MONETIZE_CONFIG = {
+  adsensePubId: '',        // e.g. 'ca-pub-1234567890123456'  ← the ONLY thing needed to switch on real web ads
+  interstitialEvery: 3,    // show an interstitial every N mission-ends
+  gaMeasurementId: ''      // optional GA4 id ('G-XXXXXXX') for ad / purchase analytics
+};
+let adsReady=false;
+(function initMonetize(){
+  const pid=MONETIZE_CONFIG.adsensePubId;
+  if(pid){
+    const s=document.createElement('script'); s.async=true; s.crossOrigin='anonymous';
+    s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+encodeURIComponent(pid);
+    s.setAttribute('data-ad-client', pid); s.onload=()=>{ adsReady=true; };
+    document.head.appendChild(s);
+    window.adsbygoogle=window.adsbygoogle||[];
+    try{ window.adsbygoogle.push({ preloadAdBreaks:'on', sound:'on' }); }catch(e){}
+  }
+  const ga=MONETIZE_CONFIG.gaMeasurementId;
+  if(ga){
+    const g=document.createElement('script'); g.async=true; g.src='https://www.googletagmanager.com/gtag/js?id='+ga; document.head.appendChild(g);
+    window.dataLayer=window.dataLayer||[]; window.gtag=function(){ dataLayer.push(arguments); };
+    gtag('js', new Date()); gtag('config', ga);
+  }
+})();
+// ---- CrazyGames portal SDK (v3) — PRIMARY ad network when the game runs on CrazyGames ----
+// Off-platform (GitHub Pages, itch.io, …) getEnvironment() is 'disabled' → CG.ready stays false and
+// we fall back to the AdSense / simulator path below. Same build works everywhere, no config change.
+const CG = { ready:false, env:'disabled', sdk:null };
+(async function initCG(){
+  try{
+    for(let i=0;i<50 && !(window.CrazyGames&&window.CrazyGames.SDK); i++){ await new Promise(r=>setTimeout(r,100)); }
+    if(!(window.CrazyGames&&window.CrazyGames.SDK)) return;
+    CG.sdk=window.CrazyGames.SDK;
+    await CG.sdk.init();
+    CG.env=await CG.sdk.getEnvironment();
+    CG.ready=(CG.env==='crazygames'||CG.env==='local');   // 'local' lets you test the flow on localhost
+    if(CG.ready && CG.sdk.game && CG.sdk.game.addSettingsChangeListener){   // honor the CrazyGames player mute button
+      try{ applyCgMute(CG.sdk.game.settings && CG.sdk.game.settings.muteAudio); }catch(e){}
+      try{ CG.sdk.game.addSettingsChangeListener(s=>applyCgMute(s && s.muteAudio)); }catch(e){}
+    }
+  }catch(e){ CG.ready=false; }
+})();
+function cgPlay(on){ try{ if(CG.ready&&CG.sdk&&CG.sdk.game){ on?CG.sdk.game.gameplayStart():CG.sdk.game.gameplayStop(); } }catch(e){} }
+function adBreak(o){ window.adsbygoogle=window.adsbygoogle||[]; try{ window.adsbygoogle.push(o); }catch(e){ if(o.afterAd)o.afterAd(); } }
+function track(ev,params){ if(window.gtag){ try{ gtag('event',ev,params||{}); }catch(e){} } }
+const Monetize = {
+  get removedAds(){ return localStorage.getItem('sh_noads')==='1'; },
+  setRemovedAds(v){ localStorage.setItem('sh_noads', v?'1':'0'); },
+  deaths:0,
+  showRewarded(label,onReward){
+    if(this.removedAds){ if(onReward) onReward(); return; }
+    track('ad_rewarded_request',{label});
+    if(CG.ready){                                // CrazyGames rewarded video (primary)
+      const resume=()=>{ if(state===State.PLAY&&!paused&&!muted) startMusic(); };
+      CG.sdk.ad.requestAd('rewarded',{
+        adStarted:()=>{ stopMusic(); },
+        adFinished:()=>{ track('ad_rewarded_complete',{label}); resume(); if(onReward) onReward(); },
+        adError:()=>{ track('ad_rewarded_error',{label}); resume(); if(onReward) onReward(); }  // grant on no-fill (player-friendly)
+      });
+      return;
+    }
+    if(adsReady){
+      let granted=false;
+      adBreak({ type:'reward', name:(label||'reward'),
+        beforeReward:(show)=>{ if(show) show(); },
+        adViewed:()=>{ granted=true; track('ad_rewarded_complete',{label}); if(onReward) onReward(); },
+        adDismissed:()=>{ track('ad_rewarded_dismissed',{label}); },
+        beforeAd:()=>{ stopMusic(); }, afterAd:()=>{ if(state===State.PLAY&&!paused&&!muted) startMusic(); } });
+    } else { showAd(label,true,onReward); }     // simulator fallback (no pub id yet)
+  },
+  maybeInterstitial(onDone){
+    if(this.removedAds) return false;
+    this.deaths++;
+    if(this.deaths % MONETIZE_CONFIG.interstitialEvery !== 0) return false;
+    track('ad_interstitial',{});
+    if(CG.ready){                                // CrazyGames midgame interstitial (primary)
+      CG.sdk.ad.requestAd('midgame',{
+        adStarted:()=>{ stopMusic(); },
+        adFinished:()=>{ if(onDone) onDone(); },
+        adError:()=>{ if(onDone) onDone(); }
+      });
+      return true;
+    }
+    if(adsReady){ adBreak({ type:'next', name:'interstitial', afterAd:()=>{ if(onDone) onDone(); } }); return true; }
+    showAd('',false,onDone); return true;
+  }
+};
+let adTimer=null;
+function showAd(label, rewarded, onDone){
+  const ov=el('adOverlay'); ov.classList.remove('hidden');
+  el('adFake').textContent = rewarded ? ('🎁  '+label) : '📺  Your ad here';
+  const act=el('adAction'); act.disabled=true;
+  let n = rewarded?5:4;
+  el('adCount').textContent=(rewarded?'Reward in ':'Skip in ')+n+'s…';
+  if(adTimer) clearInterval(adTimer);
+  adTimer=setInterval(()=>{ n--;
+    if(n>0){ el('adCount').textContent=(rewarded?'Reward in ':'Skip in ')+n+'s…'; }
+    else { clearInterval(adTimer); adTimer=null; el('adCount').textContent=''; act.disabled=false; act.textContent=rewarded?('✓ CLAIM '+label):'✕ CLOSE'; }
+  },650);
+  act.onclick=()=>{ if(adTimer){ clearInterval(adTimer); adTimer=null; } ov.classList.add('hidden'); act.onclick=null; if(onDone) onDone(); };
+}
+
+//---------------- Mission rewarded actions ----------------
+function watchRevive(){ if(reviveCount>=2) return; Monetize.showRewarded('REVIVE', ()=>{ reviveCount++; reviveRun(); }); }
+function watchDouble(){ if(doubledThisRun||runCoinsAtDeath<=0) return; Monetize.showRewarded('2× COINS', ()=>{ coins+=runCoinsAtDeath; doubledThisRun=true; saveProgress(); countUp('finalCoins', runCoinsAtDeath*2, 850, fmtNum, runCoinsAtDeath); toast('📺 DOUBLED!','+'+fmtNum(runCoinsAtDeath)+' 🪙','#ffd76b'); buzz([20,30]); updateGOButtons(); refreshMenus(); }); }
+function updateGOButtons(){
+  el('reviveBtn').classList.toggle('hidden', lastWasSuccess || reviveCount>=2);   // revive only after a real defeat, not a successful extraction
+  el('doubleBtn').classList.toggle('hidden', doubledThisRun||runCoinsAtDeath<=0);
+  el('reviveBtn').textContent='🚑 REVIVE — '+(Monetize.removedAds?'FREE':'📺');
+  el('doubleBtn').textContent='📺 DOUBLE COINS → '+fmtNum(runCoinsAtDeath*2);
+  if(tut.on && tut.phase==='buy'){ el('redeployBtn').classList.add('hidden'); el('doubleBtn').classList.add('hidden'); }   // funnel first-timers to HQ to learn the tycoon side
+}
+function reviveRun(){
+  state=State.PLAY; cgPlay(true); fires=[]; fireballs=[]; molotovs=[]; bossAlive=false;   // clearing fires removes any live boss, so release the boss-spawn gate too (else no boss ever respawns this run); keep the truck if it already arrived so you can still extract
+  health=Math.max(health,maxHealth*0.6); townHP=Math.max(townHP,55); townLost=false; hero.dashT=1.6; hero.dashVX=0; hero.dashVY=0; hero.scorch=0;
+  el('gameOverScreen').classList.add('hidden'); el('extractBtn').classList.toggle('hidden', !(truck && truck.parked));
+  el('hud').classList.remove('hidden'); el('bars').classList.remove('hidden');
+  showPlayButtons(true); updateBombBtn(); updateUltBtn(); startMusic();
+  if(tut.on){ const T=tutText(); if(tut.phase==='move')tutHud(true,T.move); else if(tut.phase==='spray')tutHud(true,T.spray); else if(tut.phase==='extract')tutHud(true,T.extract); }   // restore the guide banner after a mid-tutorial revive
+  toast('🚑 REVIVED!','back in the fight!','#7fe0ff'); shake=8;
+}
+
+//---------------- Store (IAP — simulated) ----------------
+const PRODUCTS=[
+  {id:'noads', name:'🚫 Remove Ads', desc:'No more interstitials. Rewards stay optional.', price:'$2.99'},
+  {id:'automgr',name:'👔 Auto-Tycoon', desc:'Hire ALL managers — auto-upgrade everything', price:'$2.99'},
+  {id:'cash1', name:'🪙 Cash Pouch', desc:'25,000 coins',                price:'$0.99', cash:25000},
+  {id:'cash2', name:'🪙 Cash Sack',  desc:'200,000 coins (+60% bonus)',  price:'$3.99', cash:200000},
+  {id:'cash3', name:'🪙 Cash Vault', desc:'750,000 coins (best value)',  price:'$9.99', cash:750000},
+];
+function openStore(){ renderStore(); show('storeScreen'); }
+function renderStore(){
+  el('storeCoins').textContent=fmtNum(coins);
+  const wrap=el('storeList'); wrap.innerHTML='';
+  if(!starterOwned()){
+    const row=document.createElement('div'); row.className='storeItem';
+    row.style.border='2px solid #ffd76b'; row.style.background='rgba(255,200,80,.12)';
+    row.innerHTML='<div class="si-info"><div class="si-name">🎁 STARTER PACK <span style="color:#ffd76b">★ BEST VALUE</span></div><div class="si-desc">75,000 cash + Remove Ads + exclusive Captain skin</div></div>';
+    const btn=document.createElement('button'); btn.className='priceBtn'; btn.textContent='$1.99'; btn.onclick=buyStarter;
+    row.appendChild(btn); wrap.appendChild(row);
+  }
+  PRODUCTS.forEach(p=>{
+    const row=document.createElement('div'); row.className='storeItem';
+    row.innerHTML='<div class="si-info"><div class="si-name">'+p.name+'</div><div class="si-desc">'+p.desc+'</div></div>';
+    const btn=document.createElement('button'); btn.className='priceBtn';
+    if(p.id==='noads' && Monetize.removedAds){ btn.textContent='✓ OWNED'; btn.classList.add('owned'); btn.disabled=true; }
+    else { btn.textContent=p.price; btn.onclick=()=>buyProduct(p); }
+    row.appendChild(btn); wrap.appendChild(row);
+  });
+}
+function buyProduct(p){
+  // SIMULATED purchase — replace with real IAP (Stripe on web / StoreKit / Play Billing). See MONETIZATION.md.
+  track('purchase',{ item_id:p.id, price:p.price });
+  if(p.id==='noads'){ Monetize.setRemovedAds(true); toast('🚫 Ads removed!','thank you!','#7fe0ff'); }
+  else if(p.id==='automgr'){ for(const u of TYCOON) managers[u.key]='on'; saveManagers(); toast('👔 Auto-Tycoon!','all managers hired','#ffd76b'); }
+  else if(p.cash){ coins+=p.cash; toast('🪙 +'+p.cash,'cash added!','#ffd76b'); }
+  saveProgress(); renderStore(); refreshMenus();
+}
+function starterOwned(){ return localStorage.getItem('sh_starter')==='1'; }
+function buyStarter(){
+  if(starterOwned()) return;
+  track('purchase',{ item_id:'starter_pack', price:'$1.99' });
+  // SIMULATED one-time IAP — high-converting first purchase (see MONETIZATION.md)
+  localStorage.setItem('sh_starter','1');
+  coins+=75000; Monetize.setRemovedAds(true); skinsOwned['captain']=1;
+  saveProgress(); saveSkins(); sfxBuy();
+  toast('🎁 STARTER PACK!','+75,000🪙 · ads removed · Captain skin!','#ffd76b');
+  renderStore(); refreshMenus(); updateStarterBanner();
+}
+
+//---------------- Tycoon managers ----------------
+function openManagers(){ renderManagers(); show('mgrScreen'); }
+//---------------- Rebirth / prestige ----------------
+function openPrestige(){ renderPrestige(); show('prestigeScreen'); }
+function renderPrestige(){
+  el('medalCount').textContent=fmtNum(medals);
+  const ok=canRebirth(), gain=rebirthReward();
+  el('rebirthInfo').innerHTML = 'Rebirth level <b>'+rebirthLvl+'</b> · enemies <b>+'+Math.round((diffMult()-1)*100)+'%</b>, cash <b>+'+Math.round((cashMult()-1)*100)+'%</b>.<br>'+
+    (ok ? ('Rebirth now to restart the solar system and earn <b style="color:#ffd76b">🎖️ '+gain+' medals</b>. Resets cash, HQ & gear — keeps medals, bonuses, skins.')
+        : 'Reach <b>Mars</b> (clear Earth & The Moon) to unlock your first Rebirth.');
+  const rb=el('rebirthBtn'); rb.disabled=!ok; rb.style.opacity=ok?'1':'.5';
+  rb.textContent = ok ? ('🎖️ REBIRTH (+'+gain+')') : '🔒 REBIRTH';
+  const wrap=el('prestigeList'); wrap.innerHTML='';
+  PRESTIGE.forEach(u=>{ const lv=plvl(u.key), maxed=lv>=u.max, cost=prestigeCost(u);
+    const row=document.createElement('div'); row.className='storeItem';
+    row.innerHTML='<div class="si-info"><div class="si-name">'+u.name+' <span class="si-lvl">Lv '+lv+'/'+u.max+'</span></div><div class="si-desc">'+u.desc+'</div></div>';
+    const btn=document.createElement('button'); btn.className='priceBtn';
+    if(maxed){ btn.textContent='MAX'; btn.disabled=true; btn.classList.add('owned'); }
+    else { btn.textContent='🎖️ '+cost; if(medals<cost) btn.style.opacity='.5'; btn.onclick=()=>{ if(medals>=cost){ medals-=cost; prestige[u.key]=lv+1; savePrestige(); sfxBuy(); renderPrestige(); } }; }
+    row.appendChild(btn); wrap.appendChild(row);
+  });
+}
+function doRebirth(){
+  if(!canRebirth()) return;
+  if(!confirm('REBIRTH? This resets your cash, HQ buildings, managers and gear, and restarts at Earth — harder but more rewarding. You keep medals, permanent bonuses, skins & achievements.')) return;
+  const gain=rebirthReward();
+  medals+=gain; rebirthLvl++;
+  coins=0; tycoon={}; managers={}; ups={}; planet=0; worldFire=100; lastSeen=Date.now();
+  savePrestige(); saveProgress(); saveManagers();
+  el('prestigeScreen').classList.add('hidden');
+  toast('🎖️ REBIRTH!','+'+gain+' medals · difficulty up, rewards up','#ffd76b'); sfxBoss();
+  goHub();
+}
+function renderManagers(){
+  el('mgrCoins').textContent=fmtNum(coins);
+  const wrap=el('mgrList'); wrap.innerHTML='';
+  TYCOON.forEach(u=>{
+    const cost=managerCost(u), st=managers[u.key];
+    const row=document.createElement('div'); row.className='storeItem';
+    row.innerHTML='<div class="si-info"><div class="si-name">'+u.name+'</div><div class="si-desc">'+(st?'auto-upgrades this building':'hire to auto-upgrade')+'</div></div>';
+    const btn=document.createElement('button'); btn.className='priceBtn';
+    if(!st){ btn.textContent='🪙 '+fmtNum(cost); if(coins<cost) btn.style.opacity='.5'; btn.onclick=()=>{ if(coins>=cost){ coins-=cost; managers[u.key]='on'; saveManagers(); saveProgress(); sfxBuy(); toast('👔 Manager hired!',u.name+' auto-upgrading','#9be86b'); renderManagers(); refreshMenus(); } }; }
+    else { btn.textContent = st==='on'?'AUTO: ON':'AUTO: OFF'; if(st==='on') btn.classList.add('owned'); btn.onclick=()=>{ managers[u.key]= (st==='on'?'off':'on'); saveManagers(); renderManagers(); }; }
+    row.appendChild(btn); wrap.appendChild(row);
+  });
+}
+
+//---------------- Achievements ----------------
+function openAchievements(){ renderAchievements(); show('achScreen'); }
+function renderAchievements(){
+  el('achStats').innerHTML='📊 LIFETIME &nbsp; 🔥 <b>'+fmtNum(stats.fires||0)+'</b> doused · 👑 <b>'+fmtNum(stats.boss||0)+'</b> bosses · 🧨 <b>'+fmtNum(stats.arson||0)+'</b> thugs · ✨ <b>'+fmtNum(stats.golden||0)+'</b> golden · 🌍 <b>'+(stats.planets||0)+'</b> planets · 🌊 wave <b>'+(stats.wave||0)+'</b> best';
+  const wrap=el('achList'); wrap.innerHTML=''; let claimedCount=0;
+  ACHS.forEach(a=>{
+    const cur=stats[a.stat]||0, done=cur>=a.t, claimed=!!achClaimed[a.id]; if(claimed) claimedCount++;
+    const row=document.createElement('div'); row.className='storeItem';
+    row.innerHTML='<div class="si-info"><div class="si-name" style="font-size:14px">'+a.icon+' '+a.name+'</div>'+
+      '<div class="bar" style="height:8px;margin-top:5px"><div class="barfill" style="width:'+Math.min(100,cur/a.t*100)+'%;background:linear-gradient(90deg,#ffd76b,#ffb24d)"></div></div>'+
+      '<div class="si-desc">'+fmtNum(Math.min(cur,a.t))+'/'+fmtNum(a.t)+'  ·  reward 🪙'+fmtNum(a.reward)+'</div></div>';
+    const btn=document.createElement('button'); btn.className='priceBtn';
+    if(claimed){ btn.textContent='✓'; btn.disabled=true; btn.classList.add('owned'); }
+    else if(done){ btn.textContent='🪙 '+fmtNum(a.reward); btn.onclick=()=>{ coins+=a.reward; achClaimed[a.id]=1; achSeen[a.id]=1; saveAch(); localStorage.setItem('sh_achseen',JSON.stringify(achSeen)); pendingBankAnim=a.reward; saveProgress(); sfxBuy(); toast('🏆 '+a.name+'!','+'+fmtNum(a.reward)+' 🪙','#ffd76b'); buzz([20,30]); renderAchievements(); refreshMenus(); }; }
+    else { btn.textContent='🔒'; btn.disabled=true; btn.style.opacity='.5'; }
+    row.appendChild(btn); wrap.appendChild(row);
+  });
+  el('achCount').textContent=claimedCount+'/'+ACHS.length;
+}
+
+//---------------- Cosmetic skins ----------------
+function openSkins(){ renderSkins(); show('skinScreen'); }
+function renderSkins(){
+  el('skinCoins').textContent=fmtNum(coins);
+  const wrap=el('skinList'); wrap.innerHTML='';
+  SKINS.forEach(s=>{
+    const owned=ownsSkin(s.id), equipped=skinSel===s.id;
+    const row=document.createElement('div'); row.className='storeItem';
+    const flairTag = s.flair ? ' <span style="font-size:10px;color:#9fe6ff;font-weight:700">✦ '+({stealth:'stealth',embers:'embers',sparkle:'sparkle',aura:'aura'}[s.flair]||s.flair)+'</span>' : '';
+    row.innerHTML='<span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:'+s.body+';border-top:9px solid '+s.helmet+';box-shadow:inset 0 -2px 0 '+(s.accent||'rgba(255,255,255,.4)')+';flex:0 0 auto;font-size:15px">'+(s.emblem||'')+'</span>'+
+      '<div class="si-info"><div class="si-name">'+s.name+flairTag+(s.premium?' 💎':'')+(s.exclusive?' 🎁':'')+'</div><div class="si-desc">'+(owned?'owned':(s.exclusive?'Starter Pack only':(s.premium?'premium skin':'🪙 '+s.cost)))+'</div></div>';
+    const btn=document.createElement('button'); btn.className='priceBtn';
+    if(equipped){ btn.textContent='✓ EQUIPPED'; btn.disabled=true; btn.classList.add('owned'); }
+    else if(owned){ btn.textContent='EQUIP'; btn.classList.add('owned'); btn.onclick=()=>{ skinSel=s.id; saveSkins(); sfxBuy(); renderSkins(); }; }
+    else if(s.exclusive){ btn.textContent='🎁 PACK'; btn.onclick=openStore; }
+    else if(s.premium){ btn.textContent='💎 $1.99'; btn.onclick=()=>{ skinsOwned[s.id]=1; skinSel=s.id; saveSkins(); sfxBuy(); toast('💎 '+s.name+'!','thanks for your support!','#ffd76b'); renderSkins(); }; }   // simulated IAP
+    else { btn.textContent='🪙 '+fmtNum(s.cost); if(coins<s.cost) btn.style.opacity='.5'; btn.onclick=()=>{ if(coins>=s.cost){ coins-=s.cost; skinsOwned[s.id]=1; skinSel=s.id; saveProgress(); saveSkins(); sfxBuy(); toast('🎨 '+s.name+'!','unlocked','#9be86b'); renderSkins(); refreshMenus(); } }; }
+    row.appendChild(btn); wrap.appendChild(row);
+  });
+}
+
+//---------------- Tycoon HUB + idle ----------------
+function creditIdle(){
+  const now=Date.now(); let elapsed=(now-lastSeen)/1000; if(elapsed<0) elapsed=0; if(elapsed>8*3600) elapsed=8*3600;
+  const inc=incomePerSec()*elapsed; coins+=inc;
+  if(worldFire>0){ worldFire=Math.max(0, worldFire - fireDousePerSec()*elapsed); if(worldFire<=0) planetCleared(); }
+  lastSeen=now;
+  return { inc, elapsed };
+}
+function goHub(){
+  state=State.HUB; paused=false;
+  el('hud').classList.add('hidden'); el('bars').classList.add('hidden');
+  el('bombBtn').classList.add('hidden'); el('ultBtn').classList.add('hidden'); showPlayButtons(false);
+  el('adOverlay').classList.add('hidden'); el('extractBtn').classList.add('hidden'); el('idleScreen').classList.add('hidden'); stopMusic();
+  // idle earnings since last visit
+  const now=Date.now(); let elapsed=(now-lastSeen)/1000; if(elapsed<0) elapsed=0; if(elapsed>8*3600) elapsed=8*3600;
+  const idleCash=incomePerSec()*elapsed, idleFire=Math.min(25, fireDousePerSec()*elapsed); lastSeen=now;  // cap offline planet progress so MISSIONS stay the main driver
+  if(worldFire>0 && idleFire>0){ worldFire=Math.max(0, worldFire-idleFire); if(worldFire<=0) planetCleared(); }
+  coins+=idleCash;                              // credit idle earnings, then managers spend them on auto-upgrades
+  const bought=autoBuy(400);
+  saveProgress(); renderHub(); show('hubScreen');
+  const bigIdle = elapsed>=60 && idleCash>=1;
+  if(celebQueue) flushCeleb();                                                                // planet-saved celebration takes priority
+  else if(tut.on && tut.phase==='buy') tutHubBuy();   // interactive tutorial: now teach the tycoon side — buy your first upgrade
+  else if(bigIdle) showIdleModal(elapsed, Math.floor(idleCash), bought);
+}
+function fmtTime(s){ s=Math.floor(s); if(s<60) return s+'s'; const m=Math.floor(s/60); if(m<60) return m+'m'; const h=Math.floor(m/60); return h+'h '+(m%60)+'m'; }
+function fmtNum(n){ n=Math.floor(n);
+  if(n<10000) return ''+n;
+  if(n<1e6) return (n/1e3).toFixed(1).replace('.0','')+'k';
+  if(n<1e9) return (n/1e6).toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+'M';
+  return (n/1e9).toFixed(2).replace(/0+$/,'').replace(/\.$/,'')+'B';
+}
+// animate a number ticking from `from` (default 0) up to its target; fmt optional
+function countUp(id, target, dur, fmt, from){ const node=el(id); if(!node) return; fmt=fmt||(v=>''+v); from=from||0;
+  if(target<=from){ node.textContent=fmt(target); return; }
+  const t0=performance.now(); let tick=0;
+  (function step(now){ const p=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-p,3);   // ease-out
+    node.textContent=fmt(Math.floor(from + (target-from)*e));
+    if(p<1){ if(now-tick>55){ tick=now; sfxCoin&&sfxCoin(); } requestAnimationFrame(step); } else node.textContent=fmt(target);
+  })(performance.now());
+}
+let pendingBankAnim=0;   // amount just banked from a mission — animate the hub cash up by this on return
+function showIdleModal(elapsed, cash, bought){
+  idlePending=cash;        // base already credited; this is the doublable bonus amount
+  el('idleTime').textContent='Away '+fmtTime(elapsed)+(bought?(' · 👔 '+bought+' auto-upgrades'):'');
+  el('idleCash').textContent='🪙 '+fmtNum(cash);
+  el('idleCollect').textContent='AWESOME!';
+  el('idleCollect2').textContent='📺 DOUBLE IT';
+  el('idleScreen').classList.remove('hidden');
+}
+function collectIdle(){ idlePending=0; el('idleScreen').classList.add('hidden'); renderHub(); }   // base already in the bank
+function collectIdle2(){
+  const bonus=idlePending; idlePending=0; el('idleScreen').classList.add('hidden'); renderHub();
+  Monetize.showRewarded('2× IDLE CASH', ()=>{ coins+=bonus; pendingBankAnim=bonus; saveProgress(); renderHub(); toast('📺 DOUBLED!','+'+fmtNum(bonus)+' 🪙','#ffd76b'); buzz([20,30]); });
+}
+function renderHub(){
+  const pl=PLANETS[Math.min(planet,PLANETS.length-1)];
+  el('planetRow').textContent = pl.emoji+' '+pl.name+(planet>0?' · world '+(planet+1):'');
+  el('worldFill').style.width=Math.max(0,Math.min(100,worldFire))+'%';
+  el('worldPct').textContent = worldFire>0 ? (worldFire.toFixed(0)+'% ablaze') : 'saved ✅';
+  if(pendingBankAnim>0){ countUp('hubCash', coins, 1000, fmtNum, Math.max(0,coins-pendingBankAnim)); pendingBankAnim=0; }   // watch your banked reward tick up
+  else el('hubCash').textContent=fmtNum(coins);
+  el('hubFreeBtn').textContent='📺 FREE CASH  +'+fmtNum(freeCashAmount());   // show the actual reward on the button
+  { const ips=incomePerSec(); el('hubRates').textContent='+'+(ips>=1000?fmtNum(ips):ips.toFixed(1))+'/s idle'; }
+  updateStarterBanner(); drawPlanet();
+  const wrap=el('hubList'); wrap.innerHTML='';
+  const hubMult=(planet+1)*(1+tlvl('lab')*0.12)*cashMult();   // same global multiplier incomePerSec() applies
+  const fr=v=> v>=1000?fmtNum(v):(v>=10?Math.round(v):Math.round(v*10)/10);
+  TYCOON.forEach(u=>{ const cost=tycoonCost(u), lv=tlvl(u.key);
+    const g=u.income(lv), gN=u.income(lv+1);
+    let line;
+    if(gN>g){ const now=g*hubMult, next=gN*hubMult;   // idle-cash building: current total → total after the next upgrade
+      line = lv>0 ? '🪙 <b>+'+fr(now)+'/s</b> now → <span style="color:#9be86b">+'+fr(next)+'/s</span> next'
+                  : '🪙 earns <span style="color:#9be86b">+'+fr(next)+'/s</span> at Lv 1'; }
+    else if(u.key==='crew'){ line = lv>0 ? '💥 <b>+'+(lv*22)+'%</b> mission $ → <span style="color:#9be86b">+'+((lv+1)*22)+'%</span> next' : '💥 <span style="color:#9be86b">+22%</span> mission $ at Lv 1'; }
+    else if(u.key==='lab'){ line = lv>0 ? '🔬 <b>+'+(lv*12)+'%</b> idle → <span style="color:#9be86b">+'+((lv+1)*12)+'%</span> next' : '🔬 <span style="color:#9be86b">+12%</span> idle at Lv 1'; }
+    else line = u.desc;
+    const row=document.createElement('div'); row.className='storeItem';
+    row.innerHTML='<div class="si-info"><div class="si-name">'+u.name+' <span style="color:#8fe1ff">Lv '+lv+'</span></div><div class="si-desc">'+line+'</div></div>';
+    const btn=document.createElement('button'); btn.className='priceBtn'; btn.textContent='🪙 '+fmtNum(cost);
+    if(coins<cost) btn.style.opacity='.5';
+    btn.onclick=()=>{ if(coins>=cost){ coins-=cost; tycoon[u.key]=lv+1; saveProgress(); sfxBuy(); renderHub(); if(tut.on && tut.phase==='buy') tutGearStep(); } };
+    row.appendChild(btn); wrap.appendChild(row);
+  });
+  updateNavBadge();
+}
+function updateNavBadge(){
+  ensureQuests();
+  const dailyAvail = localStorage.getItem('sh_lastclaim')!==todayStr();
+  let claimable=false;
+  quests.ids.forEach((qi,slot)=>{ const q=QUESTS[qi]; if((quests.prog[q.track]||0)>=q.t && (quests.claimed[slot]||0)<2) claimable=true; });
+  el('navQuests').classList.toggle('alert', dailyAvail||claimable);
+  el('navReb').classList.toggle('alert', canRebirth());
+  // nudge new players to upgrade their weak starter hose while gear is still cheap & low
+  const sumGear = UPGRADES.reduce((s,u)=>s+lvl(u.key),0);
+  const cheapestGear = Math.min(...UPGRADES.map(u=>u.cost(lvl(u.key))));
+  el('navGear').classList.toggle('alert', sumGear<18 && coins>=cheapestGear);
+  el('navGoals').classList.toggle('alert', ACHS.some(a=>(stats[a.stat]||0)>=a.t && !achClaimed[a.id]));   // pulse GOALS when a reward is claimable
+}
+function openQuests(){ renderQuests(); show('questScreen'); }
+function renderQuests(){
+  ensureQuests();
+  const claimed=localStorage.getItem('sh_lastclaim')===todayStr(), streak=parseInt(localStorage.getItem('sh_streak')||'0',10);
+  const db=el('dailyBtn');
+  db.textContent = claimed ? ('✓ Daily claimed · 🔥'+streak+'-day streak') : ('🎁 DAY '+dailyInfo().streak+' REWARD · +'+fmtNum(dailyInfo().reward));
+  db.classList.toggle('ready', !claimed); db.disabled=claimed;
+  const wrap=el('questList'); wrap.innerHTML='';
+  quests.ids.forEach((qi,slot)=>{
+    const q=QUESTS[qi], prog=Math.min(q.t, quests.prog[q.track]||0), done=prog>=q.t, cl=quests.claimed[slot]||0;
+    const row=document.createElement('div'); row.className='storeItem';
+    row.innerHTML='<div class="si-info"><div class="si-name" style="font-size:14px">'+q.text.replace('{t}',q.t)+'</div>'+
+      '<div class="bar" style="height:8px;margin-top:5px"><div class="barfill" style="width:'+(prog/q.t*100)+'%;background:linear-gradient(90deg,#46c24d,#9be86b)"></div></div>'+
+      '<div class="si-desc">'+prog+'/'+q.t+'  ·  reward 🪙'+fmtNum(q.reward)+'</div></div>';
+    const btn=document.createElement('button'); btn.className='priceBtn';
+    if(!done){ btn.textContent='🔒'; btn.disabled=true; btn.style.opacity='.5'; }
+    else if(cl===0){ btn.textContent='CLAIM'; btn.onclick=()=>{ if((quests.claimed[slot]||0)!==0) return; coins+=q.reward; quests.claimed[slot]=1; saveQuests(); pendingBankAnim=q.reward; saveProgress(); sfxBuy(); toast('✅ Quest complete!','+'+q.reward+' 🪙','#9be86b'); renderQuests(); refreshMenus(); }; }
+    else if(cl===1){ btn.textContent='📺 2× → '+fmtNum(q.reward); btn.onclick=()=>{ if((quests.claimed[slot]||0)!==1) return; Monetize.showRewarded('2× QUEST', ()=>{ if((quests.claimed[slot]||0)!==1) return; coins+=q.reward; quests.claimed[slot]=2; saveQuests(); pendingBankAnim=q.reward; saveProgress(); toast('📺 DOUBLED!','+'+fmtNum(q.reward)+' 🪙','#ffd76b'); buzz([20,30]); renderQuests(); refreshMenus(); }); }; }
+    else { btn.textContent='✓'; btn.disabled=true; btn.classList.add('owned'); }
+    row.appendChild(btn); wrap.appendChild(row);
+  });
+}
+function hubTick(dt){ creditIdle(); hubAccum+=dt; mgrAccum+=dt;
+  if(mgrAccum>1.2){ mgrAccum=0; autoBuy(80); }      // managers convert trickling idle cash into upgrades
+  if(celebActive){ if(!psctx) psSetup(); if(psctx) paintPlanet(psctx,130,celebIndex,0,uiT()); } else drawPlanet();
+  flushCeleb();
+  if(hubAccum>0.3){ hubAccum=0; renderHub(); } }
+
+// ---- hub planet visual: the world you're saving, with fire that shrinks as you clear it ----
+let pctx=null; let PS=150;
+let psctx=null, celebQueue=null, celebActive=false, celebIndex=0;   // planet-saved celebration
+const EARTH_BLOBS=[{x:-0.3,y:-0.3,rx:0.35,ry:0.25,rot:0.3},{x:0.35,y:0.1,rx:0.26,ry:0.4,rot:-0.4},{x:-0.1,y:0.45,rx:0.3,ry:0.18,rot:0.1},{x:0.12,y:-0.5,rx:0.16,ry:0.13,rot:0}];
+const CRATERS=[{x:-0.3,y:-0.2,r:0.16},{x:0.25,y:0.05,r:0.12},{x:0.0,y:0.35,r:0.1},{x:0.4,y:-0.35,r:0.08},{x:-0.45,y:0.3,r:0.09},{x:-0.05,y:-0.45,r:0.07}];
+const FIRE_SPOTS=[]; for(let i=0;i<20;i++) FIRE_SPOTS.push({a:i*2.39996, rr:Math.sqrt((i+0.6)/20)});
+function planetSetup(){ const c=el('planetCanvas'); if(!c) return; pctx=c.getContext('2d'); PS = window.innerWidth>=700 ? 232 : 156;   // planet width matches the bar/deploy for a consistent left column
+  const d=Math.min(2,window.devicePixelRatio||1); c.width=PS*d; c.height=PS*d; c.style.width=PS+'px'; c.style.height=PS+'px'; pctx.setTransform(d,0,0,d,0,0); }
+window.addEventListener('resize', ()=>{ pctx=null; });   // re-size the planet canvas when the layout breakpoint changes
+function paintPlanetBody(g,size,c,R,pl){
+  if(pl===0){ g.fillStyle='#1b6fd1'; g.fillRect(0,0,size,size); g.fillStyle='#2f9e44'; for(const b of EARTH_BLOBS){ g.save(); g.translate(c+b.x*R,c+b.y*R); g.rotate(b.rot); g.beginPath(); g.ellipse(0,0,b.rx*R,b.ry*R,0,0,7); g.fill(); g.restore(); } }
+  else if(pl===1){ g.fillStyle='#b9bfc7'; g.fillRect(0,0,size,size); g.fillStyle='#969da6'; for(const cr of CRATERS){ g.beginPath(); g.arc(c+cr.x*R,c+cr.y*R,cr.r*R,0,7); g.fill(); } }
+  else if(pl===2){ g.fillStyle='#c1440e'; g.fillRect(0,0,size,size); g.fillStyle='#9e3409'; for(const cr of CRATERS){ g.beginPath(); g.arc(c+cr.x*R,c+cr.y*R,cr.r*R*0.8,0,7); g.fill(); } g.fillStyle='rgba(255,255,255,0.75)'; g.beginPath(); g.arc(c,c+R*0.78,R*0.28,0,7); g.fill(); }
+  else if(pl===3){ const bands=['#caa472','#e3c9a0','#b5895a','#dcbf95','#a9794f']; for(let i=0;i<10;i++){ g.fillStyle=bands[i%bands.length]; g.fillRect(0,(i/10)*size,size,size/10+1); } g.fillStyle='#b5432a'; g.beginPath(); g.ellipse(c+R*0.3,c+R*0.2,R*0.18,R*0.12,0,0,7); g.fill(); }
+  else { const gr=g.createRadialGradient(c,c,2,c,c,R); gr.addColorStop(0,'#fff3b0'); gr.addColorStop(0.5,'#ffd23f'); gr.addColorStop(1,'#ff7a00'); g.fillStyle=gr; g.fillRect(0,0,size,size); }
+}
+function paintPlanet(g,size,pl,fireFrac,t){
+  const c=size/2, R=size*0.40;
+  g.clearRect(0,0,size,size);
+  const og=g.createRadialGradient(c,c,R*0.8,c,c,R*1.5); og.addColorStop(0,'rgba(150,210,255,0.22)'); og.addColorStop(1,'rgba(150,210,255,0)');
+  g.fillStyle=og; g.beginPath(); g.arc(c,c,R*1.5,0,7); g.fill();
+  g.save(); g.beginPath(); g.arc(c,c,R,0,7); g.clip();
+  paintPlanetBody(g,size,c,R,pl);
+  const k=Math.round(Math.max(0,Math.min(1,fireFrac))*FIRE_SPOTS.length);
+  for(let i=0;i<k;i++){ const s=FIRE_SPOTS[i], px=c+Math.cos(s.a+t*0.05)*s.rr*R, py=c+Math.sin(s.a+t*0.05)*s.rr*R;
+    const fl=0.7+0.3*Math.sin(t*6+i), rad=size*0.06*fl;
+    const gr=g.createRadialGradient(px,py,1,px,py,rad); gr.addColorStop(0,'rgba(255,225,90,0.95)'); gr.addColorStop(0.5,'rgba(255,120,20,0.85)'); gr.addColorStop(1,'rgba(255,60,0,0)');
+    g.fillStyle=gr; g.beginPath(); g.arc(px,py,rad,0,7); g.fill(); }
+  const sh=g.createRadialGradient(c-R*0.35,c-R*0.35,R*0.2,c,c,R*1.1); sh.addColorStop(0,'rgba(255,255,255,0.18)'); sh.addColorStop(0.5,'rgba(0,0,0,0)'); sh.addColorStop(1,'rgba(0,0,0,0.45)');
+  g.fillStyle=sh; g.fillRect(0,0,size,size);
+  g.restore();
+  if(fireFrac<=0){ g.globalAlpha=0.6+0.4*Math.sin(t*4); g.font='900 '+Math.round(size*0.2)+'px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('✅',c,c); g.globalAlpha=1; }
+}
+function uiT(){ return performance.now()*0.001; }   // real-time clock for menu/hub visuals (gameTime only ticks in-mission)
+function drawPlanet(){ if(!pctx){ planetSetup(); if(!pctx) return; } paintPlanet(pctx, PS, Math.min(planet,PLANETS.length-1), Math.min(100,Math.max(0,worldFire))/100, uiT()); }
+// ---- PLANET SAVED! celebration ----
+function psSetup(){ const cv=el('savedPlanetCanvas'); if(!cv) return; psctx=cv.getContext('2d'); const d=Math.min(2,window.devicePixelRatio||1); cv.width=130*d; cv.height=130*d; cv.style.width='130px'; cv.style.height='130px'; psctx.setTransform(d,0,0,d,0,0); }
+function flushCeleb(){ if(celebQueue && state===State.HUB && el('planetScreen').classList.contains('hidden')) showPlanetCeleb(); }
+function showPlanetCeleb(){
+  const q=celebQueue; if(!q) return;
+  celebActive=true; celebIndex=q.saved;
+  el('planetSavedTitle').textContent = q.last?'🌌 SYSTEM SAVED!':'🎉 PLANET SAVED!';
+  el('planetSavedName').textContent = PLANETS[q.saved].emoji+' '+PLANETS[q.saved].name+' is safe!';
+  el('planetBonus').textContent='🪙 +0'; countUp('planetBonus', q.bonus, 1200, v=>'🪙 +'+fmtNum(v));   // count the big bonus up
+  el('planetNextMsg').textContent = q.last ? 'You saved the whole solar system! 🎉' : ('Next stop: '+PLANETS[q.saved+1].emoji+' '+PLANETS[q.saved+1].name);
+  el('planetNextBtn').textContent = q.last ? '🎉 CONTINUE' : '🚀 TRAVEL';
+  const cc=el('celebConfetti'); cc.innerHTML=''; const ems=['🎉','🎊','✨','💧','🚒','⭐','🌊','🏆','🎆'];
+  for(let i=0;i<46;i++){ const sp=document.createElement('span'); sp.textContent=ems[i%ems.length];
+    sp.style.left=Math.random()*100+'%'; sp.style.fontSize=(14+Math.random()*16)+'px'; sp.style.animationDuration=(1.6+Math.random()*1.8)+'s'; sp.style.animationDelay=(Math.random()*0.7)+'s'; cc.appendChild(sp); }
+  buzz([25,40,25,40,70]); sfxWave(); if(typeof sfxUlt==='function') sfxUlt();
+  el('planetScreen').classList.remove('hidden');
+}
+function closePlanetCeleb(){ el('planetScreen').classList.add('hidden'); celebActive=false; celebQueue=null; renderHub(); }
+
+// ---- animated MAIN-MENU scene: firefighter vs the fire (carries the core theme) ----
+function drawMenu(){
+  const t=uiT();
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0a1f2e'); g.addColorStop(0.6,'#13243a'); g.addColorStop(1,'#0a151f');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#0d2a22'; ctx.fillRect(0,H*0.74,W,H*0.26);
+  // rising embers
+  for(let i=0;i<26;i++){ const ex=((i*73)+t*22*((i%3)+1))%(W+40)-20, ey=H-((t*42*((i%4)+1)+i*130)%(H*0.85));
+    ctx.globalAlpha=0.35+0.3*Math.sin(t*3+i); ctx.fillStyle=i%2?'#ff9a3d':'#ffce6b'; ctx.beginPath(); ctx.arc(ex,ey,1.6+(i%3),0,7); ctx.fill(); }
+  ctx.globalAlpha=1;
+  const fx=W*0.74, fy=H*0.66, fs=42+6*Math.sin(t*5);
+  drawMenuFire(fx,fy,fs,t);
+  const hx=W*0.26, hy=H*0.66;
+  // water stream from hero to fire
+  for(let i=0;i<16;i++){ const p=((t*1.6+i/16)%1), sx=hx+(fx-hx)*p, sy=(hy-18)+((fy-hy-6)*p)-Math.sin(p*Math.PI)*46;
+    ctx.fillStyle='rgba(150,225,255,'+(0.85*(1-p)+0.15)+')'; ctx.beginPath(); ctx.arc(sx,sy,3.4*(1-p*0.4),0,7); ctx.fill(); }
+  // steam at the fire
+  for(let i=0;i<6;i++){ ctx.globalAlpha=(0.35+0.35*Math.sin(t*4+i))*0.6; ctx.fillStyle='#dfeefc';
+    ctx.beginPath(); ctx.arc(fx-12+Math.sin(t*3+i)*10, fy-22-((t*22+i*16)%44), 6+i,0,7); ctx.fill(); }
+  ctx.globalAlpha=1;
+  drawMenuHero(hx,hy);
+}
+function drawMenuFire(x,y,s,t){
+  const flick=Math.sin(t*8)*0.12+1;
+  ctx.save(); ctx.translate(x,y);
+  const gl=ctx.createRadialGradient(0,0,2,0,0,s*2.4); gl.addColorStop(0,'rgba(255,160,40,0.4)'); gl.addColorStop(1,'rgba(255,80,0,0)');
+  ctx.fillStyle=gl; ctx.beginPath(); ctx.arc(0,0,s*2.4,0,7); ctx.fill();
+  function fl(scale,col){ ctx.fillStyle=col; ctx.beginPath(); const h=s*1.9*scale*flick, w=s*1.1*scale;
+    ctx.moveTo(0,s*0.6); ctx.quadraticCurveTo(-w,-s*0.2,-w*0.3,-h*0.55); ctx.quadraticCurveTo(-w*0.1,-h*0.85,0,-h);
+    ctx.quadraticCurveTo(w*0.1,-h*0.85,w*0.3,-h*0.55); ctx.quadraticCurveTo(w,-s*0.2,0,s*0.6); ctx.fill(); }
+  fl(1,'#ff5722'); fl(0.7,'#ff9800'); fl(0.4,'#ffeb3b');
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(-s*0.3,-s*0.25,s*0.18,0,7); ctx.arc(s*0.3,-s*0.25,s*0.18,0,7); ctx.fill();
+  ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(-s*0.3+ -0.06*s,-s*0.25,s*0.09,0,7); ctx.arc(s*0.3-0.06*s,-s*0.25,s*0.09,0,7); ctx.fill();
+  ctx.strokeStyle='#7a2e10'; ctx.lineWidth=Math.max(2,s*0.07); ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-s*0.5,-s*0.5); ctx.lineTo(-s*0.12,-s*0.34); ctx.moveTo(s*0.5,-s*0.5); ctx.lineTo(s*0.12,-s*0.34); ctx.stroke();
+  ctx.restore();
+}
+function drawMenuHero(x,y){
+  const sk=curSkin(), r=27;
+  ctx.save(); ctx.translate(x,y);
+  ctx.fillStyle='rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(0,r*0.95,r,r*0.4,0,0,7); ctx.fill();
+  ctx.fillStyle=sk.body; ctx.beginPath(); ctx.arc(0,2,r*0.85,0,7); ctx.fill();
+  ctx.fillStyle='#ffe0b3'; ctx.beginPath(); ctx.arc(0,-r*0.7,r*0.55,0,7); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(5,-r*0.72,5,0,7); ctx.arc(13,-r*0.72,5,0,7); ctx.fill();
+  ctx.fillStyle='#234'; ctx.beginPath(); ctx.arc(7,-r*0.72,2.4,0,7); ctx.arc(15,-r*0.72,2.4,0,7); ctx.fill();
+  ctx.fillStyle=sk.helmet; ctx.beginPath(); ctx.arc(0,-r*0.78,r*0.6,Math.PI,0); ctx.fill(); ctx.fillRect(-r*0.6,-r*0.82,r*1.2,r*0.16);
+  ctx.fillStyle='#2a7fff'; ctx.fillRect(r*0.3,-7,r*1.2,14);
+  ctx.fillStyle='#1b5fd1'; ctx.fillRect(r*1.1,-10,9,20);
+  ctx.fillStyle='#9fe6ff'; ctx.fillRect(r*1.45,-6,7,12);
+  ctx.fillStyle='#7fe0ff'; ctx.fillRect(-r*0.55,-9,11,18);
+  ctx.restore();
+}
+function planetCleared(){
+  if(celebQueue) return;                                  // celebration already pending
+  const saved=Math.min(planet,PLANETS.length-1), bonus=1500*(planet+1), last=(planet>=PLANETS.length-1);
+  coins+=bonus; statAdd('planets',1); saveStats(); checkAch();
+  celebQueue={saved,bonus,last};
+  if(!last){ planet++; worldFire=100; } else worldFire=0;
+  saveProgress(); flushCeleb();
+}
+function freeCashAmount(){ return Math.max(500, Math.floor(incomePerSec()*240 + planet*400 + 200)); }   // scales with your progression
+function hubFreeCash(){ Monetize.showRewarded('CASH', ()=>{ const g=freeCashAmount(); coins+=g; pendingBankAnim=g; saveProgress(); renderHub(); toast('🎁 FREE CASH!','+'+fmtNum(g)+' 🪙','#ffd76b'); buzz([20,30]); }); }
+function updateStarterBanner(){ el('starterBanner').classList.toggle('hidden', starterOwned() || localStorage.getItem('sh_starterdismiss')==='1'); }
+// daily login streak (retention hook)
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function yesterdayStr(){ const d=new Date(Date.now()-86400000); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function dailyInfo(){ const last=localStorage.getItem('sh_lastclaim'); let s=parseInt(localStorage.getItem('sh_streak')||'0',10);
+  s = (last===yesterdayStr()) ? s+1 : 1; return { streak:s, reward:Math.floor((100 + 60*(s-1))*(planet+1)) }; }
+function claimDaily(){
+  const today=todayStr(); if(localStorage.getItem('sh_lastclaim')===today) return;
+  const d=dailyInfo();
+  localStorage.setItem('sh_streak',String(d.streak)); localStorage.setItem('sh_lastclaim',today);
+  coins+=d.reward; pendingBankAnim=d.reward; saveProgress(); renderQuests(); refreshMenus();   // re-render the quest screen (where the button lives) so it flips to 'claimed'
+  toast('🎁 DAY '+d.streak+' STREAK!','+'+fmtNum(d.reward)+' 🪙 — come back tomorrow!','#ffd76b'); sfxBuy(); buzz([20,30]);
+}
+
+//---------------- Fire-truck extraction + mission end ----------------
+function spawnTruck(){ truck={ x:-150, y:Math.min(Math.max(hero.y,150), H-80), parked:false }; toast('🚒 RESCUE INBOUND!','extraction arriving…','#ffd76b'); sfxBoss(); }
+function drawTruck(t){
+  ctx.save(); ctx.translate(t.x,t.y);
+  ctx.fillStyle=(Math.floor(gameTime*6)%2)?'#ff5b5b':'#9fe6ff'; ctx.beginPath(); ctx.arc(6,-26,4,0,7); ctx.fill();
+  ctx.fillStyle='#d63a2e'; ctx.fillRect(-34,-22,58,22);
+  ctx.fillStyle='#b52c22'; ctx.fillRect(-34,-10,58,10);
+  ctx.fillStyle='#bfe3ff'; ctx.fillRect(8,-20,14,11);
+  ctx.fillStyle='#e8e8e8'; ctx.fillRect(-30,-15,26,3);
+  ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(-20,2,7,0,7); ctx.arc(12,2,7,0,7); ctx.fill();
+  ctx.fillStyle='#666'; ctx.beginPath(); ctx.arc(-20,2,3,0,7); ctx.arc(12,2,3,0,7); ctx.fill();
+  ctx.restore();
+}
+const DEATH_TIPS=[
+  'Reach the 🚒 truck and tap EXTRACT to bank your cash — death forfeits it!',
+  'Double-tap anywhere to DASH — it gives brief invincibility through danger.',
+  'Grab a 🛡️ Shield to walk through fire unharmed for a few seconds.',
+  'Keep your water topped up — low water means a weak, short-range spray.',
+  'Don\'t stand in fire — it burns you! Keep moving and spray from range.',
+  'Extract early to lock in rewards, or push your luck for a bigger payout.',
+  'Save your 🌊 Tidal Wave ultimate for when the screen gets overwhelming.',
+];
+function endMission(success){
+  if(state!==State.PLAY) return;
+  cgPlay(false);
+  state=State.OVER; picking=false; truck=null; lastWasSuccess=success;
+  el('levelup').classList.add('hidden'); stopMusic(); showPlayButtons(false);
+  if(tut.on){ tutHud(false); if(success && (tut.phase==='move'||tut.phase==='spray'||tut.phase==='extract')) tut.phase='buy'; }   // extracted → next lesson is at the hub
+  el('hud').classList.add('hidden'); el('bars').classList.add('hidden'); el('bombBtn').classList.add('hidden'); el('ultBtn').classList.add('hidden'); el('extractBtn').classList.add('hidden');
+  if(success) sfxWave(); else sfxOver();
+  // SURVIVE to extract = bank it all. DIE = forfeit this run's cash & planet progress.
+  const earned = success ? Math.floor((runCoins*missionRewardMult() + missionProgress*6*(planet+1)) * cashMult() * rewardMult()) : 0;
+  coins+=earned; runCoinsAtDeath=earned; runCoins=0; doubledThisRun=false; if(success) pendingBankAnim=earned;
+  qprog('cash',earned); qwave(wave); if(success) qprog('extract',1); saveQuests();
+  statAdd('cash',earned); statMax('wave',wave); saveStats(); checkAch();
+  const doused = success ? Math.min(100, missionProgress*0.35 + 5) : 0;    // death douses nothing
+  worldFire=Math.max(0, worldFire-doused); if(worldFire<=0) planetCleared();
+  const isBest=score>best; if(isBest){ best=score; localStorage.setItem('splashhero_best',String(best)); }
+  lastSeen=Date.now(); saveProgress();
+  el('goTitle').innerHTML = success?'🚒 RESCUED!':(townLost?'🏙️ TOWN LOST':'💀 YOU DIED');
+  el('finalWave').textContent=wave;
+  countUp('finalScore', score, 700);              // tick the score & cash up for a satisfying reveal
+  countUp('finalCoins', earned, 900, fmtNum);
+  el('goDoused').textContent=doused.toFixed(1);
+  el('newBest').textContent = !success ? DEATH_TIPS[Math.floor(Math.random()*DEATH_TIPS.length)] : (isBest?'★ NEW BEST! ★':'');
+  updateGOButtons(); refreshMenus();
+  if(!Monetize.maybeInterstitial(()=>show('gameOverScreen'))) show('gameOverScreen');
+}
+
+function show(id){ for(const s of ['startScreen','shopScreen','gameOverScreen','hubScreen','storeScreen','skinScreen','achScreen','mgrScreen','questScreen','prestigeScreen']) el(s).classList.toggle('hidden', s!==id); }
+function refreshMenus(){
+  el('menuCoins').textContent=fmtNum(coins);
+  el('menuBest').textContent=best;
+  const p=PLANETS[Math.min(planet,PLANETS.length-1)];
+  el('menuPlanet').textContent=p.emoji+' '+p.name+' — '+Math.max(0,Math.min(100,worldFire)).toFixed(0)+'% ablaze · save it!';
+  el('best').textContent=best; el('bestGO').textContent=best; el('bankGO').textContent=fmtNum(coins);
+}
+
+function startGame(){
+  audio(); ensureQuests(); reset(); state=State.PLAY; cgPlay(true);
+  for(const s of ['startScreen','shopScreen','gameOverScreen','hubScreen','storeScreen']) el(s).classList.add('hidden');
+  el('adOverlay').classList.add('hidden'); el('extractBtn').classList.add('hidden'); el('idleScreen').classList.add('hidden'); el('introScreen').classList.add('hidden'); el('planetScreen').classList.add('hidden'); el('settingsScreen').classList.add('hidden');
+  el('hud').classList.remove('hidden'); el('bars').classList.remove('hidden');
+  el('pauseScreen').classList.add('hidden'); el('pauseBtn').textContent='⏸';
+  paused=false; showPlayButtons(true); updateBombBtn(); startMusic();
+  if(tut.on){ if(tut.phase==='intro'||tut.phase==='move'||tut.phase==='spray'||tut.phase==='extract') tutMissionBegin(); else tutDone(); }   // guided first mission; deploying from any hub step gracefully ends the tutorial (no stray spotlight)
+}
+function gameOver(){ endMission(false); }   // overwhelmed = failed extraction
+el('startBtn').addEventListener('click', ()=>{ if(tut.on && tut.phase==='intro') startGame(); else goHub(); });   // first-timers go straight into the action; everyone else to the hub
+el('shopBtn').addEventListener('click', openShop);
+el('shopBack').addEventListener('click', ()=> show(state===State.OVER?'gameOverScreen': state===State.HUB?'hubScreen':'startScreen'));
+el('deployBtn').addEventListener('click', startGame);
+el('redeployBtn').addEventListener('click', startGame);
+el('hqBtn').addEventListener('click', goHub);
+el('reviveBtn').addEventListener('click', watchRevive);
+el('doubleBtn').addEventListener('click', watchDouble);
+el('navGear').addEventListener('click', openShop);
+el('navStore').addEventListener('click', openStore);
+el('navQuests').addEventListener('click', openQuests);
+el('questBack').addEventListener('click', ()=> show(state===State.HUB?'hubScreen':'startScreen'));
+el('hubFreeBtn').addEventListener('click', hubFreeCash);
+el('dailyBtn').addEventListener('click', claimDaily);
+el('extractBtn').addEventListener('click', ()=> endMission(true));
+el('idleCollect').addEventListener('click', collectIdle);
+el('idleCollect2').addEventListener('click', collectIdle2);
+el('navSkins').addEventListener('click', openSkins);
+el('skinBack').addEventListener('click', ()=> show(state===State.HUB?'hubScreen':'startScreen'));
+el('navGoals').addEventListener('click', openAchievements);
+el('achBack').addEventListener('click', ()=> show(state===State.HUB?'hubScreen':'startScreen'));
+el('navMgr').addEventListener('click', openManagers);
+el('mgrBack').addEventListener('click', ()=> show(state===State.HUB?'hubScreen':'startScreen'));
+el('navReb').addEventListener('click', openPrestige);
+el('rebirthBtn').addEventListener('click', doRebirth);
+el('rebBack').addEventListener('click', ()=> show(state===State.HUB?'hubScreen':'startScreen'));
+el('starterBanner').addEventListener('click', openStore);
+el('starterX').addEventListener('click', e=>{ e.stopPropagation(); localStorage.setItem('sh_starterdismiss','1'); updateStarterBanner(); });
+el('introBtn').addEventListener('click', ()=>{ el('introScreen').classList.add('hidden'); localStorage.setItem('sh_seenintro','1'); });
+// ---- interactive first-play tutorial: teaches by DOING, woven into the first mission + first hub visit ----
+function tutText(){ const mob=hasTouch; return {
+  move:  mob ? '👆 Drag anywhere to MOVE' : '⌨️ WASD / arrow keys to MOVE',
+  spray: mob ? '💦 Chase down the fires — you auto-spray them!' : '💦 Aim with the mouse & HOLD click to spray the fires!',
+  extract:'🚒 Hop on the truck & tap EXTRACT to bank your cash!' }; }
+function tutHud(on, txt){ const h=el('tutHud'); if(!h) return; if(on){ h.textContent=txt; h.classList.remove('hidden'); } else h.classList.add('hidden'); }
+function tutMissionBegin(){ tutPhase('move'); }
+function tutPhase(p){ tut.phase=p; const T=tutText();
+  if(p==='move'){ tut.moveAcc=0; tutHud(true,T.move); }
+  else if(p==='spray'){ tut.fires=0; tutHud(true,T.spray); }
+  else if(p==='extract'){ tutHud(true,T.extract); if(!truck) spawnTruck(); }   // call the truck in early so the lesson stays snappy
+}
+function firstHubUpgradeCost(){ let m=Infinity; for(const u of TYCOON){ const c=tycoonCost(u); if(c<m) m=c; } return isFinite(m)?m:0; }
+function tutPlace(sel){                                   // spotlight a hub element; card pinned to the opposite screen edge
+  const t=sel?document.querySelector(sel):null, spot=el('tutSpot'), card=el('tutCard');
+  if(t){ const r=t.getBoundingClientRect(), pad=8; spot.classList.remove('center'); card.classList.remove('mid');
+    spot.style.left=(r.left-pad)+'px'; spot.style.top=(r.top-pad)+'px'; spot.style.width=(r.width+pad*2)+'px'; spot.style.height=(r.height+pad*2)+'px';
+    const cy=r.top+r.height/2;
+    if(cy>window.innerHeight*0.52){ card.style.top='calc(env(safe-area-inset-top) + 16px)'; card.style.bottom='auto'; }
+    else { card.style.bottom='calc(env(safe-area-inset-bottom) + 22px)'; card.style.top='auto'; }
+  } else { spot.classList.add('center'); card.classList.add('mid'); spot.style.left='50%'; spot.style.top='50%'; spot.style.width='0'; spot.style.height='0'; }
+}
+function tutSpotlight(sel, title, body){                  // interactive: highlight target, wait for the player to DO the action (no Next button)
+  tut.sel=sel;
+  el('tutStep').textContent='TUTORIAL'; el('tutTitle').innerHTML=title; el('tutBody').innerHTML=body;
+  el('tutNext').style.display='none'; el('tutDots').style.display='none'; el('tutSkip').textContent='Skip tutorial';
+  el('tutorial').classList.remove('hidden');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>tutPlace(sel)));   // let the hub finish laying out first
+}
+function tutHubBuy(){ tut.phase='buy';
+  const need=firstHubUpgradeCost(); if(coins<need){ coins=need; saveProgress(); renderHub(); }   // make sure a brand-new player can afford their first upgrade
+  tutSpotlight('#hubList','🏗️ Grow your HQ', 'Tap an upgrade to buy it — HQ upgrades boost your hose <b>and</b> earn passive cash, even while you\'re away! 💰');
+}
+function cheapestGearCost(){ let m=Infinity; for(const u of UPGRADES){ const c=u.cost(lvl(u.key)); if(c<m) m=c; } return isFinite(m)?m:0; }
+function tutGearStep(){ tut.phase='gearOpen';
+  tutSpotlight('#navGear','🔧 Gear up!', 'Now open <b>GEAR</b> — permanent hose upgrades (bigger tank, more pressure) that make every mission easier.');
+}
+function tutGearBuy(){ tut.phase='gearBuy';
+  const need=cheapestGearCost(); if(coins<need){ coins=need; saveProgress(); renderShop(); }   // guarantee a gear item is affordable
+  tutSpotlight('#shopList','🔧 Buy some gear', 'Grab a hose upgrade — stronger gear means you clear fires faster and last longer out there.');
+}
+function tutAfterGear(){ show('hubScreen'); renderHub(); tutHubDeploy(); }   // gear bought → back to the hub for the final deploy step
+function tutHubDeploy(){ tut.phase='deploy';
+  tutSpotlight('#deployBtn','🚒 Deploy again!', 'You\'ve got the hang of it, Chief! Deploy back out and keep growing your firefighting empire.');
+}
+function tutDone(){ tut.on=false; tut.phase='done'; tutHud(false); el('tutorial').classList.add('hidden');
+  el('tutNext').style.display=''; el('tutDots').style.display=''; el('tutSkip').textContent='Skip';   // restore card defaults
+  try{ localStorage.setItem('sh_tut_v1','1'); localStorage.setItem('sh_seenintro','1'); }catch(e){}
+}
+el('tutSkip').addEventListener('click', tutDone);
+el('setTut').addEventListener('click', ()=>{ el('settingsScreen').classList.add('hidden'); tut.on=true; tut.phase='intro'; try{localStorage.removeItem('sh_tut_v1');}catch(e){} startGame(); });
+window.addEventListener('resize', ()=>{ if(!el('tutorial').classList.contains('hidden') && (tut.phase==='buy'||tut.phase==='deploy')) tutPlace(tut.sel); });
+el('planetNextBtn').addEventListener('click', closePlanetCeleb);
+el('navSet').addEventListener('click', openSettings);
+el('pauseSetBtn').addEventListener('click', openSettings);
+el('setBack').addEventListener('click', ()=> el('settingsScreen').classList.add('hidden'));
+el('setSound').addEventListener('click', ()=>{ toggleMute(); renderSettings(); });
+el('setHaptics').addEventListener('click', toggleHaptics);
+el('setReset').addEventListener('click', confirmReset);
+el('storeBack').addEventListener('click', ()=> show(state===State.OVER?'gameOverScreen': state===State.HUB?'hubScreen':'startScreen'));
+refreshMenus();
+goHub();   // skip the title/entry screen — boot straight into the HQ (main game screen)
+
+//---------------- Loop ------------------------------------------
+let last=performance.now();
+function frame(now){
+  let dt=(now-last)/1000; last=now; if(dt>0.05) dt=0.05;
+  if(state===State.PLAY){
+    if(hitStop>0){ hitStop-=dt; }
+    else if(!picking && !paused){ update(dt); }
+    draw();
+  } else if(state===State.HUB){ hubTick(dt); }
+  else if(state===State.MENU){ drawMenu(); }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// Register the PWA service worker only on the PWA host (GitHub Pages) / localhost — NOT inside
+// portal iframes (CrazyGames, itch, GameDistribution) where a SW can interfere with loading.
+if('serviceWorker' in navigator && (location.hostname.endsWith('github.io')||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
+  const hadController = !!navigator.serviceWorker.controller;   // false on first-ever visit
+  let refreshing=false;
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{   // a NEW build activated → reload once to pick it up
+    if(refreshing || !hadController) return; refreshing=true; location.reload();
+  });
+  window.addEventListener('load', ()=> navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+
+// Version tag: read the REAL deployed cache version straight from sw.js so the hub always shows
+// the truth (self-maintaining — no manual bump needed). Falls back to plain "WATER HERO" offline.
+try{ fetch('sw.js',{cache:'no-store'}).then(r=>r.text()).then(t=>{ const m=t.match(/waterhero-(v\d+)/); const n=el('verTag'); if(m&&n) n.textContent='WATER HERO · '+m[1]; }).catch(()=>{}); }catch(e){}
+})();
+</script>
+</body>
+</html>

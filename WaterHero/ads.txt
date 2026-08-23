@@ -1,0 +1,4 @@
+# Water Hero — ads.txt (Authorized Digital Sellers)
+# REQUIRED by Google AdSense / H5 Games Ads. Replace pub-0000000000000000 with YOUR
+# AdSense publisher ID (the digits after "ca-pub-"), then redeploy. Until then ads stay simulated.
+google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
