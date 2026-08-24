@@ -164,12 +164,12 @@ var BAR=(60/129.2)*4;               /* only the offline fallback pulse uses this
 var BG_VOL=0.3,SUN_VOL=0.3,CF=0.6;  /* keep these EQUAL — the filter, no' the volume, is the difference */
 /* ---- the freshness clock: nae hearin' the chorus fully twice in a row ---- */
 var CHORUS_CD=90;                   /* seconds the chorus stays "just heard" */
-var PUB_DISCOUNT=30;                /* a proper pub trip earns the drop back sooner */
+var pubFresh=false;                 /* first circle efter the pub judges on 75% heard */
 var WRAP_BARS=12;                   /* the sang-end wrap lands this mony bars AFORE the chorus */
 var WRAP_BEAT=BEAT_ANCHOR-WRAP_BARS*4,WRAP_A=bT(WRAP_BEAT);
 var chorusEndT=-1e9;                /* when a chorus was last HEARD (85% coonts) */
 var chorusHW=-1,chorusHWT=-1e9;     /* furthest chorus beat heard LOUD, an' when */
-var lastAudP=-1,lastPubTripT=-1e9;  /* playhead continuity + pub-trip stamp */
+var lastAudP=-1;                    /* playhead continuity for the clock */
 /* NOTE: freshness state deliberately survives reset() — a quick restart shouldnae re-arm the drop */
 var songBuf=null,bgSrc=null,sunSrc=null,bgGain=null,sunGain=null,bgFilt=null;
 var bgPos=0,sunPos=-1,bgT0=0,sunT0=0; /* sunPos -1 = first visit enters at SUN_A */
@@ -217,9 +217,10 @@ function scheduleSwitch(toSun){
   var c=((k-BEAT_ANCHOR)%4+4)%4;
   var inSrc=makeSrc(toSun),base,inB,inPos;
   if(toSun){
-    /* the freshness clock: cold = the drop; fresh = the sky opens on the sang */
-    var cdEff=(chorusEndT<lastPubTripT)?CHORUS_CD-PUB_DISCOUNT:CHORUS_CD;
-    var frsh=(t-chorusEndT)<cdEff;
+    /* the freshness clock: cold = the drop; fresh = the sky opens on the sang.
+       The FIRST circle efter a pub trip judges on 75% o' the chorus heard. */
+    var frsh=(t-chorusEndT)<CHORUS_CD;
+    if(pubFresh)frsh=(chorusHW-BEAT_ANCHOR)>=Math.round(SUN_BEATS*0.75)&&(t-chorusHWT)<CHORUS_CD;
     /* seamless: the bg's audibly INSIDE ony chorus zone (or the ootro), or in
        the 16-beat grace efter ane ended — open the sky in place, nae restart */
     var seam=false;
@@ -275,12 +276,13 @@ function scheduleSwitch(toSun){
   outGain.gain.setValueAtTime(outGain.gain.value,t);
   outGain.gain.setValueAtTime(outGain.gain.value,at);
   outGain.gain.linearRampToValueAtTime(0.0001,at+CF);
-  pend={to:toSun,at:at,src:inSrc,inPos:Math.max(0,inPos),outPos:swT};
+  pend={to:toSun,at:at,src:inSrc,inPos:Math.max(0,inPos),outPos:swT,pubUse:toSun&&pubFresh};
 }
 function finishSwitch(){
   if(pend.to){
     if(bgSrc){try{bgSrc.stop();}catch(e){} bgPos=pend.outPos%songBuf.duration;}
     bgSrc=null;sunSrc=pend.src;sunPos=pend.inPos;sunT0=pend.at;sunOn=true;
+    if(pend.pubUse)pubFresh=false; /* the first-efter-the-pub entry's been an' gane */
   }else{
     if(sunSrc){try{sunSrc.stop();}catch(e){} sunPos=pend.outPos%songBuf.duration;}
     sunSrc=null;bgSrc=pend.src;bgPos=pend.inPos;bgT0=pend.at;sunOn=false;
@@ -538,10 +540,7 @@ function ruinPint(msg,say){
 }
 
 /* ---------- scene switching ---------- */
-function goScene(next){
-  if(next==='PUB'&&AC)lastPubTripT=AC.currentTime; /* a proper roond earns the drop back sooner */
-  if(fadeDir===0){fadeNext=next;fadeDir=1;}
-}
+function goScene(next){if(fadeDir===0){fadeNext=next;fadeDir=1;}}
 function initStreet(){
   lanes=[
     {y:124,dir:1,t:rnd(0.8,2.6),cars:[]},
@@ -1133,6 +1132,7 @@ function finishStrut(){
   /* normal weather on returnin' — ony auld rain's blawn ower, an' the rain
      clock starts fresh: 1s grace, THEN thunder, since ye're ootside the circle */
   rain.active=false;rain.warned=false;wasInSun=false;rainCnt=0.0001;rainWarnAt=1.0;
+  pubFresh=true; /* the next circle judges the chorus on 75% heard */
   /* hame wi' a fu' pint, aye — nae hauf-measures in yer ain gairden */
   if(pint.has&&pint.ml<560)popup(dude.x,dude.y-56,"TAPPED AFF FU'",'#7ec850');
   pint.has=true;pint.ml=568;pint.watered=0;fetching=false;
