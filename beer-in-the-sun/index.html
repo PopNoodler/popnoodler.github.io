@@ -2155,17 +2155,15 @@ function drawPintLives(big){
   for(var i=0;i<3;i++){
     var lx=big?(W-10-(3-i)*gap):(W-62+i*13); /* wee anes sit clear o' the mute icon */
     var fr=clamp(stock-i,0,1);
-    /* the tume pairt stays beer-coloured, just faded — nae black gless */
-    ctx.globalAlpha=0.25;
-    px(lx,y0,w,h,'#e8a020');
+    /* the tume pairt is FLAT faded beer — solid colour, nae alpha, sae it reads
+       the same ower the sky, the grass, or the flight's black letterbox */
+    px(lx,y0,w,h,'#6b5626');
     if(fr>0){
-      ctx.globalAlpha=1;
       var fh=Math.max(1,Math.round(h*fr));
       var draining=fr<1&&spillFlash>0&&Math.floor(T*10)%2===0;
       px(lx,y0+h-fh,w,fh,draining?'#ff8830':'#e8a020');
       if(fr>0.9)px(lx,y0,w,2,'#fff8e0');
     }
-    ctx.globalAlpha=1;
     ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.strokeRect(lx-0.5,y0-0.5,w+1,h+1);
   }
   ctx.globalAlpha=1;
