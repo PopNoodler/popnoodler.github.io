@@ -162,10 +162,18 @@ var CHORUS_ZONES=[[100,150],[204,254],[BEAT_ANCHOR,BEAT_ANCHOR+SUN_BEATS],[452,1
 var SUN_A=bT(BEAT_ANCHOR),SUN_B=bT(BEAT_ANCHOR+SUN_BEATS),SUN_LEN=SUN_B-SUN_A;
 var BAR=(60/129.2)*4;               /* only the offline fallback pulse uses this */
 var BG_VOL=0.3,SUN_VOL=0.3,CF=0.6;  /* keep these EQUAL — the filter, no' the volume, is the difference */
-var STRUT_TAIL=5;                   /* the chorus lingers this lang efter walkin' it aff */
+/* ---- the freshness clock: nae hearin' the chorus fully twice in a row ---- */
+var CHORUS_CD=90;                   /* seconds the chorus stays "just heard" */
+var PUB_DISCOUNT=30;                /* a proper pub trip earns the drop back sooner */
+var WRAP_BARS=12;                   /* the sang-end wrap lands this mony bars AFORE the chorus */
+var WRAP_BEAT=BEAT_ANCHOR-WRAP_BARS*4,WRAP_A=bT(WRAP_BEAT);
+var chorusEndT=-1e9;                /* when a chorus was last HEARD (85% coonts) */
+var chorusHW=-1,chorusHWT=-1e9;     /* furthest chorus beat heard LOUD, an' when */
+var lastAudP=-1,lastPubTripT=-1e9;  /* playhead continuity + pub-trip stamp */
+/* NOTE: freshness state deliberately survives reset() — a quick restart shouldnae re-arm the drop */
 var songBuf=null,bgSrc=null,sunSrc=null,bgGain=null,sunGain=null,bgFilt=null;
 var bgPos=0,sunPos=-1,bgT0=0,sunT0=0; /* sunPos -1 = first visit enters at SUN_A */
-var sunOn=false,sunHold=0,pend=null,strutCued=false,strutTail=0,songFailed=false; /* pend = a switch waiting for its bar line */
+var sunOn=false,sunHold=0,pend=null,songFailed=false; /* pend = a switch waiting for its bar line */
 function initSong(){
   if(!AC||bgGain)return;
   /* the background song sits ahint the clouds: low-passed and quiet */
@@ -180,25 +188,25 @@ function initSong(){
 function makeSrc(sun){
   var s=AC.createBufferSource();s.buffer=songBuf;s.loop=true;
   if(sun){
-    /* plays richt on past the chorus — but when the SONG ends, it wraps
-       back tae the stairt o' the chorus, no' the track's intro */
-    s.loopStart=SUN_A;s.loopEnd=songBuf.duration;
+    /* plays richt on past the chorus — an' when the SONG ends it wraps tae
+       the RUN-UP, 12 bars afore the chorus: a breath, no' a butt-splice */
+    s.loopStart=WRAP_A;s.loopEnd=songBuf.duration;
     s.connect(sunGain);
   }
   else s.connect(bgFilt);
   return s;
 }
-function gridSnap(p){return SUN_A+Math.round((p-SUN_A)/BAR)*BAR;}
+function countMatch(b,c){return b+(((c-((b-BEAT_ANCHOR)%4))%4)+4)%4;}
 function activePos(t){
   if(sunOn){
     var pp=sunPos+(t-sunT0);
-    if(pp>=songBuf.duration){var L=songBuf.duration-SUN_A;pp=SUN_A+((pp-songBuf.duration)%L);}
+    if(pp>=songBuf.duration){var L=songBuf.duration-WRAP_A;pp=WRAP_A+((pp-songBuf.duration)%L);}
     return pp;
   }
   var b=(bgPos+(t-bgT0))%songBuf.duration;if(b<0)b+=songBuf.duration;return b;
 }
 /* every switch waits for the next bar line, then crossfades — both layers land on the grid */
-function scheduleSwitch(toSun,fresh){
+function scheduleSwitch(toSun){
   var t=AC.currentTime,p=activePos(t);
   /* next TRUE beat o' the audible material, wi' room for the pre-roll.
      The coont (beat-in-bar) carries across the switch, aff the real beat map. */
@@ -209,25 +217,52 @@ function scheduleSwitch(toSun,fresh){
   var c=((k-BEAT_ANCHOR)%4+4)%4;
   var inSrc=makeSrc(toSun),base,inB,inPos;
   if(toSun){
-    if(!sunOn&&swT>=SUN_A&&swT<SUN_B){
-      /* the chorus is ALREADY playin' on the main track — dinnae restart it,
-         just cairry the exact same spot across an' open the sky */
+    /* the freshness clock: cold = the drop; fresh = the sky opens on the sang */
+    var cdEff=(chorusEndT<lastPubTripT)?CHORUS_CD-PUB_DISCOUNT:CHORUS_CD;
+    var frsh=(t-chorusEndT)<cdEff;
+    /* seamless: the bg's audibly INSIDE ony chorus zone (or the ootro), or in
+       the 16-beat grace efter ane ended — open the sky in place, nae restart */
+    var seam=false;
+    if(!sunOn){
+      var swB=bIdx(swT);
+      for(var z3=0;z3<CHORUS_ZONES.length;z3++){
+        var zz0=CHORUS_ZONES[z3][0],zz1=Math.min(CHORUS_ZONES[z3][1],BEATS.length-1);
+        var g1=(z3<3)?Math.min(zz1+16,BEATS.length-1):zz1;
+        if(swB>=zz0&&swB<g1){seam=true;break;}
+      }
+      if(!seam&&frsh&&sunPos<0)seam=true; /* fresh but nae held spot: just unmuffle */
+    }
+    if(seam){
       inPos=swT;
+      /* same-zone high-water: dinnae replay loud whit ye already heard loud */
+      var sB=bIdx(swT);
+      if(frsh&&chorusHW>sB&&sB>=BEAT_ANCHOR&&sB<BEAT_ANCHOR+SUN_BEATS
+         &&chorusHW<BEAT_ANCHOR+SUN_BEATS&&(t-chorusHWT)<CHORUS_CD){
+        inB=countMatch(chorusHW,c);inPos=bT(inB);
+      }
     }else{
-      if(fresh||sunPos<0)base=BEAT_ANCHOR;
-      else{base=bIdx(sunPos);if(base<BEAT_ANCHOR||base>=BEAT_ANCHOR+SUN_BEATS)base=BEAT_ANCHOR;}
-      inB=base+(((c-((base-BEAT_ANCHOR)%4))%4)+4)%4;
-      if(inB>=BEAT_ANCHOR+SUN_BEATS)inB=BEAT_ANCHOR+((inB-BEAT_ANCHOR)%4);
+      if(!frsh)base=BEAT_ANCHOR;          /* cold: the drop, same as it ever wis */
+      else{                                /* fresh: play on fae whaur ye left aff */
+        base=(sunPos>=0)?bIdx(sunPos):BEAT_ANCHOR+SUN_BEATS;
+        if(chorusHW>base&&chorusHW>=BEAT_ANCHOR&&(t-chorusHWT)<CHORUS_CD)base=chorusHW;
+      }
+      inB=countMatch(base,c);
+      if(inB>=BEATS.length-4)inB=countMatch(WRAP_BEAT,c); /* tail → the run-up */
       inPos=bT(inB);
     }
   }else{
+    /* never come IN inside a chorus (or the ootro): coont-match FIRST, zone-test
+       the RESULT, re-match fae the zone end — the auld order seated us 1-2 beats
+       inside a chorus tap whenever the frozen spot sat just afore it */
     base=bIdx(bgPos);
-    /* never come IN inside a chorus (or its pre-chorus) onywhere in the sang —
-       continue fae the bar at the end o' that chorus, on the equivalent beat */
+    inB=countMatch(base,c);
     for(var z=0;z<CHORUS_ZONES.length;z++)
-      if(base>=CHORUS_ZONES[z][0]-1&&base<CHORUS_ZONES[z][1])base=CHORUS_ZONES[z][1];
-    inB=base+(((c-((base-BEAT_ANCHOR)%4))%4)+4)%4;
-    if(inB>=BEATS.length-4)inB=c+4; /* aff the end: back near the tap, same coont */
+      if(inB>=CHORUS_ZONES[z][0]-1&&inB<CHORUS_ZONES[z][1])inB=countMatch(CHORUS_ZONES[z][1],c);
+    if(inB>=BEATS.length-4){
+      inB=countMatch(4,c); /* aff the end: back near the tap, same coont */
+      for(var z5=0;z5<CHORUS_ZONES.length;z5++)
+        if(inB>=CHORUS_ZONES[z5][0]-1&&inB<CHORUS_ZONES[z5][1])inB=countMatch(CHORUS_ZONES[z5][1],c);
+    }
     inPos=bT(inB);
   }
   inPos-=CF/2; /* start half a fade early so the beat lands at full presence */
@@ -250,7 +285,7 @@ function finishSwitch(){
     if(sunSrc){try{sunSrc.stop();}catch(e){} sunPos=pend.outPos%songBuf.duration;}
     sunSrc=null;bgSrc=pend.src;bgPos=pend.inPos;bgT0=pend.at;sunOn=false;
   }
-  pend=null;
+  pend=null;lastAudP=-1; /* the playhead jumps on a switch — dinnae false-arm the clock */
 }
 function cancelSwitch(){
   var t=AC.currentTime;
@@ -260,7 +295,7 @@ function cancelSwitch(){
   outGain.gain.cancelScheduledValues(t);
   outGain.gain.setValueAtTime(outGain.gain.value,t);
   outGain.gain.setTargetAtTime(pend.to?BG_VOL:SUN_VOL,t,0.15);
-  pend=null;
+  pend=null;lastAudP=-1;
 }
 function updSong(dt){
   if(!AC||!songBuf)return;
@@ -271,19 +306,38 @@ function updSong(dt){
     bgGain.gain.setTargetAtTime(BG_VOL,t,0.5);
     return;
   }
+  /* the freshness clock: 85% o' a chorus heard = heard. Watches the audible
+     playhead across BOTH layers; a big backward jump = the sang-end wrap. */
+  var ap=activePos(t);
+  if(lastAudP>=0){
+    if(ap>lastAudP&&ap-lastAudP<5){
+      for(var zf=0;zf<3;zf++){
+        var armAt=bT(CHORUS_ZONES[zf][0]+43); /* 85% o' the 50-beat section */
+        if(lastAudP<armAt&&ap>=armAt)chorusEndT=t;
+      }
+    }else if(lastAudP-ap>60)chorusEndT=t; /* wrapped past the ootro's chorus */
+  }
+  if(sunOn){
+    var hk=bIdx(ap);
+    if(hk>=BEAT_ANCHOR&&hk<BEAT_ANCHOR+SUN_BEATS&&hk>chorusHW){chorusHW=hk;chorusHWT=t;}
+  }
+  lastAudP=ap;
   /* the chorus lives in the circle. A pint ye DRANK dry keeps the sun on
      across the gairden — a pint the rain RUINED earns ye naething */
-  var wantSun=state==='PLAY'&&scene==='GARDEN'&&pint.has&&(inSunPatch()||pint.ml<=0);
+  var pintDone=pint.has&&pint.ml<=0;
+  var wantSun=state==='PLAY'&&scene==='GARDEN'&&pint.has&&(inSunPatch()||pintDone);
   if(pend){
     if(t>pend.at+CF+0.05)finishSwitch();
-    else if(wantSun!==pend.to&&t<pend.at-0.08)cancelSwitch();
+    else if(wantSun!==pend.to&&t<pend.at-0.02)cancelSwitch();
     else return;
   }
   /* sticky: quick tae bring the chorus in, gey reluctant tae let it go */
   if(sunOn&&!wantSun&&!rain.active&&scene==='GARDEN'&&patch.alpha>0.4&&dist(dude.x,dude.y,patch.x,patch.y)<patch.r+14)wantSun=true;
   if(wantSun!==sunOn){
-    if(wantSun){ /* intae the sun: nae delay — the bar-lock is a' the timing needed */
-      sunHold=0;scheduleSwitch(true);
+    if(wantSun){ /* intae the sun: a wee 0.25s debounce hides under the beat-wait;
+                    the pint-done trigger stays instant */
+      sunHold+=dt;
+      if(pintDone||sunHold>0.25){sunHold=0;scheduleSwitch(true);}
     }else{
       sunHold+=dt; /* oot the sun: hysteresis only on the wey oot */
       if(sunHold>1.0){sunHold=0;scheduleSwitch(false);}
@@ -484,7 +538,10 @@ function ruinPint(msg,say){
 }
 
 /* ---------- scene switching ---------- */
-function goScene(next){if(fadeDir===0){fadeNext=next;fadeDir=1;}}
+function goScene(next){
+  if(next==='PUB'&&AC)lastPubTripT=AC.currentTime; /* a proper roond earns the drop back sooner */
+  if(fadeDir===0){fadeNext=next;fadeDir=1;}
+}
 function initStreet(){
   lanes=[
     {y:124,dir:1,t:rnd(0.8,2.6),cars:[]},
