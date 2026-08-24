@@ -2233,16 +2233,21 @@ function drawScanlines(){
 }
 function drawMenu(){
   ctx.fillStyle='rgba(10,16,30,0.55)';ctx.fillRect(0,0,W,H);
-  ctx.save();ctx.translate(W/2,64);
-  ctx.save();ctx.rotate(menuT*0.3);
+  /* the REAL gairden sun shines through the menu — same sun, full beam */
+  var mgx=gapX();
+  ctx.save();ctx.translate(mgx,28);
+  var mg=ctx.createRadialGradient(0,0,4,0,0,34);
+  mg.addColorStop(0,'rgba(255,214,90,0.55)');mg.addColorStop(1,'rgba(255,214,90,0)');
+  ctx.fillStyle=mg;ctx.fillRect(-36,-30,72,64);
   ctx.fillStyle='#ffd23f';
-  for(var i=0;i<10;i++){ctx.rotate(TAU/10);ctx.fillRect(24,-3,12,6);}
-  ctx.beginPath();ctx.arc(0,0,20,0,TAU);ctx.fill();
+  ctx.save();ctx.rotate(menuT*0.3);
+  for(var i=0;i<8;i++){ctx.rotate(TAU/8);ctx.fillRect(13,-2,7,4);}
   ctx.restore();
+  ctx.beginPath();ctx.arc(0,0,11,0,TAU);ctx.fill();
   ctx.fillStyle='#7a5510';
-  ctx.fillRect(-8,-6,4,6);ctx.fillRect(4,-6,4,6);
-  ctx.strokeStyle='#7a5510';ctx.lineWidth=2;
-  ctx.beginPath();ctx.arc(0,4,8,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
+  ctx.fillRect(-5,-4,2,3);ctx.fillRect(3,-4,2,3);
+  ctx.strokeStyle='#7a5510';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(0,2,4.5,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
   ctx.restore();
   text('BEER',W/2,112,26,'#ffd23f');
   text('IN THE SUN',W/2,136,17,'#ffd23f');
