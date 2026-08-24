@@ -314,7 +314,7 @@ function updSong(dt){
   if(lastAudP>=0){
     if(ap>lastAudP&&ap-lastAudP<5){
       for(var zf=0;zf<3;zf++){
-        var armAt=bT(CHORUS_ZONES[zf][0]+43); /* 85% o' the 50-beat section */
+        var armAt=bT(CHORUS_ZONES[zf][0]+38); /* 75% o' the 50-beat section */
         if(lastAudP<armAt&&ap>=armAt)chorusEndT=t;
       }
     }else if(lastAudP-ap>60)chorusEndT=t; /* wrapped past the ootro's chorus */
