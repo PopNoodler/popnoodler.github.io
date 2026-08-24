@@ -1250,8 +1250,15 @@ function drawGardenSky(){
   ctx.fillStyle=mix([142,166,188],[92,104,124],gloom);ctx.fillRect(0,0,W,112);
   var gx=gapX(),gapHalf=lerp(2,26,patch.alpha);
   /* sun face keekin' through the gap */
-  if(patch.alpha>0.1){
-    ctx.save();ctx.translate(gx,28);ctx.globalAlpha=patch.alpha;
+  if(patch.alpha>0.1)drawSunFace(patch.alpha);
+  /* twa decks o' cloud, wi' the gap cut oot */
+  drawCloudDeck(20,'#c3cbd6',gx,gapHalf,7,gloom);
+  drawCloudDeck(8,'#dfe4ea',gx,gapHalf+6,11,gloom);
+}
+function drawSunFace(a){ /* the ONE sun — gairden an' menu baith use this */
+  var gx=gapX();
+  {
+    ctx.save();ctx.translate(gx,28);ctx.globalAlpha=a;
     if(blissV>0.5&&Math.sin(T*0.35)>0.45){ /* whiles, the sun has a wee dance */
       ctx.translate(Math.sin(T*6)*2.2*blissV,-Math.abs(Math.sin(T*12))*2.2*blissV);
       ctx.rotate(Math.sin(T*6)*0.14*blissV);
@@ -1288,9 +1295,6 @@ function drawGardenSky(){
     }
     ctx.restore();
   }
-  /* twa decks o' cloud, wi' the gap cut oot */
-  drawCloudDeck(20,'#c3cbd6',gx,gapHalf,7,gloom);
-  drawCloudDeck(8,'#dfe4ea',gx,gapHalf+6,11,gloom);
 }
 function drawCloudDeck(y,col,gx,gapHalf,drift,gloom){
   ctx.fillStyle=gloom>0.3?mix([139,149,166],[110,118,132],gloom):col;
@@ -2233,61 +2237,52 @@ function drawScanlines(){
 }
 function drawMenu(){
   ctx.fillStyle='rgba(10,16,30,0.55)';ctx.fillRect(0,0,W,H);
-  /* the REAL gairden sun shines through the menu — same sun, full beam */
-  var mgx=gapX();
-  ctx.save();ctx.translate(mgx,28);
+  /* the REAL gairden sun shines through the menu — the exact same sun */
+  ctx.save();ctx.translate(gapX(),28);
   var mg=ctx.createRadialGradient(0,0,4,0,0,34);
-  mg.addColorStop(0,'rgba(255,214,90,0.55)');mg.addColorStop(1,'rgba(255,214,90,0)');
+  mg.addColorStop(0,'rgba(255,214,90,0.5)');mg.addColorStop(1,'rgba(255,214,90,0)');
   ctx.fillStyle=mg;ctx.fillRect(-36,-30,72,64);
-  ctx.fillStyle='#ffd23f';
-  ctx.save();ctx.rotate(menuT*0.3);
-  for(var i=0;i<8;i++){ctx.rotate(TAU/8);ctx.fillRect(13,-2,7,4);}
   ctx.restore();
-  ctx.beginPath();ctx.arc(0,0,11,0,TAU);ctx.fill();
-  ctx.fillStyle='#7a5510';
-  ctx.fillRect(-5,-4,2,3);ctx.fillRect(3,-4,2,3);
-  ctx.strokeStyle='#7a5510';ctx.lineWidth=1;
-  ctx.beginPath();ctx.arc(0,2,4.5,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
-  ctx.restore();
-  text('BEER',W/2,112,26,'#ffd23f');
-  text('IN THE SUN',W/2,136,17,'#ffd23f');
-  text('~ THE GAME ~',W/2,154,8,'#fff');
+  drawSunFace(1);
+  text('BEER',W/2,94,26,'#ffd23f');
+  text('IN THE SUN',W/2,116,17,'#ffd23f');
+  text('~ THE GAME ~',W/2,132,8,'#fff');
   /* TAP TO START sits ABOVE the game text */
-  if(Math.floor(menuT*2)%2===0)text('TAP TO START',W/2,168,10,'#fff');
+  if(Math.floor(menuT*2)%2===0)text('TAP TO START',W/2,146,10,'#fff');
   /* the how-it-goes panel — a' the rules in a tidy box */
   ctx.fillStyle='rgba(6,12,24,0.72)';
-  ctx.fillRect(16,178,W-32,84);
+  ctx.fillRect(16,156,W-32,84);
   ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=1;
-  ctx.strokeRect(16.5,178.5,W-33,83);
-  text('HOW IT GOES',W/2,188,6,'rgba(255,255,255,0.55)');
-  text('CHUG IN THE SUN SPOTS',W/2,200,7,'#ffd23f');
-  text('EMPTY? OOT THE GATE TAE THE PUB',W/2,211,6,'#cfe6f5');
-  text('POUR YER AIN — STOP AT THE LINE',W/2,222,6,'#cfe6f5');
-  text('GET RUN OWER ON THE WAY HAME',W/2,233,6,'#ffd23f');
-  text('BALANCE YER PINT IN THE AIR',W/2,244,6,'#ff9d6b');
-  text("DRAIN 3 PINTS AN' YER OOT AE BEER (GAME OVER)",W/2,255,5,'#ff6b6b');
+  ctx.strokeRect(16.5,156.5,W-33,83);
+  text('HOW IT GOES',W/2,166,6,'rgba(255,255,255,0.55)');
+  text('CHUG IN THE SUN SPOTS',W/2,178,7,'#ffd23f');
+  text('EMPTY? OOT THE GATE TAE THE PUB',W/2,189,6,'#cfe6f5');
+  text('POUR YER AIN — STOP AT THE LINE',W/2,200,6,'#cfe6f5');
+  text('GET RUN OWER ON THE WAY HAME',W/2,211,6,'#ffd23f');
+  text('BALANCE YER PINT IN THE AIR',W/2,222,6,'#ff9d6b');
+  text("DRAIN 3 PINTS AN' YER OOT AE BEER (GAME OVER)",W/2,233,5,'#ff6b6b');
   /* the lower panel: board, slider an' credits thegither */
   ctx.fillStyle='rgba(6,12,24,0.72)';
-  ctx.fillRect(16,268,W-32,92);
+  ctx.fillRect(16,246,W-32,92);
   ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=1;
-  ctx.strokeRect(16.5,268.5,W-33,91);
+  ctx.strokeRect(16.5,246.5,W-33,91);
   /* the world board — a proper gold arcade button */
-  ctx.fillStyle='#ffd23f';ctx.fillRect(30,273,W-60,15);
-  ctx.fillStyle='rgba(255,255,255,0.45)';ctx.fillRect(30,273,W-60,1);
-  text('🌍 WORLD TOP PINTS',W/2,281,7,'#3a2a00');
-  if(hi>0)text('BEST '+hi+' ml',W/2,295,6,'#7ec850');
+  ctx.fillStyle='#ffd23f';ctx.fillRect(30,251,W-60,15);
+  ctx.fillStyle='rgba(255,255,255,0.45)';ctx.fillRect(30,251,W-60,1);
+  text('🌍 WORLD TOP PINTS',W/2,259,7,'#3a2a00');
+  if(hi>0)text('BEST '+hi+' ml',W/2,273,6,'#7ec850');
   /* the volume slider (dinnae bother) */
-  text('VOLUME',W/2,305,6,'rgba(255,255,255,0.75)');
-  ctx.fillStyle='rgba(255,255,255,0.25)';ctx.fillRect(W/2-40,313,80,3);
+  text('VOLUME',W/2,283,6,'rgba(255,255,255,0.75)');
+  ctx.fillStyle='rgba(255,255,255,0.25)';ctx.fillRect(W/2-40,291,80,3);
   var kx=W/2+16+(nawT>0?Math.sin(menuT*40)*3:0);
-  ctx.fillStyle='#ffd23f';ctx.fillRect(kx-2,309,5,11);
-  if(nawT>0)text(nawMsg,W/2,324,7,'#ff9d6b');
-  text('Fan tribute - with big thanks to GMCG',W/2,331,6,'rgba(255,255,255,0.65)');
+  ctx.fillStyle='#ffd23f';ctx.fillRect(kx-2,287,5,11);
+  if(nawT>0)text(nawMsg,W/2,302,7,'#ff9d6b');
+  text('Fan tribute - with big thanks to GMCG',W/2,309,6,'rgba(255,255,255,0.65)');
   /* the stream link — a proper wee Spotify-green button */
-  ctx.fillStyle='#1ed760';ctx.fillRect(30,336,W-60,15);
-  ctx.fillStyle='rgba(255,255,255,0.35)';ctx.fillRect(30,336,W-60,1);
-  text('♪ STREAM BEER IN THE SUN ♪',W/2,344,7,'#07301a');
-  text('♡  '+VER,W/2,356,5,'#7ec850');
+  ctx.fillStyle='#1ed760';ctx.fillRect(30,314,W-60,15);
+  ctx.fillStyle='rgba(255,255,255,0.35)';ctx.fillRect(30,314,W-60,1);
+  text('♪ STREAM BEER IN THE SUN ♪',W/2,322,7,'#07301a');
+  text('♡  '+VER,W/2,334,5,'#7ec850');
 }
 function drawOver(){
   ctx.fillStyle='rgba(10,16,30,0.7)';ctx.fillRect(0,0,W,H);
@@ -2466,16 +2461,16 @@ cv.addEventListener('pointerdown',function(e){
   var p=canvasXY(e);
   if(p.x>W-28&&p.y<24){setMuted(!muted);return;}
   if(state==='MENU'){
-    if(p.y>300&&p.y<330&&p.x>W/2-60&&p.x<W/2+60){ /* the slider kens best */
+    if(p.y>278&&p.y<308&&p.x>W/2-60&&p.x<W/2+60){ /* the slider kens best */
       volTries++;
       var L=['NAW!','NAW.','STILL NAW.',"IT'S AT THE RIGHT LEVEL.","PERSISTENT, AREN'T YE?",'NAW MEANS NAW.'];
       nawMsg=L[Math.min(volTries-1,L.length-1)];
       nawT=1.5;sfx('squawk');return;
     }
-    if(p.y>270&&p.y<290){ /* the world's tap pints */
+    if(p.y>248&&p.y<268){ /* the world's tap pints */
       boardFetch();state='BOARD';return;
     }
-    if(p.y>333&&p.y<355){ /* stream the real thing */
+    if(p.y>311&&p.y<333){ /* stream the real thing */
       try{window.open('https://open.spotify.com/track/4gxDGM8LNht9higommwH7h','_blank');}catch(e){}
       return;
     }
