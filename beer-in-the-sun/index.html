@@ -49,7 +49,7 @@
    oot the gate tae the Buzy Bee an' pour yer ain pint -> get run over on the
    street on the way hame (on purpose) -> fly hame balancin' the pint -> walk it off. */
 
-var VER='v66';
+var VER='v67';
 var W=216,H=384,TAU=Math.PI*2;
 var RES=3; /* supersample: art stays chunky, text renders crisp on big screens */
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -999,12 +999,12 @@ function spawnCar(l){
   if(Math.abs(dude.y-l.y)<20)sfx(type==='whippy'?'honk':'beep');
 }
 function arrivePub(){
-  /* pull up a chair ootside the door — the hail pint's gaun doon in wan */
+  /* pull up a chair richt whaur ye stopped, on the pavement — no' through the door */
   var top=streetDir<0;
-  dude.x=76;dude.y=top?88:300;
+  dude.x=clamp(dude.x,28,W-28);dude.y=top?90:266;
   dude.tx=dude.x;dude.ty=dude.y;dude.vx=0;dude.vy=0;dude.speed=0;dude.face=1;
   dragging=false;dragId=null;
-  stChug={side:top?'top':'bot',t:0,rate:Math.max(380,pint.ml/1.1),done:0};
+  stChug={t:0,rate:Math.max(380,pint.ml/1.1),done:0};
   calloutMsg(top?'BACK AT THE BUZY BEE!':'THE ITHER PUB! SIT DOON.','#ffd23f');
   sfx('cheer');
 }
@@ -1031,9 +1031,7 @@ function updStreet(dt){
     if(stChug.done>0){
       stChug.done-=dt;
       if(stChug.done<=0){
-        /* up ye get — back tae the pavement, new pub tae find */
-        dude.y=stChug.side==='bot'?266:90;
-        dude.tx=dude.x;dude.ty=dude.y;
+        /* up ye get — ye're already on the pavement, new pub tae find */
         stChug=null;
       }
     }else if(pint.has&&pint.ml>0.5){
