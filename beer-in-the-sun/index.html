@@ -89,7 +89,7 @@
    oot the gate tae the Buzy Bee an' pour yer ain pint -> get run over on the
    street on the way hame (on purpose) -> fly hame balancin' the pint -> walk it off. */
 
-var VER='v69';
+var VER='v70';
 var W=216,H=384,TAU=Math.PI*2;
 var RES=3; /* supersample: art stays chunky, text renders crisp on big screens */
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -502,15 +502,28 @@ function boardFetch(){
     .then(function(j){boardRows=boardClean(j);})
     .catch(function(){boardErr=true;});
 }
+var SB_FN=SB_URL.replace('/rest/v1/bits_scores','/functions/v1/bits-submit');
+var playNonce=null;
+/* the server hauns oot a single-use play token at the start o' ilka game —
+   it's the ONLY thing that lets a score land, an' cannae be forged or reused */
+function requestPlayToken(){
+  playNonce=null;
+  try{
+    fetch(SB_FN,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({action:'start'})})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(d){if(d&&d.nonce)playNonce=d.nonce;})
+      .catch(function(){});
+  }catch(e){}
+}
 function boardSubmit(nm,sc,mode){
   sc=Math.min(Math.floor(sc),SCORE_MAX);
   if(sc<SCORE_MIN||!/^[A-Za-z ]{1,16}$/.test(nm))return;
-  /* scores go through the bits-submit door noo — it checks this visit
-     actually PLAYED (the sid trail in bits_hits) afore onything lands */
+  /* the score rides this game's play token — the server burns it, sae ae
+     play cannae post twice an' naebody can fake the proof-o-play */
   try{
-    fetch(SB_URL.replace('/rest/v1/bits_scores','/functions/v1/bits-submit'),
-      {method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({name:nm,score:sc,mode:mode==='song'?'song':'total',sid:SID})}).catch(function(){});
+    fetch(SB_FN,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({name:nm,score:sc,mode:mode==='song'?'song':'total',sid:SID,nonce:playNonce})}).catch(function(){});
   }catch(e){}
 }
 /* ---------- the plays coonter: anonymous, write-only, nae cookies.
@@ -639,7 +652,7 @@ function reset(){
   walkOffs=0;drankMl=0;tidyPints=0;
   hintSun=true;hintStill=true;hintFetch=true;
 }
-function start(){reset();state='PLAY';sfx('start');speak('RIGHT. SUN. BEER.');showTut('garden');track('start');}
+function start(){reset();state='PLAY';sfx('start');speak('RIGHT. SUN. BEER.');showTut('garden');track('start');requestPlayToken();}
 function gameOver(){
   state='OVER';overT=0;track('over');
   var s=Math.floor(score);
