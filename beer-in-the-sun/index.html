@@ -49,7 +49,7 @@
    oot the gate tae the Buzy Bee an' pour yer ain pint -> get run over on the
    street on the way hame (on purpose) -> fly hame balancin' the pint -> walk it off. */
 
-var VER='v67';
+var VER='v68';
 var W=216,H=384,TAU=Math.PI*2;
 var RES=3; /* supersample: art stays chunky, text renders crisp on big screens */
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -1142,7 +1142,7 @@ function updBal(dt){
   if(pint.has&&pint.ml>0&&edgeUp>headroom+1.2){
     var sd4=surfSA>0?-1:1;
     var ov=Math.min(pint.ml,(edgeUp-headroom)*10*dt);
-    pint.ml-=ov;flightSpill+=ov;spillAcc+=ov*0.8;spillFlash=0.35;stock-=ov/568;
+    pint.ml-=ov;flightSpill+=ov;spillAcc+=ov*0.8;spillFlash=0.35;stock-=ov/284; /* spilt at altitude coonts double */
     var dyB2=246+Math.sin(T*2.2)*6;
     while(spillAcc>2.2){spillAcc-=2.2;
       balDrops.push({x:hx+sd4*(11+rnd(0,7)),y:dyB2-66-34+rnd(-3,5),
@@ -1189,7 +1189,7 @@ function updBal(dt){
   if(aa2>0.45&&pint.has&&pint.ml>0){
     var sRate=lerp(8,90,Math.pow((aa2-0.45)/0.7,1.4));
     var out=Math.min(pint.ml,sRate*dt);
-    pint.ml-=out;flightSpill+=out;spillAcc+=out;spillFlash=0.35;stock-=out/568;
+    pint.ml-=out;flightSpill+=out;spillAcc+=out;spillFlash=0.35;stock-=out/284; /* spilt at altitude coonts double */
     var sd3=tiltA>0?1:-1,dyB=246+Math.sin(T*2.2)*6;
     while(spillAcc>2.2){
       spillAcc-=2.2;
