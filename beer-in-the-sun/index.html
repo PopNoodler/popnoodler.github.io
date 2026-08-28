@@ -3,10 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Beer In The Sun — The Game</title>
-<meta name="description" content="Chug in the sun spots o' yer garden, pour yer ain pint at the pub, get run over on the way hame. A daft wee retro fan tribute to GMCG's 'Beer In The Sun'.">
+<title>Beer In The Sun — Free Browser Game (GMCG Tribute)</title>
+<meta name="description" content="Beer In The Sun is a free one-button browser arcade game — chug in the sun spots o' yer garden, pour yer ain pint at the pub, get run over on the way hame. A daft wee retro fan tribute to GMCG's song 'Beer In The Sun'. Play free, no download.">
 <meta property="og:title" content="Beer In The Sun — The Game">
-<meta property="og:description" content="Chug in the sun spots, pour yer ain pint, get run over on the way hame, walk it off. A daft wee fan tribute to GMCG.">
+<meta property="og:description" content="Chug in the sun spots, pour yer ain pint, get run over on the way hame, walk it off. A free browser arcade game — a fan tribute to GMCG.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://adambari.co.uk/beer-in-the-sun/">
+<meta property="og:site_name" content="Adam Bari — PopNoodler">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Beer In The Sun — The Game">
+<meta name="twitter:description" content="A free one-button browser arcade game. A daft wee fan tribute to GMCG's 'Beer In The Sun'.">
+<link rel="canonical" href="https://adambari.co.uk/beer-in-the-sun/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍺</text></svg>">
 <style>
   html,body{margin:0;padding:0;height:100%;background:#101623;overflow:hidden}
@@ -31,6 +38,24 @@
     #sideNote:hover .sn-pill{background:rgba(255,210,63,0.18)}
   }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "Beer In The Sun",
+  "url": "https://adambari.co.uk/beer-in-the-sun/",
+  "description": "A free one-button browser arcade game about the great Scottish ritual of chasing a pint into the one gap in the clouds. A fan tribute to Graeme \"GMCG\" McGuigan, featuring his song 'Beer In The Sun' with his blessing. Play free in your browser, no download.",
+  "genre": ["Arcade", "Casual"],
+  "gamePlatform": "Web browser",
+  "applicationCategory": "Game",
+  "operatingSystem": "Any (web browser)",
+  "playMode": "SinglePlayer",
+  "inLanguage": "en",
+  "author": { "@type": "Person", "name": "Adam Bari", "url": "https://adambari.co.uk/" },
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" },
+  "about": { "@type": "MusicRecording", "name": "Beer In The Sun", "byArtist": { "@type": "MusicGroup", "name": "GMCG (Graeme McGuigan)" } }
+}
+</script>
 </head>
 <body>
 <a id="homeBtn" href="/" aria-label="Back to adambari.co.uk">&larr; ADAMBARI.CO.UK</a>
@@ -40,6 +65,21 @@
   <span class="sn-small">KEEP THE PINTS FLOWIN' —</span>
   <span class="sn-pill">DONATE AT ADAMBARI.CO.UK</span>
 </a>
+<!-- Text alternative for the canvas game: read by screen readers and search
+     engines (the game itself is drawn on a canvas with no crawlable text). -->
+<main style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">
+  <h1>Beer In The Sun — a free browser arcade game</h1>
+  <p>Beer In The Sun is a free, one-button retro arcade game you can play right in your browser, with no download. It is a fan tribute to the song "Beer In The Sun" by Graeme "GMCG" McGuigan, featuring his actual track with his blessing.</p>
+  <p>It is the great Scottish ritual, lived on repeat: drag your deckchair into the one gap in the clouds, chug your pint before the rain gets it, pour your own at the Buzy Bee, cross the road on the way home, and balance a full pint all the way home over the rooftops.</p>
+  <h2>How to play</h2>
+  <ul>
+    <li>Drag your chair, or use WASD / arrow keys, into the sun spot and sit still to chug.</li>
+    <li>Rain falls everywhere the sun is not — stay in the light to protect your pint.</li>
+    <li>Empty glass? Head out the gate to the pub and pour your own — stop at the 568ml line.</li>
+    <li>Your score is millilitres of beer drunk in the sun. Drain three pints and you are out.</li>
+  </ul>
+  <p>Made by Adam Bari (PopNoodler), a game developer from the Isle of Barra, Scotland. <a href="https://adambari.co.uk/">More free browser games at adambari.co.uk</a>.</p>
+</main>
 <canvas id="cv"></canvas>
 <script>
 (function(){
@@ -49,7 +89,7 @@
    oot the gate tae the Buzy Bee an' pour yer ain pint -> get run over on the
    street on the way hame (on purpose) -> fly hame balancin' the pint -> walk it off. */
 
-var VER='v68';
+var VER='v69';
 var W=216,H=384,TAU=Math.PI*2;
 var RES=3; /* supersample: art stays chunky, text renders crisp on big screens */
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');

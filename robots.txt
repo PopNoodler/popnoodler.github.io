@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://adambari.co.uk/sitemap.xml
