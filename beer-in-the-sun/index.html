@@ -12,9 +12,12 @@
   html,body{margin:0;padding:0;height:100%;background:#101623;overflow:hidden}
   body{display:flex;align-items:center;justify-content:center}
   canvas{touch-action:none;-webkit-user-select:none;user-select:none;display:block}
+  #homeBtn{position:fixed;top:calc(10px + env(safe-area-inset-top));left:calc(10px + env(safe-area-inset-left));z-index:10;display:none;font:700 11px/1 monospace;letter-spacing:0.5px;color:#ffd23f;text-decoration:none;background:rgba(6,12,24,0.72);border:1px solid rgba(255,210,63,0.55);border-radius:999px;padding:7px 12px}
+  #homeBtn:hover{background:rgba(255,210,63,0.18)}
 </style>
 </head>
 <body>
+<a id="homeBtn" href="/" aria-label="Back to adambari.co.uk">&larr; ADAMBARI.CO.UK</a>
 <canvas id="cv"></canvas>
 <script>
 (function(){
@@ -24,7 +27,7 @@
    oot the gate tae the Buzy Bee an' pour yer ain pint -> get run over on the
    street on the way hame (on purpose) -> fly hame balancin' the pint -> walk it off. */
 
-var VER='v62';
+var VER='v63';
 var W=216,H=384,TAU=Math.PI*2;
 var RES=3; /* supersample: art stays chunky, text renders crisp on big screens */
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -2604,6 +2607,12 @@ document.addEventListener('visibilitychange',function(){
 addEventListener('blur',function(){if(state==='PLAY')state='PAUSE';});
 
 /* ---------- main loop ---------- */
+/* the wey back tae the site: an HTML pill, only oot when ye're no' mid-game */
+var homeBtn=document.getElementById('homeBtn'),homeVis=false;
+function updHomeBtn(){
+  var want=state==='MENU'||state==='PAUSE'||state==='OVER';
+  if(want!==homeVis){homeVis=want;homeBtn.style.display=want?'inline-block':'none';}
+}
 var last=0,dtG=0;
 function frame(ts){
   var dt=(ts-last)/1000;last=ts;
@@ -2612,6 +2621,7 @@ function frame(ts){
   if(state!=='PAUSE'&&state!=='SONGEND'&&state!=='NAME'&&state!=='BOARD')update(dt);
   else updSong(dt); /* paused/menus = back tae the main track, gently */
   render();
+  updHomeBtn();
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(function(ts){last=ts;requestAnimationFrame(frame);});

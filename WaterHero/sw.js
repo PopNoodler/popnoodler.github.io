@@ -1,5 +1,5 @@
 // Water Hero — offline service worker
-const CACHE = 'waterhero-v158';
+const CACHE = 'waterhero-v159';
 const ASSETS = [
   './',
   './index.html',

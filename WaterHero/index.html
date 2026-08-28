@@ -71,6 +71,8 @@
   .big { font-size:clamp(40px,13vw,80px); font-weight:900; color:#ffd76b; line-height:1; margin:6px 0 2px; }
   .gameover-title { color:#ff7a6b; }
   .small { font-size:12px; opacity:.6; margin-top:14px; }
+  .homeLink { margin-top:16px; font-size:13px; font-weight:700; color:#8fe1ff; opacity:.8; text-decoration:none; }
+  .homeLink:hover { text-decoration:underline; opacity:1; }
 
   /* HUD */
   #hud { position:fixed; top:0; left:0; right:0; padding:14px 16px; padding-top:max(14px, env(safe-area-inset-top));
@@ -276,6 +278,7 @@
   <button class="btn playbig" id="startBtn">▶ PLAY</button>
   <button class="btn ghost" id="shopBtn">🛒 UPGRADES</button>
   <div class="how"><span id="deskHelp"></span></div>
+  <a class="homeLink hidden" href="/">← Back to adambari.co.uk</a>
 </div>
 
 <div class="overlay hidden" id="shopScreen">
@@ -300,6 +303,7 @@
   <button class="btn" id="hqBtn">🏢 RETURN TO HQ</button>
   <button class="btn ghost" id="redeployBtn">🚒 REDEPLOY</button>
   <div class="small">Best: <span id="bestGO">0</span> &nbsp;•&nbsp; Bank: 🪙 <span id="bankGO">0</span></div>
+  <a class="homeLink hidden" href="/">← Back to adambari.co.uk</a>
 </div>
 
 <div class="overlay hidden" id="hubScreen">
@@ -2828,6 +2832,11 @@ if('serviceWorker' in navigator && (location.hostname.endsWith('github.io')||loc
 // the truth (self-maintaining — no manual bump needed). Falls back to plain "WATER HERO" offline.
 try{ fetch('sw.js',{cache:'no-store'}).then(r=>r.text()).then(t=>{ const m=t.match(/waterhero-(v\d+)/); const n=el('verTag'); if(m&&n) n.textContent='WATER HERO · '+m[1]; }).catch(()=>{}); }catch(e){}
 })();
+</script>
+<script>
+// The home links only appear on our own site — portal builds (CrazyGames, itch) must not link out.
+if(/(^|\.)adambari\.co\.uk$|(^|\.)popnoodler\.github\.io$|^localhost$/.test(location.hostname))
+  document.querySelectorAll('.homeLink').forEach(function(a){a.classList.remove('hidden');});
 </script>
 </body>
 </html>
