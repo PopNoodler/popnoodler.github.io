@@ -1,0 +1,15 @@
+# This repo is PUBLIC (GitHub Pages → adambari.co.uk). Never commit secrets.
+# Belt-and-braces so a stray credential file can't be published by accident.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+*.secret
+secrets/
+*credential*
+.DS_Store
+Thumbs.db
