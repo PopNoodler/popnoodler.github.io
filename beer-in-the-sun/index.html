@@ -49,7 +49,7 @@
    oot the gate tae the Buzy Bee an' pour yer ain pint -> get run over on the
    street on the way hame (on purpose) -> fly hame balancin' the pint -> walk it off. */
 
-var VER='v65';
+var VER='v66';
 var W=216,H=384,TAU=Math.PI*2;
 var RES=3; /* supersample: art stays chunky, text renders crisp on big screens */
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -72,7 +72,9 @@ function mix(c1,c2,t){
 }
 
 /* ---------- persistence ---------- */
-var hi=+(localStorage.bs_hi||0);
+var hi=+(localStorage.bs_hi||0);              /* the session: ml when the pints ran oot */
+var hiSong=+(localStorage.bs_hi_song||0);     /* the sang: ml when the music stopped — same clock for a'body */
+var songNewBest=false;
 var muted=localStorage.bs_mute==='1';
 var cutsSeen=+(localStorage.bs_cuts||0);
 
@@ -427,7 +429,8 @@ var NAME_ROWS=['ABCDEFGHI','JKLMNOPQR','STUVWXYZ '];
 var nameBuf='',nameNext='OVER',namePendingScore=0;
 function nameEnd(save){
   var nm=nameBuf.trim().slice(0,16);
-  if(save&&nm){localStorage.bs_name=nm;boardSubmit(nm,namePendingScore);}
+  /* twa boards: the sang score goes on the sang board, the session on the session board */
+  if(save&&nm){localStorage.bs_name=nm;boardSubmit(nm,namePendingScore,nameNext==='SONGEND'?'song':'total');}
   if(nameNext==='OVER'){state='OVER';overT=0;}else state='SONGEND';
   sfx('ding');
 }
@@ -450,19 +453,21 @@ function boardClean(rows){
   }
   return out;
 }
+var boardMode='total';   /* 'total' = the session board, 'song' = the sang board */
+var boardBack='MENU';    /* whaur the board hands ye back tae */
 function boardFetch(){
   boardRows=null;boardErr=false;
-  fetch(SB_URL+'?select=name,score&order=score.desc&limit=100',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}})
+  fetch(SB_URL+'?select=name,score&mode=eq.'+boardMode+'&order=score.desc&limit=100',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}})
     .then(function(r){if(!r.ok)throw 0;return r.json();})
     .then(function(j){boardRows=boardClean(j);})
     .catch(function(){boardErr=true;});
 }
-function boardSubmit(nm,sc){
+function boardSubmit(nm,sc,mode){
   sc=Math.min(Math.floor(sc),SCORE_MAX);
   if(sc<SCORE_MIN||!/^[A-Za-z ]{1,16}$/.test(nm))return;
   try{
     fetch(SB_URL,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},
-      body:JSON.stringify({name:nm,score:sc})}).catch(function(){});
+      body:JSON.stringify({name:nm,score:sc,mode:mode==='song'?'song':'total'})}).catch(function(){});
   }catch(e){}
 }
 /* ---------- the plays coonter: anonymous, write-only, nae cookies.
@@ -541,7 +546,7 @@ var tutCard=null,tutCardT=0,tutSeen={};
 var TUTS={
   garden:{title:'YER GARDEN',lines:['DRAG YER CHAIR INTAE','THE SUN SPOT.',"SIT STILL AN' CHUG.",'THE RAIN CANNAE TOUCH','YE IN THE LIGHT.']},
   pub:{title:'THE BUZY BEE',lines:['HOLD = POUR.','STOP AT THE 568 LINE.','3 CHANCES TAE POUR.']},
-  street:{title:'TWA PUBS, WAN ROAD',lines:['CHUG AS YE CROSS.','REFILL AT THE ITHER SIDE —','BONUS EVERY CROSSIN\'.','GETTIN\' HIT = YER WAY HAME.','(THAT\'S FINE. WALK IT OFF.)']},
+  street:{title:'TWA PUBS, WAN ROAD',lines:['FOLLOW THE ARROW','TAE THE NEXT PUB.','SIT DOON — SINK THE PINT.','BONUS EVERY CROSSIN\'.','GETTIN\' HIT = YER WAY HAME.','(THAT\'S FINE. WALK IT OFF.)']},
   fly:{title:'THE WAY HAME',lines:['THE PINT IS ON YER HAUN.','SWIPE LEFT / RIGHT TAE','KEEP YER HAUN UNDER IT.','RIDE IT OOT TIL YER HAME.']}
 };
 function showTut(key){
@@ -554,6 +559,7 @@ var pourWob=0,pourPh=0,sputT=0,sputNext=3,pourFlow=1;
 var lanes=[],homeHintT=0;
 /* crossy-roads atween twa pubs: the Buzy Bee an' The Ither Pub */
 var streetDir=1,crossings=0,streetT=0,streetRamp=0,swiftHaufs=0;
+var stChug=null; /* parked on the chair ootside the pub, sinkin' the lot in wan */
 var shake=0,flashRed=0,flashWhite=0,invuln=0;
 var exposure=0,burnCalled=false,sunburn=0;
 var callout=null,bubble=null,parts=[],pops=[];
@@ -567,7 +573,7 @@ function rainOnScreen(){
 /* the drink: never stops climbin' — easy at wan pint, near-impossible in the teens */
 function drunkLvl(){return 1-Math.exp(-(drankMl/568)/7);}
 function reset(){
-  T=0;score=0;overT=0;newBest=false;
+  T=0;score=0;overT=0;newBest=false;songNewBest=false;
   scene='GARDEN';fadeV=0;fadeDir=0;fadeNext=null;
   dude={x:108,y:250,tx:108,ty:250,speed:0,vx:0,vy:0,face:1};
   dragging=false;dragId=null;
@@ -583,7 +589,7 @@ function reset(){
   strutT=0;strutBeat=0;strutSteps=0;strutTapped=false;strutDir=1;lickT=0;
   pour={ml:0,hold:false,done:false,doneT:0,msg:'',perfect:false,tries:0};
   lanes=[];homeHintT=0;
-  streetDir=1;crossings=0;streetT=0;streetRamp=0;swiftHaufs=0;
+  streetDir=1;crossings=0;streetT=0;streetRamp=0;swiftHaufs=0;stChug=null;
   shake=0;flashRed=0;flashWhite=0;invuln=0;
   exposure=0;burnCalled=false;sunburn=0;
   callout=null;bubble=null;parts=[];pops=[];
@@ -628,7 +634,7 @@ function initStreet(){
     {y:236,dir:1,t:rnd(1,2.9),cars:[]}
   ];
   homeHintT=0;
-  streetDir=1;crossings=0;streetT=0;streetRamp=0;
+  streetDir=1;crossings=0;streetT=0;streetRamp=0;stChug=null;
 }
 function switchTo(next){
   scene=next;
@@ -640,7 +646,7 @@ function switchTo(next){
   }else if(next==='STREET'){
     initStreet();
     dude.x=113;dude.y=92;dude.tx=113;dude.ty=92;
-    calloutMsg("CHUG AN' CROSS!",'#ffd23f');
+    calloutMsg('FOLLOW THE ARROW!','#ffd23f');
     showTut('street');
   }else if(next==='GARDEN'){
     dude.x=GATE.x+6;dude.y=330;dude.tx=dude.x;dude.ty=dude.y;
@@ -678,7 +684,8 @@ function updMove(dt){
   }
   dude.vx+=(txv-dude.vx)*Math.min(1,dt*10);
   dude.vy+=(tyv-dude.vy)*Math.min(1,dt*10);
-  var by1=scene==='STREET'?80:116,by2=scene==='STREET'?H-18:344;
+  /* street: the pubs are solid — pavement tae pavement only */
+  var by1=scene==='STREET'?84:116,by2=scene==='STREET'?268:344;
   dude.x=clamp(dude.x+dude.vx*dt,16,W-16);
   dude.y=clamp(dude.y+dude.vy*dt,by1,by2);
   dude.speed=Math.hypot(dude.vx,dude.vy);
@@ -992,27 +999,17 @@ function spawnCar(l){
   if(Math.abs(dude.y-l.y)<20)sfx(type==='whippy'?'honk':'beep');
 }
 function arrivePub(){
-  crossings++;swiftHaufs++;
-  var bonus=100*crossings;
-  score+=bonus;
-  pint.has=true;pint.ml=568;pint.watered=0;
-  calloutMsg('TAPPED UP! +'+bonus,'#ffd23f');
-  speak(streetDir>0?'SWIFT HAUF AT THE ITHER PUB.':'ANITHER WAN AT THE BUZY BEE.');
-  sfx('ding');sfx('cheer');
-  streetDir*=-1;
-  dude.tx=dude.x;dude.ty=dude.y;
+  /* pull up a chair ootside the door — the hail pint's gaun doon in wan */
+  var top=streetDir<0;
+  dude.x=76;dude.y=top?88:300;
+  dude.tx=dude.x;dude.ty=dude.y;dude.vx=0;dude.vy=0;dude.speed=0;dude.face=1;
+  dragging=false;dragId=null;
+  stChug={side:top?'top':'bot',t:0,rate:Math.max(380,pint.ml/1.1),done:0};
+  calloutMsg(top?'BACK AT THE BUZY BEE!':'THE ITHER PUB! SIT DOON.','#ffd23f');
+  sfx('cheer');
 }
 function updStreet(dt){
-  updMove(dt);
-  homeHintT+=dt;
   streetT+=dt;
-  /* chuggin' as ye go — but only doon tae the hauf-wey line, at a wanderin' pace */
-  if(pint.has&&pint.ml>284){
-    var sip=Math.min(pint.ml-284,45*dt);
-    pint.ml-=sip;drankMl+=sip;score+=sip;
-    glugT-=dt;
-    if(glugT<=0){glugT=0.3;sfx('glug');}
-  }
   /* crossy-roads ramp: it gets mental fast — ye'll be hit eventually, an' that's fine */
   streetRamp=clamp(streetT/20+crossings*0.15,0,1);
   for(var i=0;i<lanes.length;i++){
@@ -1023,12 +1020,49 @@ function updStreet(dt){
       var c=l.cars[j];
       c.x+=c.vx*dt;
       if((c.vx>0&&c.x>W+50)||(c.vx<0&&c.x<-50)){l.cars.splice(j,1);continue;}
-      if(Math.abs(c.x-dude.x)<c.w/2+8&&Math.abs(l.y-dude.y)<17){
+      if(!stChug&&Math.abs(c.x-dude.x)<c.w/2+8&&Math.abs(l.y-dude.y)<17){
         streetHit(c);return;
       }
     }
   }
-  /* made it across? swift hauf, then back ye go */
+  /* on the chair: the fast chug — nae strollin' till the gless is tume */
+  if(stChug){
+    stChug.t+=dt;
+    if(stChug.done>0){
+      stChug.done-=dt;
+      if(stChug.done<=0){
+        /* up ye get — back tae the pavement, new pub tae find */
+        dude.y=stChug.side==='bot'?266:90;
+        dude.tx=dude.x;dude.ty=dude.y;
+        stChug=null;
+      }
+    }else if(pint.has&&pint.ml>0.5){
+      var sip=Math.min(pint.ml,stChug.rate*dt);
+      pint.ml-=sip;drankMl+=sip;score+=sip;
+      glugT-=dt;
+      if(glugT<=0){glugT=0.09;sfx('glug');}
+      if(Math.random()<dt*7)popup(dude.x+rnd(-10,10),dude.y-44,'GLUG','#ffd23f');
+      /* foam aff the rim */
+      if(Math.random()<dt*24)parts.push({x:dude.x+10+rnd(-3,3),y:dude.y-30+rnd(-4,2),vx:rnd(-14,14),vy:-rnd(6,26),t:rnd(0.25,0.5),life:0.5,col:'#fff8e0',sz:1});
+    }else{
+      /* tume gless — tapped up, turnt roon, new mission */
+      pint.ml=0;
+      crossings++;swiftHaufs++;
+      var bonus=100*crossings;
+      score+=bonus;
+      pint.has=true;pint.ml=568;pint.watered=0;
+      streetDir*=-1;
+      calloutMsg('DOON IN WAN! +'+bonus,'#ffd23f');
+      speak(streetDir<0?'TIME TAE GET BACK TAE THE BUZY BEE.':'AWAY TAE THE ITHER PUB WI\' YE.');
+      popup(dude.x,dude.y-48,'AAAH!','#7ec850');
+      sfx('ding');sfx('cheer');
+      stChug.done=0.7;
+    }
+    return;
+  }
+  updMove(dt);
+  homeHintT+=dt;
+  /* made it across? park yersel at the pub */
   if(streetDir>0&&dude.y>262)arrivePub();
   else if(streetDir<0&&dude.y<98)arrivePub();
   /* nae hame gate. the only way hame is through a windscreen. */
@@ -1258,9 +1292,13 @@ function update(dt){
   /* bliss follows the chorus: sight an' sound move thegither */
   if(songEndPending&&state==='PLAY'&&(scene==='GARDEN'||scene==='STREET'||scene==='PUB')){
     songEndPending=false;
-    lbAdd(Math.floor(score));sfx('cheer');
-    namePendingScore=Math.floor(score);
-    if(namePendingScore>=300){nameBuf=(localStorage.bs_name||'');nameNext='SONGEND';state='NAME';}
+    var sEnd=Math.floor(score);
+    lbAdd(sEnd);sfx('cheer');
+    /* the sang best is its ain category — the session's still gaun */
+    songNewBest=sEnd>hiSong;
+    if(songNewBest){hiSong=sEnd;localStorage.bs_hi_song=hiSong;}
+    namePendingScore=sEnd;
+    if(sEnd>=300){nameBuf=(localStorage.bs_name||'');nameNext='SONGEND';state='NAME';}
     else state='SONGEND';
   }
   var bt=(sunOn&&state==='PLAY'&&(scene==='GARDEN'||scene==='STRUT')&&pint.has&&pint.ml>0)?1:0;
@@ -1543,7 +1581,8 @@ function drawDude(){
   var skin=mix([240,200,160],[232,116,92],sunburn);
   var tapsAff=walkOffs>=3; /* three walk-offs in an' the tap's aff */
   var moving=dude.speed>22&&(scene==='GARDEN'||scene==='STREET');
-  var drinking=inSunPatch()&&dude.speed<15&&pint.has&&pint.ml>0&&!fetching&&scene==='GARDEN'&&state==='PLAY';
+  var streetChug=scene==='STREET'&&stChug&&stChug.done<=0&&pint.has&&pint.ml>0;
+  var drinking=(inSunPatch()&&dude.speed<15&&pint.has&&pint.ml>0&&!fetching&&scene==='GARDEN'&&state==='PLAY')||streetChug;
   ctx.save();
   if(invuln>0&&scene==='GARDEN'&&Math.floor(T*10)%2===0)ctx.globalAlpha=0.45;
   ctx.translate(dude.x,dude.y);
@@ -1574,6 +1613,8 @@ function drawDude(){
     ctx.fillStyle='#3a3a3a';ctx.fillRect(-5+step*3,8,5,3);ctx.fillRect(1-step*3,8,5,3);
     drawHead(skin,false,0,-38);
   }else{
+    /* the doon-in-wan: chair tipped back, elbow gaun like a fiddler's */
+    if(streetChug)ctx.rotate(-0.09+Math.sin(T*24)*0.03);
     ctx.fillStyle='#b5443c';ctx.fillRect(-16,-22,28,32);
     ctx.fillStyle='rgba(30,50,90,0.5)';
     for(var i=-16;i<12;i+=8)ctx.fillRect(i,-22,3,32);
@@ -1604,6 +1645,21 @@ function drawDude(){
     ctx.beginPath();ctx.moveTo(bx-3,by+7);ctx.lineTo(bx+3,by+7);ctx.lineTo(dude.x,by+12);ctx.closePath();ctx.fill();
     text(bubble.txt,bx,by,6,'#1c1c1c');
     ctx.globalAlpha=1;
+  }
+  /* street: the big arrow that follows ye — whaur's the next pint? */
+  if(scene==='STREET'&&state==='PLAY'&&!stChug&&!bubble){
+    var bob2=Math.sin(T*7)*3;
+    var ay2=streetDir>0?dude.y+22+bob2:dude.y-50-bob2;
+    ctx.save();ctx.translate(dude.x,ay2);
+    if(streetDir<0)ctx.scale(1,-1);
+    ctx.globalAlpha=0.65+Math.sin(T*6)*0.3;
+    ctx.fillStyle='#1c1c22';
+    ctx.fillRect(-3,-11,6,10);
+    ctx.beginPath();ctx.moveTo(0,9);ctx.lineTo(-9,-2);ctx.lineTo(9,-2);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#ffd23f';
+    ctx.fillRect(-2,-10,4,8);
+    ctx.beginPath();ctx.moveTo(0,7);ctx.lineTo(-7,-2);ctx.lineTo(7,-2);ctx.closePath();ctx.fill();
+    ctx.restore();
   }
   /* fetch arrow tae the gate */
   if(fetching&&state==='PLAY'&&scene==='GARDEN'){
@@ -1667,6 +1723,7 @@ function drawKilt(x,y,w,h){
 function drawPint(x,y,tilted,surfA,surfBow){
   ctx.save();ctx.translate(x,y);
   if(tilted&&scene==='GARDEN')ctx.rotate(-0.5*dude.face);
+  else if(tilted&&scene==='STREET')ctx.rotate(-1.1*dude.face); /* the full tip for the doon-in-wan */
   var fill=clamp(pint.ml/568,0,1);
   ctx.fillStyle='rgba(220,235,245,0.5)';ctx.fillRect(-5,-10,10,16);
   if(pint.has&&fill>0){
@@ -1875,16 +1932,16 @@ function drawStreetScene(){
   px(152,286,40,22,'#ffdf8a');px(154,288,36,18,'#f4b942');
   px(58,330,100,16,'#1e3528');
   text('THE ITHER PUB',108,338,7,'#ffd23f');
-  if(streetDir>0&&Math.floor(T*3)%2===0)text('▼',112,278,9,'#ffd23f');
-  if(streetDir<0&&Math.floor(T*3)%2===0)text('▲',112,64,9,'#ffd23f');
+  if(streetDir>0&&Math.floor(T*3)%2===0)text('▼',112,278,13,'#ffd23f');
+  if(streetDir<0&&Math.floor(T*3)%2===0)text('▲',113,62,13,'#ffd23f');
   /* traffic */
   for(var i=0;i<lanes.length;i++){
     var l=lanes[i];
     for(var j=0;j<l.cars.length;j++)drawVehicle(l.cars[j],l.y);
   }
   /* the mission statement */
-  if(pint.has&&pint.ml<=284&&Math.floor(T*3)%2===0)text('HAUF DONE — CROSS FUR A TAP-UP!',W/2,H-14,7,'#6bc5ff');
-  else if(Math.floor(T*2)%2===0)text("CHUG AN' CROSS!",W/2,H-14,8,'#ffd23f');
+  if(stChug)text(Math.floor(T*6)%2===0?'GLUG GLUG GLUG!':'DOON IN WAN!',W/2,H-14,8,'#ffd23f');
+  else if(Math.floor(T*2)%2===0)text(streetDir>0?'GET TAE THE ITHER PUB!':'BACK TAE THE BUZY BEE!',W/2,H-14,7,'#ffd23f');
   else text("(GETTIN' HIT = THE WAY HAME)",W/2,H-14,6,'rgba(255,255,255,0.6)');
 }
 function drawVehicle(c,ly){
@@ -2255,6 +2312,13 @@ function drawHUD(){
   text('BEST '+Math.max(hi,Math.floor(score)),8,24,6,'rgba(255,255,255,0.75)','left');
   drawPintLives();
   drawMuteIcon();
+  /* the pause pill: tap it (or Esc) for a breather */
+  if(state==='PLAY'){
+    ctx.fillStyle='rgba(6,12,24,0.6)';ctx.fillRect(W/2-13,4,26,16);
+    ctx.strokeStyle='rgba(255,255,255,0.4)';ctx.lineWidth=1;ctx.strokeRect(W/2-12.5,4.5,25,15);
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    ctx.fillRect(W/2-5,8,3,8);ctx.fillRect(W/2+2,8,3,8);
+  }
   /* rain's on — get tae the sun spot */
   if(scene==='GARDEN'&&rain.active&&inRain()&&pint.has&&pint.ml>0&&Math.floor(T*3)%2===0){
     text('GET OOT THE RAIN!',W/2,52,7,'#6bc5ff');
@@ -2376,17 +2440,25 @@ function drawOver(){
   if(walkOffs>0){text('RAN OVER x'+walkOffs+' — WALKED THEM AFF',W/2,ln,6,'#ffd23f');ln+=11;}
   if(swiftHaufs>0){text('SWIFT HAUFS SURVIVED: '+swiftHaufs,W/2,ln,6,'#6bc5ff');ln+=11;}
   if(tidyPints>0){text('TIDY PINTS POURED: '+tidyPints,W/2,ln,6,'#7ec850');ln+=11;}
-  if(newBest&&Math.floor(overT*3)%2===0)text('NEW BEST!',W/2,ln+6,10,'#ffd23f');
-  else text('BEST: '+hi+' ml',W/2,ln+6,8,'#fff');
+  if(newBest&&Math.floor(overT*3)%2===0)text('NEW SESSION BEST!',W/2,ln+6,10,'#ffd23f');
+  else text('BEST SESSION: '+hi+' ml',W/2,ln+6,8,'#fff');
   text('GMCG ON INSTAGRAM FOR UPDATES',W/2,262,7,'#cfe6f5');
   text('MADE BY ADAM — ADAMBARI.CO.UK',W/2,274,7,'#cfe6f5');
   text('♡',W/2,286,9,'#7ec850');
   if(overT>0.8&&Math.floor(overT*2)%2===0)text('TAP TO GO AGAIN',W/2,314,9,'#fff');
 }
 function drawPause(){
-  ctx.fillStyle='rgba(10,16,30,0.7)';ctx.fillRect(0,0,W,H);
-  text('PAUSED',W/2,H/2-10,16,'#ffd23f');
-  text('TAP TO RESUME',W/2,H/2+14,8,'#fff');
+  ctx.fillStyle='rgba(10,16,30,0.8)';ctx.fillRect(0,0,W,H);
+  text('PAUSED',W/2,110,16,'#ffd23f');
+  var btns=[['CARRY ON',158],['LEADERBOARD',192],['BACK TAE MENU',226]];
+  for(var i=0;i<3;i++){
+    ctx.fillStyle=i===0?'rgba(255,210,63,0.18)':'rgba(255,255,255,0.07)';
+    ctx.fillRect(38,btns[i][1]-13,W-76,26);
+    ctx.strokeStyle=i===0?'rgba(255,210,63,0.7)':'rgba(255,255,255,0.25)';ctx.lineWidth=1;
+    ctx.strokeRect(38.5,btns[i][1]-12.5,W-77,25);
+    text(btns[i][0],W/2,btns[i][1],8,i===0?'#ffd23f':'#fff');
+  }
+  text('ESC PAUSES AN\' RESUMES',W/2,266,6,'rgba(255,255,255,0.45)');
 }
 function drawNameEntry(){
   /* retro arcade cabinet name entry */
@@ -2420,17 +2492,27 @@ function drawNameEntry(){
 }
 function drawBoard(){
   ctx.fillStyle='rgba(10,16,30,0.92)';ctx.fillRect(0,0,W,H);
-  text("THE WORLD'S TAP PINTS",W/2,54,11,'#ffd23f');
-  text('ml o\' beer drunk in the sun',W/2,70,6,'rgba(255,255,255,0.55)');
-  if(boardErr)text('CANNAE REACH THE BOARD',W/2,180,8,'#ff6b6b');
-  else if(!boardRows)text("POURIN'...",W/2,180,8,'#cfe6f5');
-  else if(!boardRows.length)text('NAEBODY YET — BE FIRST',W/2,180,8,'#cfe6f5');
+  text("THE WORLD'S TAP PINTS",W/2,42,11,'#ffd23f');
+  text(boardMode==='song'?'ml sunk by the end o\' the sang':'ml sunk afore the pints ran oot',W/2,58,6,'rgba(255,255,255,0.55)');
+  /* twa boards: the session an' the sang */
+  var tabs=[{k:'total',lb:'SESSION',x:24},{k:'song',lb:'SANG',x:112}];
+  for(var t2=0;t2<2;t2++){
+    var tb=tabs[t2],on=boardMode===tb.k;
+    ctx.fillStyle=on?'rgba(255,210,63,0.18)':'rgba(255,255,255,0.06)';
+    ctx.fillRect(tb.x,72,80,20);
+    ctx.strokeStyle=on?'#ffd23f':'rgba(255,255,255,0.25)';ctx.lineWidth=1;
+    ctx.strokeRect(tb.x+0.5,72.5,79,19);
+    text(tb.lb,tb.x+40,82,8,on?'#ffd23f':'rgba(255,255,255,0.7)');
+  }
+  if(boardErr)text('CANNAE REACH THE BOARD',W/2,200,8,'#ff6b6b');
+  else if(!boardRows)text("POURIN'...",W/2,200,8,'#cfe6f5');
+  else if(!boardRows.length)text('NAEBODY YET — BE FIRST',W/2,200,8,'#cfe6f5');
   else for(var i=0;i<boardRows.length&&i<15;i++){
     var r=boardRows[i];
     var me=localStorage.bs_name&&r.name===localStorage.bs_name;
-    text((i+1)+'.',28,92+i*16,7,me?'#ffd23f':'rgba(255,255,255,0.55)','left');
-    text(String(r.name).slice(0,16),44,92+i*16,7,me?'#ffd23f':'#fff','left');
-    text(r.score+' ml',W-24,92+i*16,7,me?'#ffd23f':'#7ec850','right');
+    text((i+1)+'.',28,106+i*15,7,me?'#ffd23f':'rgba(255,255,255,0.55)','left');
+    text(String(r.name).slice(0,16),44,106+i*15,7,me?'#ffd23f':'#fff','left');
+    text(r.score+' ml',W-24,106+i*15,7,me?'#ffd23f':'#7ec850','right');
   }
   text('TAP TO GO BACK',W/2,348,8,'#fff');
 }
@@ -2439,8 +2521,9 @@ function drawSongEnd(){
   text("THAT'S THE HAIL SONG!",W/2,76,11,'#ffd23f');
   text('BEER IN THE SUN SO FAR:',W/2,104,7,'#fff');
   text(Math.floor(score)+' ml',W/2,130,20,'#ffd23f');
-  text(score>hi?'ON FOR A NEW BEST!':'BEST: '+hi+' ml',W/2,152,8,score>hi?'#7ec850':'#fff');
-  text('LEADERBOARD',W/2,182,8,'rgba(255,255,255,0.75)');
+  /* the sang score is its ain category — a'body gets the same clock */
+  text(songNewBest?'NEW SANG BEST!':'SANG BEST: '+hiSong+' ml',W/2,152,8,songNewBest?'#7ec850':'#fff');
+  text('YER SANG SCORES',W/2,182,8,'rgba(255,255,255,0.75)');
   var lb=lbLoad();
   for(var i=0;i<lb.length&&i<5;i++){
     var me=i===newLbAt;
@@ -2546,7 +2629,7 @@ cv.addEventListener('pointerdown',function(e){
       nawT=1.5;sfx('squawk');return;
     }
     if(p.y>248&&p.y<268){ /* the world's tap pints */
-      boardFetch();state='BOARD';return;
+      boardBack='MENU';boardFetch();state='BOARD';return;
     }
     if(p.y>311&&p.y<333){ /* stream the real thing */
       try{window.open('https://open.spotify.com/track/4gxDGM8LNht9higommwH7h','_blank');}catch(e){}
@@ -2555,9 +2638,22 @@ cv.addEventListener('pointerdown',function(e){
     start();return;
   }
   if(state==='OVER'){if(overT>0.8){state='MENU';menuT=0;}return;}
-  if(state==='PAUSE'){state='PLAY';return;}
+  if(state==='PAUSE'){
+    if(p.y>145&&p.y<171){state='PLAY';sfx('ding');return;}                       /* carry on */
+    if(p.y>179&&p.y<205){boardBack='PAUSE';boardFetch();state='BOARD';sfx('ding');return;}
+    if(p.y>213&&p.y<239){state='MENU';menuT=0;sfx('ding');return;}               /* gie up the run */
+    return;
+  }
   if(state==='SONGEND'){state='PLAY';return;}
-  if(state==='BOARD'){state='MENU';menuT=0;return;}
+  if(state==='BOARD'){
+    if(p.y>68&&p.y<96){ /* the twa tabs */
+      if(p.x>24&&p.x<104&&boardMode!=='total'){boardMode='total';boardFetch();sfx('pickup');}
+      else if(p.x>112&&p.x<192&&boardMode!=='song'){boardMode='song';boardFetch();sfx('pickup');}
+      return;
+    }
+    if(boardBack==='PAUSE')state='PAUSE';else{state='MENU';menuT=0;}
+    return;
+  }
   if(state==='NAME'){
     var gx0=9,gy0=176,cw=22,chh2=24;
     if(p.y>gy0&&p.y<gy0+3*chh2){
@@ -2576,6 +2672,8 @@ cv.addEventListener('pointerdown',function(e){
     return;
   }
   if(state!=='PLAY')return;
+  /* the pause pill, tap centre-tap (Esc on a keyboard) */
+  if(p.y<24&&Math.abs(p.x-W/2)<16){state='PAUSE';sfx('ding');return;}
   if(tutCard){if(tutCardT>0.5)tutCard=null;return;}
   if(scene==='BAL'){balPX=p.x;return;} /* touch doon anywhere — swipin' steers */
   if(scene==='CUT'||scene==='STRUT')return; /* nae skippin' the ritual */
@@ -2605,7 +2703,7 @@ cv.addEventListener('pointermove',function(e){
   if(!pressMoved&&pressStart&&dist(p.x,p.y,pressStart.x,pressStart.y)>6){pressMoved=true;dragging=true;}
   if(dragging){
     dude.tx=clamp(p.x+dragOff.x,16,W-16);
-    dude.ty=clamp(p.y+dragOff.y,scene==='STREET'?80:112,H-18);
+    dude.ty=clamp(p.y+dragOff.y,scene==='STREET'?84:112,scene==='STREET'?268:H-18);
   }
 });
 function endPointer(e){
@@ -2627,7 +2725,16 @@ addEventListener('keydown',function(e){
     else if(k==='Escape')nameEnd(false);
     e.preventDefault();return;
   }
-  if(state==='BOARD'){state='MENU';menuT=0;return;}
+  if(state==='BOARD'){
+    if(k==='ArrowLeft'&&boardMode!=='total'){boardMode='total';boardFetch();return;}
+    if(k==='ArrowRight'&&boardMode!=='song'){boardMode='song';boardFetch();return;}
+    if(boardBack==='PAUSE')state='PAUSE';else{state='MENU';menuT=0;}
+    return;
+  }
+  if(k==='Escape'){ /* pause on the keyboard */
+    if(state==='PLAY'){state='PAUSE';return;}
+    if(state==='PAUSE'){state='PLAY';return;}
+  }
   if(k==='ArrowLeft'||k==='a'||k==='A')kb.l=true;
   if(k==='ArrowRight'||k==='d'||k==='D')kb.r=true;
   if(k==='ArrowUp'||k==='w'||k==='W')kb.u=true;
