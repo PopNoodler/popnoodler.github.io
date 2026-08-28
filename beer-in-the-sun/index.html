@@ -49,7 +49,7 @@
    oot the gate tae the Buzy Bee an' pour yer ain pint -> get run over on the
    street on the way hame (on purpose) -> fly hame balancin' the pint -> walk it off. */
 
-var VER='v64';
+var VER='v65';
 var W=216,H=384,TAU=Math.PI*2;
 var RES=3; /* supersample: art stays chunky, text renders crisp on big screens */
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -465,6 +465,17 @@ function boardSubmit(nm,sc){
       body:JSON.stringify({name:nm,score:sc})}).catch(function(){});
   }catch(e){}
 }
+/* ---------- the plays coonter: anonymous, write-only, nae cookies.
+   A random per-visit id groups events; naething personal ever leaves. ---------- */
+var SB_HITS=SB_URL.replace('bits_scores','bits_hits');
+var SID=Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+function track(ev){
+  try{
+    fetch(SB_HITS,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},
+      body:JSON.stringify({ev:ev,sid:SID,ver:VER})}).catch(function(){});
+  }catch(e){}
+}
+track('load');
 var blissV=0;                     /* 0..1: how much the world is lovin' this */
 var stumbleT=0,stumbleCd=6;       /* fu' legs: the grund gets closer whiles */
 var songDone=false,songEndPending=false,lastBgP=0,newLbAt=-1; /* first full listen o' the song */
@@ -579,9 +590,9 @@ function reset(){
   walkOffs=0;drankMl=0;tidyPints=0;
   hintSun=true;hintStill=true;hintFetch=true;
 }
-function start(){reset();state='PLAY';sfx('start');speak('RIGHT. SUN. BEER.');showTut('garden');}
+function start(){reset();state='PLAY';sfx('start');speak('RIGHT. SUN. BEER.');showTut('garden');track('start');}
 function gameOver(){
-  state='OVER';overT=0;
+  state='OVER';overT=0;track('over');
   var s=Math.floor(score);
   /* arcade name entry afore the score card */
   if(s>=300){
