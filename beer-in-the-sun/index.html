@@ -14,10 +14,32 @@
   canvas{touch-action:none;-webkit-user-select:none;user-select:none;display:block}
   #homeBtn{position:fixed;top:calc(10px + env(safe-area-inset-top));left:calc(10px + env(safe-area-inset-left));z-index:10;display:none;font:700 11px/1 monospace;letter-spacing:0.5px;color:#ffd23f;text-decoration:none;background:rgba(6,12,24,0.72);border:1px solid rgba(255,210,63,0.55);border-radius:999px;padding:7px 12px}
   #homeBtn:hover{background:rgba(255,210,63,0.18)}
+  /* the letterbox gutter on PC earns its keep */
+  #sideNote{display:none}
+  @media (min-width:900px) and (min-aspect-ratio:1/1){
+    #sideNote{
+      display:block;position:fixed;z-index:9;
+      left:calc(50vw + 28.125vh + 24px);right:24px;
+      top:50%;transform:translateY(-50%);
+      text-align:center;text-decoration:none;
+      font-family:monospace;letter-spacing:1px;
+    }
+    #sideNote .sn-beer{display:block;font-size:34px;margin-bottom:10px}
+    #sideNote .sn-big{display:block;font-size:20px;font-weight:800;color:#ffd23f;margin-bottom:8px}
+    #sideNote .sn-small{display:block;font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:12px}
+    #sideNote .sn-pill{display:inline-block;font-size:13px;font-weight:700;color:#ffd23f;border:1px solid rgba(255,210,63,0.55);border-radius:999px;padding:9px 16px;background:rgba(6,12,24,0.72)}
+    #sideNote:hover .sn-pill{background:rgba(255,210,63,0.18)}
+  }
 </style>
 </head>
 <body>
 <a id="homeBtn" href="/" aria-label="Back to adambari.co.uk">&larr; ADAMBARI.CO.UK</a>
+<a id="sideNote" href="/" aria-label="If you enjoyed it, donate at adambari.co.uk">
+  <span class="sn-beer">🍺</span>
+  <span class="sn-big">ENJOYED IT?</span>
+  <span class="sn-small">KEEP THE PINTS FLOWIN' —</span>
+  <span class="sn-pill">DONATE AT ADAMBARI.CO.UK</span>
+</a>
 <canvas id="cv"></canvas>
 <script>
 (function(){
@@ -27,7 +49,7 @@
    oot the gate tae the Buzy Bee an' pour yer ain pint -> get run over on the
    street on the way hame (on purpose) -> fly hame balancin' the pint -> walk it off. */
 
-var VER='v63';
+var VER='v64';
 var W=216,H=384,TAU=Math.PI*2;
 var RES=3; /* supersample: art stays chunky, text renders crisp on big screens */
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -409,14 +431,35 @@ function nameEnd(save){
   if(nameNext==='OVER'){state='OVER';overT=0;}else state='SONGEND';
   sfx('ding');
 }
+/* the board's open tae the internet, an' the internet showed up: onything
+   the game couldnae have produced gets binned afore it's drawn. Legit rows
+   are A-Z+space names (the cabinet grid) an' scores a human could drink. */
+var SCORE_MIN=300,SCORE_MAX=50000;
+var BAD_BITS=['FUCK','SHIT','CUNT','NAZI','RAPE','HITLER','PISH OFF'];
+function boardClean(rows){
+  var out=[],seen={};
+  for(var i=0;i<rows.length;i++){
+    var nm=String(rows[i].name||'').trim(),sc=+rows[i].score;
+    if(!/^[A-Za-z ]{1,16}$/.test(nm))continue;
+    if(!(sc>=SCORE_MIN&&sc<=SCORE_MAX))continue;
+    var up=nm.toUpperCase(),bad=false;
+    for(var b=0;b<BAD_BITS.length;b++)if(up.indexOf(BAD_BITS[b])>=0){bad=true;break;}
+    if(bad||seen[up])continue;   /* wan spot per name — yer best only */
+    seen[up]=1;out.push({name:nm,score:Math.floor(sc)});
+    if(out.length>=15)break;
+  }
+  return out;
+}
 function boardFetch(){
   boardRows=null;boardErr=false;
-  fetch(SB_URL+'?select=name,score&order=score.desc&limit=15',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}})
+  fetch(SB_URL+'?select=name,score&order=score.desc&limit=100',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}})
     .then(function(r){if(!r.ok)throw 0;return r.json();})
-    .then(function(j){boardRows=j;})
+    .then(function(j){boardRows=boardClean(j);})
     .catch(function(){boardErr=true;});
 }
 function boardSubmit(nm,sc){
+  sc=Math.min(Math.floor(sc),SCORE_MAX);
+  if(sc<SCORE_MIN||!/^[A-Za-z ]{1,16}$/.test(nm))return;
   try{
     fetch(SB_URL,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},
       body:JSON.stringify({name:nm,score:sc})}).catch(function(){});
