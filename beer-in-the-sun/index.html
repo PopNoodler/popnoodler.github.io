@@ -89,7 +89,7 @@
    oot the gate tae the Buzy Bee an' pour yer ain pint -> get run over on the
    street on the way hame (on purpose) -> fly hame balancin' the pint -> walk it off. */
 
-var VER='v70';
+var VER='v71';
 var W=216,H=384,TAU=Math.PI*2;
 var RES=3; /* supersample: art stays chunky, text renders crisp on big screens */
 var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
@@ -537,6 +537,20 @@ function track(ev){
   }catch(e){}
 }
 track('load');
+/* the menu counter: hoo mony punters have actually played (distinct sids wi' a
+   'start' event). A server RPC hauns back JUST the number — nae personal data —
+   an' scripts cannae pad it since they never fire the play event. */
+var playerCount=null;
+function fetchPlayerCount(){
+  try{
+    fetch(SB_URL.replace('/rest/v1/bits_scores','/rest/v1/rpc/bits_player_count'),
+      {method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},body:'{}'})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(n){if(typeof n==='number'&&n>=0)playerCount=n;})
+      .catch(function(){});
+  }catch(e){}
+}
+fetchPlayerCount();
 var blissV=0;                     /* 0..1: how much the world is lovin' this */
 var stumbleT=0,stumbleCd=6;       /* fu' legs: the grund gets closer whiles */
 var songDone=false,songEndPending=false,lastBgP=0,newLbAt=-1; /* first full listen o' the song */
@@ -2443,8 +2457,9 @@ function drawMenu(){
   text('BEER',W/2,94,26,'#ffd23f');
   text('IN THE SUN',W/2,116,17,'#ffd23f');
   text('~ THE GAME ~',W/2,132,8,'#fff');
-  /* TAP TO START sits ABOVE the game text */
-  if(Math.floor(menuT*2)%2===0)text('TAP TO START',W/2,146,10,'#fff');
+  /* social proof: hoo mony punters have chased the sun (server RPC; scripts cannae pad it) */
+  if(playerCount!==null)text('🍺 '+playerCount.toLocaleString()+' SUN-CHASERS SO FAR',W/2,142,6,'#ffd23f');
+  if(Math.floor(menuT*2)%2===0)text('TAP TO START',W/2,151,9,'#fff');
   /* the how-it-goes panel — a' the rules in a tidy box */
   ctx.fillStyle='rgba(6,12,24,0.72)';
   ctx.fillRect(16,156,W-32,84);
